@@ -109,7 +109,7 @@ mysql -u root -p < sql/ops_monitor_schema.sql
 | `DB_USER` | MySQL 用户名 | `root` |
 | `DB_PASSWORD` | MySQL 密码 | - |
 | `DB_NAME` | 数据库名 | `ops_monitor` |
-| `REDIS_URL` | Redis 连接串 | `redis://127.0.0.1:6379/0` |
+| `REDIS_URL` | Redis 连接串（本地开发用 `127.0.0.1`；容器部署由 Compose 注入服务名 `redis`） | `redis://127.0.0.1:6379/0` |
 | `JWT_SECRET_KEY` | JWT 签名密钥 | - |
 | `JWT_EXPIRE_MINUTES` | Token 有效期（分钟） | `120` |
 | `AGENT_SERVER_URL` | Agent 上报服务端地址 | `http://127.0.0.1:8000` |
