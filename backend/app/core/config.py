@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     SEED_INIT_DATA: bool = True
     SEED_ADMIN_USERNAME: str = "admin"
     SEED_ADMIN_PASSWORD: str = "admin123456"
+    OPERATION_LOG_ENABLED: bool = True
 
     @property
     def database_url(self) -> str:

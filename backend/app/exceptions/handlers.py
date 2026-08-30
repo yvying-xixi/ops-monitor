@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -13,6 +13,15 @@ from app.exceptions.app_exception import AppException
 from app.exceptions.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
+
+_HTTP_STATUS_TO_CODE = {
+    400: ErrorCode.BAD_REQUEST,
+    401: ErrorCode.UNAUTHORIZED,
+    403: ErrorCode.FORBIDDEN,
+    404: ErrorCode.NOT_FOUND,
+    409: ErrorCode.CONFLICT,
+    500: ErrorCode.INTERNAL_ERROR,
+}
 
 
 def _build_body(code: int, message: str, data=None) -> dict:
@@ -42,6 +51,16 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=400,
             content=_build_body(ErrorCode.BAD_REQUEST, message, errors),
+        )
+
+    @app.exception_handler(HTTPException)
+    async def _handle_http_exception(request: Request, exc: HTTPException):
+        code = _HTTP_STATUS_TO_CODE.get(exc.status_code, ErrorCode.BAD_REQUEST)
+        headers = getattr(exc, "headers", None)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=_build_body(code, str(exc.detail)),
+            headers=headers,
         )
 
     @app.exception_handler(SQLAlchemyError)

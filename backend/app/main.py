@@ -11,6 +11,7 @@ from app.api.v1 import auth, health, users
 from app.core.config import settings
 from app.core.seed import init_seed_data
 from app.exceptions.handlers import register_exception_handlers
+from app.middleware import OperationLogMiddleware, RequestContextMiddleware
 
 
 @asynccontextmanager
@@ -37,6 +38,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 中间件按外层→内层顺序：RequestContext(外层) → OperationLog → 路由
+app.add_middleware(OperationLogMiddleware)
+app.add_middleware(RequestContextMiddleware)
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
