@@ -144,11 +144,17 @@ docker compose down         # 停止
 | [docs/02-database.md](docs/02-database.md) | 数据库设计：26 张表、索引、常用查询 |
 | [docs/03-development.md](docs/03-development.md) | 开发规范：分层约定、响应格式、日志、提交规范 |
 | [docs/04-agent.md](docs/04-agent.md) | Agent 协议：注册、心跳、指标上报、部署 |
+| [docs/05-phase2-auth.md](docs/05-phase2-auth.md) | 阶段二用户权限模块设计：决策、错误码、接口、实现要点 |
 
 ## 开发进度
 
 - [x] 阶段一 · 基础设置：Git 仓库、依赖安装、目录骨架、数据库脚本
-- [ ] 阶段二 · 用户权限：用户/角色/登录/JWT/RBAC/审计
+- [x] 阶段一 · 数据映射：26 张表 SQLAlchemy ORM、泛型仓储 + 用户权限域仓储
+- [ ] 阶段二 · 用户权限（进行中）：登录/JWT/用户管理/RBAC/操作审计
+  - [ ] M1 基础能力层：安全工具、统一异常、统一响应
+  - [ ] M2 登录闭环：登录接口、用户管理 API、种子数据、Health
+  - [ ] M3 鉴权与审计：鉴权依赖、操作日志中间件、接口权限
+  - [ ] M4 前端用户权限（后端稳定后推进）
 - [ ] 阶段三 · Agent：指标采集、注册、心跳、上报
 - [ ] 阶段四 · 监控中心：服务器管理、Dashboard、ECharts
 - [ ] 阶段五 · 告警中心：规则、事件、确认、恢复
