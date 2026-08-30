@@ -15,7 +15,12 @@ class Settings(BaseSettings):
     DB_NAME: str = "ops_monitor"
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
     JWT_SECRET_KEY: str = "change-me"
+    JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 120
+    CORS_ORIGINS: list[str] = ["*"]
+    SEED_INIT_DATA: bool = True
+    SEED_ADMIN_USERNAME: str = "admin"
+    SEED_ADMIN_PASSWORD: str = "admin123456"
 
     @property
     def database_url(self) -> str:
