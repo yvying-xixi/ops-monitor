@@ -7,8 +7,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, health, users
+from app.api.v1 import agent, auth, health, servers, users
 from app.core.config import settings
+from app.core.scheduler import setup_scheduler, shutdown_scheduler
 from app.core.seed import init_seed_data
 from app.exceptions.handlers import register_exception_handlers
 from app.middleware import OperationLogMiddleware, RequestContextMiddleware
@@ -16,10 +17,12 @@ from app.middleware import OperationLogMiddleware, RequestContextMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """应用生命周期：启动时按配置幂等初始化种子数据。"""
+    """应用生命周期：启动时初始化种子数据并启动后台调度器。"""
     if settings.SEED_INIT_DATA:
         init_seed_data()
+    setup_scheduler()
     yield
+    shutdown_scheduler()
 
 
 app = FastAPI(
@@ -45,4 +48,6 @@ app.add_middleware(RequestContextMiddleware)
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
+app.include_router(servers.router, prefix="/api/v1")
+app.include_router(agent.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")

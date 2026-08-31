@@ -39,6 +39,7 @@ class OperationLogMiddleware(BaseHTTPMiddleware):
         if (
             not settings.OPERATION_LOG_ENABLED
             or not path.startswith("/api/v1")
+            or path.startswith("/api/v1/agent/")
             or path in EXCLUDE_PATHS
         ):
             return await call_next(request)

@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.exceptions import AppException, ErrorCode
-from app.models import SysUser
-from app.repositories import UserRepository
+from app.models import OpsServer, SysUser
+from app.repositories import AgentTokenRepository, ServerRepository, UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -76,3 +76,31 @@ def require_roles(*role_codes: str):
         return current_user
 
     return dependency
+
+
+def get_agent_server(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> OpsServer:
+    """解析 Bearer Token 并加载 Agent 绑定的服务器。
+
+    Agent 上报接口专用鉴权：按 Token 哈希查 `ops_agent_token`，
+    校验有效状态（未撤销、未过期）后返回绑定服务器。
+
+    Args:
+        token: Agent Token 明文。
+        db: 数据库会话。
+
+    Returns:
+        绑定的服务器对象。
+
+    Raises:
+        AppException: Token 无效（40103）、服务器不存在或停用（40403）。
+    """
+    token_record = AgentTokenRepository(db).authenticate(token)
+    if token_record is None:
+        raise AppException(ErrorCode.AGENT_UNAUTHORIZED, "Agent 凭证无效", http_status=401)
+    server = ServerRepository(db).get(token_record.server_id)
+    if server is None or server.status != 1:
+        raise AppException(ErrorCode.SERVER_NOT_FOUND, "服务器不存在或已停用", http_status=404)
+    return server
