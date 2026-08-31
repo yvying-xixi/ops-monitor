@@ -1,0 +1,16 @@
+server:
+  url: "http://127.0.0.1:8000"
+  token: "REPLACE_WITH_GENERATED_AGENT_TOKEN"
+  server_code: "web-01"
+
+collect:
+  heartbeat_interval: 30
+  metrics_interval: 10
+  assets_interval: 60
+  retry_max_seconds: 60
+  connect_timeout: 5
+  request_timeout: 10
+
+log:
+  level: "INFO"
+  # file: "/var/log/server-agent/agent.log"
