@@ -83,12 +83,16 @@ npm run dev            # http://localhost:5173
 
 ### Agent
 
+1. 管理员先在后端创建服务器并生成注册凭证：
+   `POST /api/v1/servers` → `POST /api/v1/servers/{id}/agent-token`（Token 明文仅返回一次）
+2. 配置并启动 Agent：
+
 ```bash
 cd agent
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-# 编辑 config/config.yaml 配置服务端地址与凭证后：
+cp config/config.yaml.example config/config.yaml   # 填入服务端地址、token、server_code
 python main.py
 ```
 
@@ -155,7 +159,10 @@ docker compose down         # 停止
   - [x] M2 登录闭环：登录接口、用户管理 API、种子数据、Health
   - [x] M3 鉴权与审计：鉴权依赖、操作日志中间件、接口权限
   - [ ] M4 前端用户权限（后端稳定后推进）
-- [ ] 阶段三 · Agent：指标采集、注册、心跳、上报
+- [x] 阶段三 · Agent：指标采集、注册、心跳、上报、资产同步、状态刷新
+  - [x] 服务端：`/agent/register|heartbeat|metrics|assets` + 服务器管理 + APScheduler 状态判定
+  - [x] Agent 客户端：CPU/Memory/Disk/Network/Load/TCP/Uptime 采集 + 上报重试
+  - [x] E2E 全链路验证
 - [ ] 阶段四 · 监控中心：服务器管理、Dashboard、ECharts
 - [ ] 阶段五 · 告警中心：规则、事件、确认、恢复
 - [ ] 阶段六 · 自动化运维：服务管理、批量任务、任务日志
