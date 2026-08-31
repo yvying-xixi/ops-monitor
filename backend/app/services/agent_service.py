@@ -93,7 +93,7 @@ class AgentService:
             server_id=server.id,
             agent_version=data.agent_version,
             ip_address=ip,
-            collected_at=data.timestamp or _utcnow(),
+            collected_at=self._normalize_utc(data.timestamp) if data.timestamp else _utcnow(),
         )
         self.db.commit()
         return {"server_id": server.id, "received_at": _utcnow().isoformat()}
@@ -112,11 +112,11 @@ class AgentService:
             AppException: 采集时间与服务器时间偏差过大（40001）。
         """
         self._assert_server_match(server, data.server_id)
-        self._validate_timestamp(data.timestamp)
+        collected_at = self._validate_timestamp(data.timestamp)
 
         metric = MonitorServerMetric(
             server_id=server.id,
-            collected_at=data.timestamp,
+            collected_at=collected_at,
             cpu_usage=data.cpu_usage,
             memory_usage=data.memory_usage,
             memory_used_bytes=data.memory_used_bytes,
@@ -172,8 +172,16 @@ class AgentService:
             )
 
     @staticmethod
-    def _validate_timestamp(collected_at: datetime) -> None:
+    def _normalize_utc(dt: datetime) -> datetime:
+        """将任意时区的时间归一化为 naive UTC，用于落库与比较。"""
+        if dt.tzinfo is not None:
+            return dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return dt
+
+    def _validate_timestamp(self, collected_at: datetime) -> None:
         """校验采集时间与服务器时间偏差不超过允许范围。"""
         now = _utcnow()
-        if abs((now - collected_at).total_seconds()) > MAX_TIME_SKEW_SECONDS:
+        normalized = self._normalize_utc(collected_at)
+        if abs((now - normalized).total_seconds()) > MAX_TIME_SKEW_SECONDS:
             raise AppException(ErrorCode.INVALID_TIMESTAMP, "采集时间非法", http_status=400)
+        return normalized
