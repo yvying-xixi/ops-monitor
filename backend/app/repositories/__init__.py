@@ -1,4 +1,9 @@
 from app.repositories.base import BaseRepository
+from app.repositories.alert_repository import (
+    AlertEventLogRepository,
+    AlertEventRepository,
+    AlertRuleRepository,
+)
 from app.repositories.audit_repository import LoginLogRepository
 from app.repositories.metric_repository import MetricRepository
 from app.repositories.server_repository import (
@@ -26,4 +31,7 @@ __all__ = [
     "DiskRepository",
     "NetworkRepository",
     "MetricRepository",
+    "AlertRuleRepository",
+    "AlertEventRepository",
+    "AlertEventLogRepository",
 ]

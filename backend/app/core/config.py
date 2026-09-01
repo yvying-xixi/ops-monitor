@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     SEED_ADMIN_PASSWORD: str = "admin123456"
     OPERATION_LOG_ENABLED: bool = True
     AGENT_STATUS_REFRESH_SECONDS: int = 30
+    ALERT_EVALUATE_INTERVAL_SECONDS: int = 10
     METRIC_RETENTION_DAYS: int = 7
     METRIC_CLEANUP_ENABLED: bool = True
 

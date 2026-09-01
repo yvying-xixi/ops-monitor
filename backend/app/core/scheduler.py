@@ -9,10 +9,24 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.repositories import MetricRepository, ServerRepository
+from app.services.alert_engine import AlertEngine
 
 logger = logging.getLogger(__name__)
 
 _scheduler: BackgroundScheduler | None = None
+
+
+def _evaluate_alerts() -> None:
+    """执行一轮告警规则评估。"""
+    db = SessionLocal()
+    try:
+        created = AlertEngine(db).evaluate_all()
+        if created:
+            logger.info("告警引擎：新增 %s 条告警", created)
+    except Exception:
+        logger.exception("告警规则评估失败")
+    finally:
+        db.close()
 
 
 def _refresh_agent_statuses() -> None:
@@ -68,10 +82,19 @@ def setup_scheduler() -> None:
         coalesce=True,
         next_run_time=None,
     )
+    _scheduler.add_job(
+        _evaluate_alerts,
+        "interval",
+        seconds=settings.ALERT_EVALUATE_INTERVAL_SECONDS,
+        id="evaluate_alerts",
+        max_instances=1,
+        coalesce=True,
+    )
     _scheduler.start()
     logger.info(
-        "后台调度器已启动（状态刷新 %ss，指标清理 24h）",
+        "后台调度器已启动（状态刷新 %ss，指标清理 24h，告警评估 %ss）",
         settings.AGENT_STATUS_REFRESH_SECONDS,
+        settings.ALERT_EVALUATE_INTERVAL_SECONDS,
     )
 
 
