@@ -38,6 +38,7 @@ def get_overview(
         data={
             "server_stats": result["server_stats"],
             "avg_usage": result["avg_usage"],
+            "active_alerts": result["active_alerts"],
             "servers": [
                 {
                     "server": ServerOut.model_validate(item["server"]).model_dump(),

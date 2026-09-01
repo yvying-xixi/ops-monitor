@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.exceptions import AppException, ErrorCode
 from app.models import MonitorServerMetric, OpsServer
 from app.repositories import (
+    AlertEventRepository,
     MetricRepository,
     NetworkRepository,
     ServerRepository,
@@ -128,9 +129,10 @@ class MonitorService:
         return {"disks": disks, "networks": networks}
 
     def get_overview(self) -> dict:
-        """Dashboard 汇总：服务器状态统计、平均使用率与服务器列表。"""
+        """Dashboard 汇总：服务器状态统计、平均使用率、实时告警与服务器列表。"""
         server_stats = self.server_repo.get_status_counts()
         cpu, memory, disk = self.metric_repo.get_server_usage_avg()
+        active_alerts = AlertEventRepository(self.db).count_active()
         servers = self.server_repo.list_active()
         latest_map = self.metric_repo.get_latest_map([s.id for s in servers])
 
@@ -148,5 +150,6 @@ class MonitorService:
         return {
             "server_stats": server_stats,
             "avg_usage": {"cpu": cpu, "memory": memory, "disk": disk},
+            "active_alerts": active_alerts,
             "servers": server_list,
         }

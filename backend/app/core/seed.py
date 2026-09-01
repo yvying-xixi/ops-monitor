@@ -7,8 +7,13 @@ import logging
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.security import hash_password
-from app.models import SysPermission, SysRole, SysUser
-from app.repositories import PermissionRepository, RoleRepository, UserRepository
+from app.models import AlertRule, SysPermission, SysRole, SysUser
+from app.repositories import (
+    AlertRuleRepository,
+    PermissionRepository,
+    RoleRepository,
+    UserRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +31,20 @@ DEFAULT_PERMISSIONS = [
     {"permission_code": "user:delete", "permission_name": "删除用户", "permission_type": "API", "path": "/api/v1/users/{id}", "method": "DELETE"},
 ]
 
+# (rule_name, metric_type, severity, operator, threshold, duration_seconds)
+DEFAULT_ALERT_RULES = [
+    ("CPU 使用率过高", "CPU", "WARNING", "GT", 80.0, 300),
+    ("CPU 使用率严重过高", "CPU", "CRITICAL", "GT", 95.0, 120),
+    ("内存使用率过高", "MEMORY", "WARNING", "GT", 80.0, 300),
+    ("内存使用率严重过高", "MEMORY", "CRITICAL", "GT", 95.0, 120),
+    ("磁盘使用率过高", "DISK", "WARNING", "GT", 85.0, 300),
+    ("磁盘使用率严重过高", "DISK", "CRITICAL", "GT", 95.0, 120),
+    ("负载过高", "LOAD", "WARNING", "GT", 1.0, 300),
+    ("负载严重过高", "LOAD", "CRITICAL", "GT", 2.0, 120),
+    ("Agent 心跳丢失", "AGENT", "WARNING", "GT", 90.0, 0),
+    ("Agent 心跳严重丢失", "AGENT", "CRITICAL", "GT", 180.0, 0),
+]
+
 
 def init_seed_data() -> None:
     """幂等初始化种子数据。
@@ -39,6 +58,7 @@ def init_seed_data() -> None:
         role_repo = RoleRepository(db)
         permission_repo = PermissionRepository(db)
         user_repo = UserRepository(db)
+        alert_rule_repo = AlertRuleRepository(db)
 
         created_roles: dict[str, SysRole] = {}
         for item in DEFAULT_ROLES:
@@ -51,6 +71,21 @@ def init_seed_data() -> None:
         for item in DEFAULT_PERMISSIONS:
             if permission_repo.get_by_code(item["permission_code"]) is None:
                 permission_repo.create(SysPermission(**item))
+
+        for rule_name, metric_type, severity, operator, threshold, duration in DEFAULT_ALERT_RULES:
+            if alert_rule_repo.get_by_name(rule_name) is None:
+                alert_rule_repo.create(
+                    AlertRule(
+                        rule_name=rule_name,
+                        metric_type=metric_type,
+                        target_type="SERVER",
+                        severity=severity,
+                        operator=operator,
+                        threshold=threshold,
+                        duration_seconds=duration,
+                        enabled=1,
+                    )
+                )
 
         admin = user_repo.get_by_username(settings.SEED_ADMIN_USERNAME)
         if admin is None:
