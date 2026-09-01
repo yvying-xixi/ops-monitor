@@ -83,7 +83,7 @@ onUnmounted(() => clearInterval(timer))
     </el-row>
 
     <el-row :gutter="16" class="row">
-      <el-col :span="8">
+      <el-col :span="6">
         <el-card shadow="hover">
           <div class="stat">
             <div class="stat-label">CPU 平均使用率</div>
@@ -91,7 +91,7 @@ onUnmounted(() => clearInterval(timer))
           </div>
         </el-card>
       </el-col>
-      <el-col :span="8">
+      <el-col :span="6">
         <el-card shadow="hover">
           <div class="stat">
             <div class="stat-label">内存平均使用率</div>
@@ -99,11 +99,22 @@ onUnmounted(() => clearInterval(timer))
           </div>
         </el-card>
       </el-col>
-      <el-col :span="8">
+      <el-col :span="6">
         <el-card shadow="hover">
           <div class="stat">
             <div class="stat-label">磁盘平均使用率</div>
             <el-progress :percentage="Number(usagePercent(overview.avg_usage.disk))" :status="usageType(overview.avg_usage.disk)" :stroke-width="14" />
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover" class="alert-card" @click="router.push('/alerts')">
+          <div class="stat">
+            <div class="stat-label">实时告警</div>
+            <div class="stat-value" :style="{ color: overview.active_alerts > 0 ? '#f56c6c' : '#67c23a' }">
+              {{ overview.active_alerts || 0 }}
+            </div>
+            <div class="stat-tip">点击进入告警中心</div>
           </div>
         </el-card>
       </el-col>
@@ -149,6 +160,9 @@ onUnmounted(() => clearInterval(timer))
 .row {
   margin-top: 16px;
 }
+.alert-card {
+  cursor: pointer;
+}
 .stat-label {
   color: #909399;
   margin-bottom: 12px;
@@ -156,5 +170,10 @@ onUnmounted(() => clearInterval(timer))
 .stat-value {
   font-size: 28px;
   font-weight: 700;
+}
+.stat-tip {
+  color: #c0c4cc;
+  font-size: 12px;
+  margin-top: 4px;
 }
 </style>

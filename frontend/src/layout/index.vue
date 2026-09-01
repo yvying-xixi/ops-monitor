@@ -2,7 +2,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { computed } from 'vue'
 import { ElMessageBox } from 'element-plus'
-import { Monitor, Cpu, User, SwitchButton } from '@element-plus/icons-vue'
+import { Monitor, Cpu, Bell, User, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from '../store/user'
 
 const route = useRoute()
@@ -13,6 +13,7 @@ const menus = computed(() => {
   const items = [
     { index: '/dashboard', title: '监控总览', icon: Monitor },
     { index: '/servers', title: '服务器管理', icon: Cpu },
+    { index: '/alerts', title: '告警中心', icon: Bell },
   ]
   if (userStore.isAdmin) {
     items.push({ index: '/system/users', title: '用户管理', icon: User })
