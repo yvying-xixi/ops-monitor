@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings
 from app.core.database import SessionLocal
-from app.repositories import ServerRepository
+from app.repositories import MetricRepository, ServerRepository
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,22 @@ def _refresh_agent_statuses() -> None:
         db.close()
 
 
+def _cleanup_old_metrics() -> None:
+    """删除超过保留期的历史指标。"""
+    if not settings.METRIC_CLEANUP_ENABLED:
+        return
+    db = SessionLocal()
+    try:
+        deleted = MetricRepository(db).delete_older_than(settings.METRIC_RETENTION_DAYS)
+        db.commit()
+        if deleted:
+            logger.info("清理过期指标 %s 条（保留 %s 天）", deleted, settings.METRIC_RETENTION_DAYS)
+    except Exception:
+        logger.exception("指标清理失败")
+    finally:
+        db.close()
+
+
 def setup_scheduler() -> None:
     """启动后台调度器（仅随应用 lifespan 调用一次）。"""
     global _scheduler
@@ -43,8 +59,20 @@ def setup_scheduler() -> None:
         max_instances=1,
         coalesce=True,
     )
+    _scheduler.add_job(
+        _cleanup_old_metrics,
+        "interval",
+        hours=24,
+        id="cleanup_old_metrics",
+        max_instances=1,
+        coalesce=True,
+        next_run_time=None,
+    )
     _scheduler.start()
-    logger.info("后台调度器已启动（Agent 状态刷新周期 %ss）", settings.AGENT_STATUS_REFRESH_SECONDS)
+    logger.info(
+        "后台调度器已启动（状态刷新 %ss，指标清理 24h）",
+        settings.AGENT_STATUS_REFRESH_SECONDS,
+    )
 
 
 def shutdown_scheduler() -> None:

@@ -6,7 +6,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import case, select, update
+from sqlalchemy import case, func, select, update
 
 from app.models import (
     OpsAgentHeartbeat,
@@ -118,6 +118,27 @@ class ServerRepository(BaseRepository[OpsServer]):
         )
         result = self.db.execute(stmt)
         return result.rowcount or 0
+
+    def get_status_counts(self) -> dict:
+        """统计各 Agent 状态的服务器数量。
+
+        Returns:
+            `{ONLINE, WARNING, OFFLINE, UNKNOWN, total}` 计数。
+        """
+        stmt = (
+            select(OpsServer.agent_status, func.count())
+            .where(OpsServer.status == 1, OpsServer.deleted_at.is_(None))
+            .group_by(OpsServer.agent_status)
+        )
+        counts = {"ONLINE": 0, "WARNING": 0, "OFFLINE": 0, "UNKNOWN": 0}
+        for status, count in self.db.execute(stmt):
+            counts[status] = count
+        counts["total"] = sum(counts.values())
+        return counts
+
+    def list_active(self) -> list[OpsServer]:
+        """查询全部启用且未删除的服务器。"""
+        return self.list_all(status=1)
 
 
 class AgentTokenRepository(BaseRepository[OpsAgentToken]):
