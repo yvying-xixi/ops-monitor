@@ -152,6 +152,7 @@ docker compose down         # 停止
 | [docs/04-agent.md](docs/04-agent.md) | Agent 协议：注册、心跳、指标上报、部署 |
 | [docs/05-phase2-auth.md](docs/05-phase2-auth.md) | 阶段二用户权限模块设计：决策、错误码、接口、实现要点 |
 | [docs/06-phase4-monitor.md](docs/06-phase4-monitor.md) | 阶段四监控中心：指标查询/聚合差分、Dashboard、前端结构 |
+| [docs/07-phase5-alert.md](docs/07-phase5-alert.md) | 阶段五告警中心：告警引擎、状态机、默认规则、接口 |
 
 ## 开发进度
 
@@ -169,6 +170,9 @@ docker compose down         # 停止
 - [x] 阶段四 · 监控中心：服务器详情指标查询、Dashboard、ECharts 图表
   - [x] 后端：metrics latest/history/summary（分桶聚合 + 网络速率差分）、dashboard overview、auth/me、roles
   - [x] 前端：登录/布局/路由守卫、Dashboard、服务器列表与详情、用户管理
-- [ ] 阶段五 · 告警中心：规则、事件、确认、恢复
+- [x] 阶段五 · 告警中心：规则、事件、确认、恢复
+  - [x] 告警引擎：定时评估、PENDING→FIRING→ACKNOWLEDGED→RESOLVED、去重、恢复自动解除
+  - [x] 接口：事件列表/详情/确认/恢复、规则 CRUD；Dashboard 实时告警卡片
+  - [x] 前端：告警中心（事件 + 规则管理）
 - [ ] 阶段六 · 自动化运维：服务管理、批量任务、任务日志
 - [ ] 阶段七 · 部署优化：镜像、Compose、Nginx、CI/CD
