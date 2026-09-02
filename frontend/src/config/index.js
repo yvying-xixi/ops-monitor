@@ -38,6 +38,28 @@ export const ALERT_METRIC_TYPES = ['CPU', 'MEMORY', 'DISK', 'LOAD', 'AGENT']
 /** 告警操作符选项 */
 export const ALERT_OPERATORS = ['GT', 'GTE', 'LT', 'LTE', 'EQ']
 
+/** 服务运行状态标签 */
+export const SERVICE_STATUS_MAP = {
+  RUNNING: { type: 'success', label: '运行中' },
+  STOPPED: { type: 'info', label: '已停止' },
+  FAILED: { type: 'danger', label: '异常' },
+  UNKNOWN: { type: 'info', label: '未知' },
+}
+
+/** 任务状态标签 */
+export const TASK_STATUS_MAP = {
+  CREATED: { type: 'info', label: '待确认' },
+  PENDING: { type: 'warning', label: '等待执行' },
+  RUNNING: { type: 'primary', label: '执行中' },
+  SUCCESS: { type: 'success', label: '成功' },
+  FAILED: { type: 'danger', label: '失败' },
+  TIMEOUT: { type: 'danger', label: '超时' },
+  CANCELLED: { type: 'info', label: '已取消' },
+}
+
+/** 执行状态标签 */
+export const EXEC_STATUS_MAP = TASK_STATUS_MAP
+
 /** 角色编码常量 */
 export const ROLE = {
   SYSTEM_ADMIN: 'SYSTEM_ADMIN',

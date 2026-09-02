@@ -1,22 +1,71 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getLatestMetricApi, getServerAssetsApi, getSummaryMetricApi } from '../../api/monitor'
+import { createTaskApi, listServerServicesApi, updateServiceWhitelistApi } from '../../api/task'
+import { useUserStore } from '../../store/user'
 import MetricChart from '../../components/MetricChart.vue'
-import { AGENT_STATUS_MAP, TIME_RANGES } from '../../config'
+import { AGENT_STATUS_MAP, SERVICE_STATUS_MAP, TIME_RANGES } from '../../config'
 import { formatBytes, formatTime, formatUptime } from '../../utils/format'
 
 const route = useRoute()
+const router = useRouter()
 const serverId = Number(route.params.id)
+const userStore = useUserStore()
 
 const latest = ref(null)
 const assets = ref({ disks: [], networks: [] })
+const services = ref([])
 const timeRange = ref('1h')
 const summary = ref(null)
 let timer = null
 
-const statusLabel = computed(() => AGENT_STATUS_MAP[latest.value?.server?.agent_status] || AGENT_STATUS_MAP.UNKNOWN)
-const serverInfo = computed(() => latest.value?.server || {})
+const canOperate = () => userStore.hasRole('SYSTEM_ADMIN', 'OPS_ENGINEER')
+
+function serviceStatus(s) {
+  return SERVICE_STATUS_MAP[s] || { type: 'info', label: s }
+}
+
+async function loadServices() {
+  services.value = await listServerServicesApi(serverId)
+}
+
+async function serviceAction(service, action) {
+  const label = { START: '启动', STOP: '停止', RESTART: '重启' }[action]
+  if (action !== 'START') {
+    await ElMessageBox.confirm(
+      `确定${label}服务「${service.service_name}」吗？该操作会在远端执行并记录审计。`,
+      '高风险操作确认',
+      { type: 'warning', confirmButtonText: `${label}` },
+    )
+  }
+  await createTaskApi({
+    task_name: `${label} ${service.service_name}`,
+    task_type: 'SERVICE_ACTION',
+    action,
+    service_name: service.service_name,
+    server_ids: [serverId],
+  })
+  ElMessage.success('任务已提交，请到任务中心查看结果')
+}
+
+async function viewLogs(service) {
+  await createTaskApi({
+    task_name: `查看 ${service.service_name} 日志`,
+    task_type: 'SERVICE_LOG',
+    action: 'LOGS',
+    service_name: service.service_name,
+    server_ids: [serverId],
+  })
+  ElMessage.success('日志任务已提交，请到任务中心查看结果')
+}
+
+async function toggleWhitelist(service) {
+  await updateServiceWhitelistApi(serverId, service.id, service.is_whitelisted === 1 ? 0 : 1)
+  ElMessage.success('白名单已更新')
+  await loadServices()
+}
 
 async function loadLatest() {
   latest.value = await getLatestMetricApi(serverId)
@@ -29,6 +78,9 @@ async function loadAssets() {
 async function loadSummary() {
   summary.value = await getSummaryMetricApi(serverId, timeRange.value)
 }
+
+const statusLabel = computed(() => AGENT_STATUS_MAP[latest.value?.server?.agent_status] || AGENT_STATUS_MAP.UNKNOWN)
+const serverInfo = computed(() => latest.value?.server || {})
 
 function metricSeries(field, names) {
   const xAxis = summary.value.points.map((p) => new Date(p.time).toLocaleTimeString('zh-CN', { hour12: false }))
@@ -72,6 +124,7 @@ function refreshAll() {
 onMounted(() => {
   refreshAll()
   loadAssets()
+  loadServices()
   timer = setInterval(() => loadLatest(), 10000)
 })
 onUnmounted(() => clearInterval(timer))
@@ -147,6 +200,46 @@ onUnmounted(() => clearInterval(timer))
       <el-row :gutter="16" class="row">
         <el-col :span="12"><MetricChart v-if="loadChart" title="Load Average" :x-axis="loadChart.xAxis" :series="loadChart.series" /></el-col>
       </el-row>
+    </el-card>
+
+    <el-card shadow="never" class="row">
+      <template #header>服务管理</template>
+      <el-table :data="services">
+        <el-table-column prop="service_name" label="服务名称" min-width="120" />
+        <el-table-column prop="display_name" label="展示名" min-width="110" />
+        <el-table-column prop="service_type" label="类型" width="90" />
+        <el-table-column label="状态" width="90">
+          <template #default="{ row }">
+            <el-tag :type="serviceStatus(row.current_status).type" size="small">{{ serviceStatus(row.current_status).label }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="关键服务" width="90">
+          <template #default="{ row }">
+            <el-tag v-if="row.is_critical === 1" type="danger" size="small">关键</el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="白名单" width="90">
+          <template #default="{ row }">
+            <el-switch
+              :model-value="row.is_whitelisted === 1"
+              :disabled="!userStore.isAdmin"
+              @change="toggleWhitelist(row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="最后检查" min-width="150">
+          <template #default="{ row }">{{ formatTime(row.last_checked_at) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" min-width="220" fixed="right" v-if="canOperate()">
+          <template #default="{ row }">
+            <el-button link type="success" :disabled="row.current_status === 'RUNNING' || row.is_whitelisted !== 1" @click="serviceAction(row, 'START')">启动</el-button>
+            <el-button link type="warning" :disabled="row.current_status !== 'RUNNING' || row.is_whitelisted !== 1" @click="serviceAction(row, 'STOP')">停止</el-button>
+            <el-button link type="danger" :disabled="row.is_whitelisted !== 1" @click="serviceAction(row, 'RESTART')">重启</el-button>
+            <el-button link type="primary" @click="viewLogs(row)">日志</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-card>
 
     <el-card shadow="never" class="row">

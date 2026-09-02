@@ -118,9 +118,11 @@ class TaskService:
                 select(OpsServer.id, OpsServer.hostname).where(OpsServer.id.in_(server_ids))
             ).all():
                 hostnames[sid] = hostname
-        return {
-            "task": task,
-            "executions": [
+
+        execution_list = []
+        for e in executions:
+            logs = self.log_repo.list_by_execution(e.id)
+            execution_list.append(
                 {
                     "id": e.id,
                     "task_id": e.task_id,
@@ -133,9 +135,12 @@ class TaskService:
                     "started_at": e.started_at,
                     "finished_at": e.finished_at,
                     "duration_ms": e.duration_ms,
+                    "logs": [log.log_content for log in logs],
                 }
-                for e in executions
-            ],
+            )
+        return {
+            "task": task,
+            "executions": execution_list,
         }
 
     def cancel_task(self, task_id: int) -> OpsTask:

@@ -39,6 +39,12 @@ const routes = [
         meta: { title: '告警中心' },
       },
       {
+        path: 'tasks',
+        name: 'Tasks',
+        component: () => import('../views/task/index.vue'),
+        meta: { title: '任务中心' },
+      },
+      {
         path: 'system/users',
         name: 'Users',
         component: () => import('../views/system/user.vue'),
