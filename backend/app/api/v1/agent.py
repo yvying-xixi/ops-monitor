@@ -8,7 +8,13 @@ from sqlalchemy.orm import Session
 from app.api.v1.deps import get_agent_server
 from app.core.database import get_db
 from app.models import OpsServer
-from app.schemas.agent import AssetsRequest, HeartbeatRequest, MetricsRequest, RegisterRequest
+from app.schemas.agent import (
+    AssetsRequest,
+    HeartbeatRequest,
+    MetricsRequest,
+    RegisterRequest,
+    ServicesRequest,
+)
 from app.services.agent_service import AgentService
 from app.utils.request import get_client_ip
 from app.utils.response import success
@@ -58,4 +64,15 @@ def sync_assets(
 ):
     """Agent 磁盘/网卡资产同步接口。"""
     result = AgentService(db).sync_assets(server, data)
+    return success(data=result)
+
+
+@router.post("/services", summary="Agent 服务状态同步")
+def sync_services(
+    data: ServicesRequest,
+    server: OpsServer = Depends(get_agent_server),
+    db: Session = Depends(get_db),
+):
+    """Agent 服务状态同步接口。"""
+    result = AgentService(db).sync_services(server, data)
     return success(data=result)

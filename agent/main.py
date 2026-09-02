@@ -7,9 +7,16 @@ import threading
 import time
 
 from agent.collector import collect_assets, collect_metrics, collect_system_info
+from agent.collector.service import collect_services
 from agent.config.config import AgentConfig, load_config
 from agent.reporter.client import AgentClient
-from agent.reporter.report import register, send_assets, send_heartbeat, send_metrics
+from agent.reporter.report import (
+    register,
+    send_assets,
+    send_heartbeat,
+    send_metrics,
+    send_services,
+)
 from agent.utils.logger import setup_logger
 
 AGENT_VERSION = "1.0.0"
@@ -104,8 +111,13 @@ class Agent:
                     server_id=self.server_id,
                     assets=collect_assets(),
                 )
+                send_services(
+                    self._client,
+                    server_id=self.server_id,
+                    services=collect_services(self.config.collect.services),
+                )
             except Exception as exc:
-                self.logger.warning("资产同步失败: %s", exc)
+                self.logger.warning("资产/服务同步失败: %s", exc)
             self._sleep_interval(self.config.collect.assets_interval)
 
     def _sleep_interval(self, seconds: int) -> None:

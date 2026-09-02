@@ -21,10 +21,15 @@ class CollectConfig(BaseModel):
 
     heartbeat_interval: int = Field(30, ge=5, description="心跳周期（秒）")
     metrics_interval: int = Field(10, ge=2, description="指标采集周期（秒）")
-    assets_interval: int = Field(60, ge=10, description="资产同步周期（秒）")
+    assets_interval: int = Field(60, ge=10, description="资产/服务同步周期（秒）")
+    task_poll_interval: int = Field(5, ge=2, description="任务轮询周期（秒）")
     retry_max_seconds: int = Field(60, ge=1, description="退避重试封顶（秒）")
     connect_timeout: float = Field(5.0, gt=0, description="连接超时（秒）")
     request_timeout: float = Field(10.0, gt=0, description="请求超时（秒）")
+    services: list[str] = Field(
+        default_factory=lambda: ["nginx", "docker", "ssh"],
+        description="需要监控与受控管理的服务白名单",
+    )
 
 
 class LogConfig(BaseModel):

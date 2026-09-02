@@ -78,3 +78,20 @@ def send_assets(client: AgentClient, *, server_id: int, assets: dict) -> dict:
     """
     payload = {"server_id": server_id, "timestamp": _utcnow_iso(), **assets}
     return client.post("/api/v1/agent/assets", json=payload)
+
+
+def send_services(client: AgentClient, *, server_id: int, services: list[dict]) -> dict:
+    """同步服务状态。
+
+    Args:
+        client: 上报客户端。
+        server_id: 服务器 ID。
+        services: `[{service_name, current_status}]` 列表。
+
+    Returns:
+        服务端返回的 `{server_id, synced_at}`。
+    """
+    return client.post(
+        "/api/v1/agent/services",
+        json={"server_id": server_id, "timestamp": _utcnow_iso(), "services": services},
+    )

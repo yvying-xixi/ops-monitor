@@ -46,3 +46,24 @@ class AgentTokenResponse(BaseModel):
     token_prefix: str = Field(..., description="Token 前缀，用于识别")
     token: str = Field(..., description="Token 明文，仅此一次展示，请妥善保存")
     created_at: datetime = Field(..., description="创建时间")
+
+
+class ServerServiceOut(BaseModel):
+    """服务资产响应模型。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="服务资产 ID")
+    service_name: str = Field(..., description="服务名称")
+    display_name: str | None = Field(None, description="展示名称")
+    service_type: str = Field(..., description="SYSTEMD/DOCKER/CUSTOM")
+    is_whitelisted: int = Field(..., description="是否允许受控操作")
+    is_critical: int = Field(..., description="是否关键服务")
+    current_status: str | None = Field(None, description="RUNNING/STOPPED/FAILED/UNKNOWN")
+    last_checked_at: datetime | None = Field(None, description="最后检查时间")
+
+
+class ServiceWhitelistUpdate(BaseModel):
+    """更新服务白名单请求体。"""
+
+    is_whitelisted: int = Field(..., ge=0, le=1, description="0 禁止受控操作，1 允许")

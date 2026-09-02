@@ -74,3 +74,18 @@ class AssetsRequest(BaseModel):
     timestamp: datetime | None = Field(None, description="Agent 侧时间")
     disks: list[DiskAsset] = Field(default_factory=list, description="磁盘列表")
     networks: list[NetworkAsset] = Field(default_factory=list, description="网卡列表")
+
+
+class ServiceStatus(BaseModel):
+    """服务状态上报项。"""
+
+    service_name: str = Field(..., max_length=64, description="服务名称")
+    current_status: str = Field(..., description="RUNNING/STOPPED/FAILED/UNKNOWN")
+
+
+class ServicesRequest(BaseModel):
+    """Agent 服务状态同步请求体。"""
+
+    server_id: int | None = Field(None, description="服务器 ID，用于交叉校验")
+    timestamp: datetime | None = Field(None, description="Agent 侧时间")
+    services: list[ServiceStatus] = Field(default_factory=list, description="服务状态列表")

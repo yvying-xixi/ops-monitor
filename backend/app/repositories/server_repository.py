@@ -14,6 +14,7 @@ from app.models import (
     OpsServer,
     OpsServerDisk,
     OpsServerNetwork,
+    OpsServerService,
 )
 from app.repositories.base import BaseRepository
 
@@ -220,6 +221,49 @@ class HeartbeatRepository(BaseRepository[OpsAgentHeartbeat]):
                 collected_at=collected_at or _utcnow(),
             )
         )
+
+
+class ServiceRepository(BaseRepository[OpsServerService]):
+    """服务资产仓储。"""
+
+    model = OpsServerService
+
+    def upsert_status(self, server_id: int, service_name: str, current_status: str) -> OpsServerService:
+        """按 (server_id, service_name) 幂等写入服务状态。"""
+        existing = self.db.scalars(
+            select(OpsServerService).where(
+                OpsServerService.server_id == server_id,
+                OpsServerService.service_name == service_name,
+            )
+        ).first()
+        now = _utcnow()
+        if existing:
+            existing.current_status = current_status
+            existing.last_checked_at = now
+            self.db.flush()
+            return existing
+        return self.create(
+            OpsServerService(
+                server_id=server_id,
+                service_name=service_name,
+                display_name=service_name,
+                service_type="SYSTEMD",
+                is_whitelisted=1,
+                current_status=current_status,
+                last_checked_at=now,
+            )
+        )
+
+    def get_by_server_service(self, server_id: int, service_name: str) -> OpsServerService | None:
+        return self.get_by(server_id=server_id, service_name=service_name)
+
+    def list_by_server(self, server_id: int) -> list[OpsServerService]:
+        return self.list_all(server_id=server_id)
+
+    def set_whitelist(self, service: OpsServerService, is_whitelisted: int) -> OpsServerService:
+        service.is_whitelisted = is_whitelisted
+        self.db.flush()
+        return service
 
 
 class DiskRepository(BaseRepository[OpsServerDisk]):

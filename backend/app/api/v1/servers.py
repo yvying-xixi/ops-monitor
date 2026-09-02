@@ -8,7 +8,13 @@ from sqlalchemy.orm import Session
 from app.api.v1.deps import get_current_user, require_roles
 from app.core.database import get_db
 from app.models import SysUser
-from app.schemas.server import AgentTokenResponse, ServerCreate, ServerOut
+from app.schemas.server import (
+    AgentTokenResponse,
+    ServerCreate,
+    ServerOut,
+    ServerServiceOut,
+    ServiceWhitelistUpdate,
+)
 from app.services.server_service import ServerService
 from app.utils.response import page, success
 
@@ -53,3 +59,30 @@ def generate_agent_token(
     """为服务器生成 Agent 注册凭证（明文仅返回一次）。"""
     result: AgentTokenResponse = ServerService(db).generate_agent_token(server_id, token_name)
     return success(data=result.model_dump(), message="凭证已生成，请妥善保存")
+
+
+@router.get("/{server_id}/services", summary="服务器服务列表")
+def list_services(
+    server_id: int,
+    _user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """查询服务器服务资产与状态。"""
+    services = ServerService(db).list_services(server_id)
+    return success(data=[ServerServiceOut.model_validate(s).model_dump() for s in services])
+
+
+@router.put(
+    "/{server_id}/services/{service_id}/whitelist",
+    summary="设置服务操作白名单",
+    dependencies=admin_only,
+)
+def update_service_whitelist(
+    server_id: int,
+    service_id: int,
+    data: ServiceWhitelistUpdate,
+    db: Session = Depends(get_db),
+):
+    """更新服务是否允许受控操作。"""
+    service = ServerService(db).update_service_whitelist(server_id, service_id, data.is_whitelisted)
+    return success(data=ServerServiceOut.model_validate(service).model_dump(), message="已更新")

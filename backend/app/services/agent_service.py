@@ -14,8 +14,14 @@ from app.repositories import (
     MetricRepository,
     ServerRepository,
 )
-from app.repositories.server_repository import DiskRepository, NetworkRepository
-from app.schemas.agent import AssetsRequest, HeartbeatRequest, MetricsRequest, RegisterRequest
+from app.repositories.server_repository import DiskRepository, NetworkRepository, ServiceRepository
+from app.schemas.agent import (
+    AssetsRequest,
+    HeartbeatRequest,
+    MetricsRequest,
+    RegisterRequest,
+    ServicesRequest,
+)
 
 MAX_TIME_SKEW_SECONDS = 300
 
@@ -35,6 +41,7 @@ class AgentService:
         self.metric_repo = MetricRepository(db)
         self.disk_repo = DiskRepository(db)
         self.network_repo = NetworkRepository(db)
+        self.service_repo = ServiceRepository(db)
 
     def register(self, data: RegisterRequest, *, ip: str | None = None) -> dict:
         """Agent 注册：校验凭证并回写系统信息。
@@ -161,6 +168,14 @@ class AgentService:
             if network.interface_name not in network_keys:
                 self.network_repo.delete(network)
 
+        self.db.commit()
+        return {"server_id": server.id, "synced_at": _utcnow().isoformat()}
+
+    def sync_services(self, server: OpsServer, data: ServicesRequest) -> dict:
+        """同步服务状态（幂等 upsert）。"""
+        self._assert_server_match(server, data.server_id)
+        for item in data.services:
+            self.service_repo.upsert_status(server.id, item.service_name, item.current_status)
         self.db.commit()
         return {"server_id": server.id, "synced_at": _utcnow().isoformat()}
 

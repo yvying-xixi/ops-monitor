@@ -5,8 +5,9 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.exceptions import AppException, ErrorCode
-from app.models import OpsServer
+from app.models import OpsServer, OpsServerService
 from app.repositories import AgentTokenRepository, ServerRepository
+from app.repositories.server_repository import ServiceRepository
 from app.schemas.server import AgentTokenResponse, ServerCreate
 
 
@@ -17,6 +18,7 @@ class ServerService:
         self.db = db
         self.server_repo = ServerRepository(db)
         self.token_repo = AgentTokenRepository(db)
+        self.service_repo = ServiceRepository(db)
 
     def create_server(self, data: ServerCreate, *, created_by: int | None = None) -> OpsServer:
         """创建服务器资产。
@@ -102,3 +104,20 @@ class ServerService:
             token=plaintext,
             created_at=token.created_at,
         )
+
+    def list_services(self, server_id: int) -> list[OpsServerService]:
+        """查询服务器的服务资产。"""
+        self.get_server(server_id)
+        return self.service_repo.list_by_server(server_id)
+
+    def update_service_whitelist(
+        self, server_id: int, service_id: int, is_whitelisted: int
+    ) -> OpsServerService:
+        """更新服务是否允许受控操作。"""
+        self.get_server(server_id)
+        service = self.service_repo.get(service_id)
+        if service is None or service.server_id != server_id:
+            raise AppException(ErrorCode.SERVER_NOT_FOUND, "服务不存在", http_status=404)
+        self.service_repo.set_whitelist(service, is_whitelisted)
+        self.db.commit()
+        return service
