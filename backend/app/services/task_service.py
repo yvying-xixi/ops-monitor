@@ -200,14 +200,18 @@ class TaskService:
             self.execution_repo.finish(
                 execution, status="SUCCESS", exit_code=exit_code, result_text=result_text
             )
-            if logs:
-                self.log_repo.record(execution.id, logs, "INFO")
+            self.log_repo.record(
+                execution.id,
+                logs or result_text or "执行成功",
+                "INFO",
+            )
         else:
             self.execution_repo.finish(
                 execution, status="FAILED", exit_code=exit_code, error_message=error_message
             )
-            if error_message:
-                self.log_repo.record(execution.id, error_message, "ERROR")
+            self.log_repo.record(
+                execution.id, error_message or "执行失败", "ERROR"
+            )
 
         task = self.get_task_entity(execution.task_id)
         self._aggregate_task_status(task)
