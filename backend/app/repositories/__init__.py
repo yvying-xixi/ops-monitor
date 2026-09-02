@@ -12,6 +12,13 @@ from app.repositories.server_repository import (
     HeartbeatRepository,
     NetworkRepository,
     ServerRepository,
+    ServiceRepository,
+)
+from app.repositories.task_repository import (
+    TaskExecutionRepository,
+    TaskLogRepository,
+    TaskRepository,
+    TaskTargetRepository,
 )
 from app.repositories.user_repository import (
     PermissionRepository,
@@ -30,8 +37,13 @@ __all__ = [
     "HeartbeatRepository",
     "DiskRepository",
     "NetworkRepository",
+    "ServiceRepository",
     "MetricRepository",
     "AlertRuleRepository",
     "AlertEventRepository",
     "AlertEventLogRepository",
+    "TaskRepository",
+    "TaskTargetRepository",
+    "TaskExecutionRepository",
+    "TaskLogRepository",
 ]

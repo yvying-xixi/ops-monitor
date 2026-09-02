@@ -14,8 +14,10 @@ from app.schemas.agent import (
     MetricsRequest,
     RegisterRequest,
     ServicesRequest,
+    TaskResultRequest,
 )
 from app.services.agent_service import AgentService
+from app.services.task_service import TaskService
 from app.utils.request import get_client_ip
 from app.utils.response import success
 
@@ -76,3 +78,32 @@ def sync_services(
     """Agent 服务状态同步接口。"""
     result = AgentService(db).sync_services(server, data)
     return success(data=result)
+
+
+@router.get("/tasks/pending", summary="Agent 拉取待执行任务")
+def fetch_pending_tasks(
+    server: OpsServer = Depends(get_agent_server),
+    db: Session = Depends(get_db),
+):
+    """Agent 轮询拉取本服务器待执行任务（领取后置 RUNNING）。"""
+    tasks = TaskService(db).fetch_pending(server)
+    return success(data=tasks)
+
+
+@router.post("/task/result", summary="Agent 回传任务执行结果")
+def report_task_result(
+    data: TaskResultRequest,
+    server: OpsServer = Depends(get_agent_server),
+    db: Session = Depends(get_db),
+):
+    """Agent 回传任务执行结果。"""
+    TaskService(db).report_result(
+        server,
+        execution_id=data.execution_id,
+        status=data.status,
+        exit_code=data.exit_code,
+        result_text=data.result_text,
+        error_message=data.error_message,
+        logs=data.logs,
+    )
+    return success(message="已记录")

@@ -89,3 +89,14 @@ class ServicesRequest(BaseModel):
     server_id: int | None = Field(None, description="服务器 ID，用于交叉校验")
     timestamp: datetime | None = Field(None, description="Agent 侧时间")
     services: list[ServiceStatus] = Field(default_factory=list, description="服务状态列表")
+
+
+class TaskResultRequest(BaseModel):
+    """Agent 任务执行结果回传请求体。"""
+
+    execution_id: int = Field(..., description="执行记录 ID")
+    status: str = Field(..., description="SUCCESS/FAILED")
+    exit_code: int | None = Field(None, description="进程退出码")
+    result_text: str | None = Field(None, description="执行结果")
+    error_message: str | None = Field(None, description="错误信息")
+    logs: str | None = Field(None, description="执行日志")

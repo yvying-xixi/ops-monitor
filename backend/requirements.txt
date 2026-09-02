@@ -9,6 +9,7 @@ pyjwt==2.9.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 apscheduler==3.10.4
+croniter==6.2.4
 psutil==5.9.8
 python-multipart==0.0.9
 pytest==8.3.2

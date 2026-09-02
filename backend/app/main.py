@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import agent, alerts, auth, dashboard, health, monitor, roles, servers, users
+from app.api.v1 import agent, alerts, auth, dashboard, health, monitor, roles, servers, tasks, users
 from app.core.config import settings
 from app.core.scheduler import setup_scheduler, shutdown_scheduler
 from app.core.seed import init_seed_data
@@ -51,6 +51,7 @@ app.include_router(alerts.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(roles.router, prefix="/api/v1")
 app.include_router(servers.router, prefix="/api/v1")
+app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(monitor.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(agent.router, prefix="/api/v1")

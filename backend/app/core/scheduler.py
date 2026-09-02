@@ -10,10 +10,37 @@ from app.core.config import settings
 from app.core.database import SessionLocal
 from app.repositories import MetricRepository, ServerRepository
 from app.services.alert_engine import AlertEngine
+from app.services.task_service import TaskService
 
 logger = logging.getLogger(__name__)
 
 _scheduler: BackgroundScheduler | None = None
+
+
+def _scan_task_timeouts() -> None:
+    """将超时执行的任务置为 TIMEOUT。"""
+    db = SessionLocal()
+    try:
+        updated = TaskService(db).scan_timeouts()
+        if updated:
+            logger.info("任务超时扫描：%s 个执行超时", updated)
+    except Exception:
+        logger.exception("任务超时扫描失败")
+    finally:
+        db.close()
+
+
+def _fire_due_cron_tasks() -> None:
+    """触发到期的 CRON 任务。"""
+    db = SessionLocal()
+    try:
+        fired = TaskService(db).fire_due_cron()
+        if fired:
+            logger.info("定时任务触发：%s 个", fired)
+    except Exception:
+        logger.exception("定时任务触发失败")
+    finally:
+        db.close()
 
 
 def _evaluate_alerts() -> None:
@@ -90,9 +117,25 @@ def setup_scheduler() -> None:
         max_instances=1,
         coalesce=True,
     )
+    _scheduler.add_job(
+        _scan_task_timeouts,
+        "interval",
+        seconds=30,
+        id="scan_task_timeouts",
+        max_instances=1,
+        coalesce=True,
+    )
+    _scheduler.add_job(
+        _fire_due_cron_tasks,
+        "interval",
+        seconds=30,
+        id="fire_due_cron_tasks",
+        max_instances=1,
+        coalesce=True,
+    )
     _scheduler.start()
     logger.info(
-        "后台调度器已启动（状态刷新 %ss，指标清理 24h，告警评估 %ss）",
+        "后台调度器已启动（状态刷新 %ss，指标清理 24h，告警评估 %ss，任务超时/定时 30s）",
         settings.AGENT_STATUS_REFRESH_SECONDS,
         settings.ALERT_EVALUATE_INTERVAL_SECONDS,
     )
