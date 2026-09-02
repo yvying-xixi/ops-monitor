@@ -95,3 +95,35 @@ def send_services(client: AgentClient, *, server_id: int, services: list[dict]) 
         "/api/v1/agent/services",
         json={"server_id": server_id, "timestamp": _utcnow_iso(), "services": services},
     )
+
+
+def report_task_result(
+    client: AgentClient,
+    *,
+    execution_id: int,
+    status: str,
+    result_text: str | None = None,
+    error_message: str | None = None,
+    logs: str | None = None,
+) -> dict:
+    """回传任务执行结果。
+
+    Args:
+        client: 上报客户端。
+        execution_id: 执行记录 ID。
+        status: SUCCESS/FAILED。
+        result_text: 执行结果文本。
+        error_message: 错误信息。
+        logs: 执行日志。
+
+    Returns:
+        服务端返回。
+    """
+    payload = {
+        "execution_id": execution_id,
+        "status": status,
+        "result_text": result_text,
+        "error_message": error_message,
+        "logs": logs,
+    }
+    return client.post("/api/v1/agent/task/result", json=payload)

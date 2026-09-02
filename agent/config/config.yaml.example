@@ -7,9 +7,14 @@ collect:
   heartbeat_interval: 30
   metrics_interval: 10
   assets_interval: 60
+  task_poll_interval: 5
   retry_max_seconds: 60
   connect_timeout: 5
   request_timeout: 10
+  services:
+    - "nginx"
+    - "docker"
+    - "ssh"
 
 log:
   level: "INFO"

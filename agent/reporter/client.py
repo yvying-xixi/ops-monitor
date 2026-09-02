@@ -56,10 +56,27 @@ class AgentClient:
         Raises:
             ReporterError: 服务端返回非 2xx 或重试后仍失败。
         """
+        return self._request("POST", path, json=json)
+
+    def get(self, path: str) -> dict:
+        """GET 请求并指数退避重试。
+
+        Args:
+            path: 接口路径。
+
+        Returns:
+            响应中的 `data` 字段。
+
+        Raises:
+            ReporterError: 服务端返回非 2xx 或重试后仍失败。
+        """
+        return self._request("GET", path)
+
+    def _request(self, method: str, path: str, json: dict | None = None) -> dict:
         delay = 1.0
         while True:
             try:
-                response = self._client.post(path, json=json)
+                response = self._client.request(method, path, json=json)
                 payload = response.json()
             except (httpx.HTTPError, ValueError) as exc:
                 logger.warning("请求 %s 失败: %s，%ss 后重试", path, exc, delay)
@@ -73,8 +90,10 @@ class AgentClient:
                 message = payload.get("message", "unknown error")
                 raise ReporterError(f"{path} 返回 {response.status_code}: {message}")
 
-            logger.info("上报 %s 成功", path)
-            return payload.get("data") or payload
+            logger.info("%s %s 成功", method, path)
+            if "data" in payload:
+                return payload["data"]
+            return payload
 
     def __enter__(self) -> "AgentClient":
         return self

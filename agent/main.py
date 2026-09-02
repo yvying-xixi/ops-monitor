@@ -18,6 +18,7 @@ from agent.reporter.report import (
     send_services,
 )
 from agent.utils.logger import setup_logger
+from agent.worker import TaskWorker
 
 AGENT_VERSION = "1.0.0"
 
@@ -45,6 +46,9 @@ class Agent:
             threading.Thread(target=self._heartbeat_loop, name="heartbeat", daemon=True),
             threading.Thread(target=self._metrics_loop, name="metrics", daemon=True),
             threading.Thread(target=self._assets_loop, name="assets", daemon=True),
+            threading.Thread(
+                target=self._task_worker_loop, name="task-worker", daemon=True
+            ),
         ]
         for t in threads:
             t.start()
@@ -119,6 +123,16 @@ class Agent:
             except Exception as exc:
                 self.logger.warning("资产/服务同步失败: %s", exc)
             self._sleep_interval(self.config.collect.assets_interval)
+
+    def _task_worker_loop(self) -> None:
+        worker = TaskWorker(
+            self._client,
+            server_id=self.server_id,
+            allowed_services=self.config.collect.services,
+            poll_interval=self.config.collect.task_poll_interval,
+            stop=self._stop,
+        )
+        worker.run()
 
     def _sleep_interval(self, seconds: int) -> None:
         self._stop.wait(seconds)
