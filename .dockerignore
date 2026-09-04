@@ -1,0 +1,28 @@
+# Git / CI
+.git
+.github
+.gitignore
+
+# Python
+.venv
+**/__pycache__
+*.py[cod]
+**/.pytest_cache
+backend/.venv
+agent/.venv
+
+# Node
+frontend/node_modules
+**/dist
+frontend/dist
+
+# 环境与密钥
+.env
+.env.local
+**/.env
+*.pem
+*.key
+
+# 本地数据
+deploy/mysql/data
+deploy/redis/data
