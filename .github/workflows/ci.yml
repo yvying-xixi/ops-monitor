@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: ops_monitor
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ""
+      DB_NAME: ops_monitor
+      REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Bootstrap database schema
+        run: |
+          python - <<'PY'
+          import re, pymysql
+          sql = open("sql/ops_monitor_schema.sql", encoding="utf-8").read()
+          sql = re.sub(r"CREATE DATABASE[^;]*;", "", sql, flags=re.I | re.S)
+          sql = re.sub(r"USE\s+\w+\s*;", "", sql, flags=re.I)
+          conn = pymysql.connect(host="127.0.0.1", user="root", password="",
+                                 database="ops_monitor", charset="utf8mb4",
+                                 client_flag=pymysql.constants.CLIENT.MULTI_STATEMENTS)
+          conn.cursor().execute(sql); conn.commit(); conn.close()
+          PY
+      - name: Run backend tests
+        working-directory: backend
+        run: python -m pytest app/test/ -q
+
+  agent:
+    name: Agent Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r agent/requirements.txt
+      - name: Run agent tests
+        run: python -m pytest agent/tests/ -q
+
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build
+        working-directory: frontend
+        run: npm run build
