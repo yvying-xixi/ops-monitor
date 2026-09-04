@@ -60,14 +60,33 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+// 会话恢复标记：刷新后仅尝试一次拉取用户信息，避免导航期间重复请求
+let restoreAttempted = false
+
+router.beforeEach(async (to) => {
   const userStore = useUserStore()
-  if (to.path !== '/login' && !userStore.isLoggedIn) {
+  const needsAuth = to.path !== '/login'
+
+  if (needsAuth && !userStore.isLoggedIn) {
     return { path: '/login' }
   }
   if (to.path === '/login' && userStore.isLoggedIn) {
     return { path: '/dashboard' }
   }
+
+  // 启动/刷新后恢复用户信息与角色（页面刷新时 token 已持久化但 userInfo 为空）
+  if (needsAuth && userStore.isLoggedIn && !userStore.userInfo && !restoreAttempted) {
+    restoreAttempted = true
+    try {
+      await userStore.fetchMe()
+    } catch (e) {
+      // 401 已由拦截器登出并跳转；其余错误放行（角色受限页由服务端鉴权兜底）
+    }
+    if (!userStore.isLoggedIn) {
+      return { path: '/login' }
+    }
+  }
+
   if (to.meta.roles && !userStore.hasRole(...to.meta.roles)) {
     return { path: '/dashboard' }
   }

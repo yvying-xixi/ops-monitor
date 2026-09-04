@@ -162,11 +162,11 @@ docker compose down -v        # 停止并清理数据卷
 
 - [x] 阶段一 · 基础设置：Git 仓库、依赖安装、目录骨架、数据库脚本
 - [x] 阶段一 · 数据映射：26 张表 SQLAlchemy ORM、泛型仓储 + 用户权限域仓储
-- [x] 阶段二 · 用户权限（后端闭环）：登录/JWT/用户管理/RBAC/操作审计
+- [x] 阶段二 · 用户权限（前后端闭环）：登录/JWT/用户管理/RBAC/操作审计
   - [x] M1 基础能力层：安全工具、统一异常、统一响应
   - [x] M2 登录闭环：登录接口、用户管理 API、种子数据、Health
   - [x] M3 鉴权与审计：鉴权依赖、操作日志中间件、接口权限
-  - [ ] M4 前端用户权限（后端稳定后推进）
+  - [x] M4 前端用户权限：登录页/守卫/角色菜单、刷新会话恢复
 - [x] 阶段三 · Agent：指标采集、注册、心跳、上报、资产同步、状态刷新
   - [x] 服务端：`/agent/register|heartbeat|metrics|assets` + 服务器管理 + APScheduler 状态判定
   - [x] Agent 客户端：CPU/Memory/Disk/Network/Load/TCP/Uptime 采集 + 上报重试

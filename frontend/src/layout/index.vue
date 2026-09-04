@@ -28,7 +28,15 @@ const activeMenu = computed(() => {
 })
 
 async function handleLogout() {
-  await ElMessageBox.confirm('确定要退出登录吗？', '提示', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm('确定要退出登录吗？退出后需重新登录才能继续使用。', '退出登录', {
+      type: 'warning',
+      confirmButtonText: '退出',
+      cancelButtonText: '取消',
+    })
+  } catch {
+    return // 用户取消
+  }
   userStore.logout()
   router.push('/login')
 }
@@ -50,13 +58,16 @@ async function handleLogout() {
         <div class="header-title">{{ route.meta.title || '' }}</div>
         <el-dropdown @command="handleLogout">
           <span class="user">
-            <el-icon><User /></el-icon>
-            {{ userStore.username }}
+            <el-avatar :size="28" class="user-avatar">{{ userStore.displayName.charAt(0).toUpperCase() }}</el-avatar>
+            <span class="user-name">{{ userStore.displayName }}</span>
+            <el-tag v-if="userStore.primaryRoleName" size="small" type="info" effect="plain" class="user-role">
+              {{ userStore.primaryRoleName }}
+            </el-tag>
             <el-icon><SwitchButton /></el-icon>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+              <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -99,9 +110,20 @@ async function handleLogout() {
 .user {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   color: #303133;
+}
+.user-avatar {
+  background: #409eff;
+  color: #fff;
+  font-size: 14px;
+}
+.user-name {
+  font-size: 14px;
+}
+.user-role {
+  margin-left: 0;
 }
 .main {
   background-color: #f0f2f5;
