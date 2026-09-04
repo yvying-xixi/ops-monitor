@@ -123,14 +123,16 @@ mysql -u root -p < sql/ops_monitor_schema.sql
 ## Docker Compose 部署
 
 ```bash
-docker compose up -d        # 启动
-docker compose ps           # 查看容器
+cp .env.example .env          # 修改 DB/REDIS 密码、JWT、种子管理员
+docker compose up -d --build  # 构建并启动（首启自动建表 + seed）
+docker compose ps             # 全部 healthy 后访问 http://<host>:80
 docker compose logs -f backend   # 查看日志
-docker compose down         # 停止
+docker compose down           # 停止（保留数据卷）
+docker compose down -v        # 停止并清理数据卷
 ```
 
-- `/api/*` → FastAPI:8000
-- 页面 `/*` → Vue 静态资源（由 Nginx 托管）
+- 服务：`nginx`（静态 + `/api` 反代，暴露 `HTTP_PORT`）、`backend`、`mysql`、`redis`
+- 详见 [docs/09-phase7-deploy.md](docs/09-phase7-deploy.md)
 
 ## 端口约定
 
@@ -154,6 +156,7 @@ docker compose down         # 停止
 | [docs/06-phase4-monitor.md](docs/06-phase4-monitor.md) | 阶段四监控中心：指标查询/聚合差分、Dashboard、前端结构 |
 | [docs/07-phase5-alert.md](docs/07-phase5-alert.md) | 阶段五告警中心：告警引擎、状态机、默认规则、接口 |
 | [docs/08-phase6-task.md](docs/08-phase6-task.md) | 阶段六自动化运维：任务引擎、服务管理、安全约束、接口 |
+| [docs/09-phase7-deploy.md](docs/09-phase7-deploy.md) | 阶段七部署优化：镜像/Compose/Nginx/CI、启动与上线清单 |
 
 ## 开发进度
 
@@ -179,4 +182,5 @@ docker compose down         # 停止
   - [x] 服务状态采集上报 + 白名单控制
   - [x] 任务引擎：创建/确认/取消/领取/回传/超时/状态聚合；单机/批量/定时
   - [x] Agent 受控执行器（白名单+禁 shell）；任务中心与服务管理前端
-- [ ] 阶段七 · 部署优化：镜像、Compose、Nginx、CI/CD
+- [x] 阶段七 · 部署优化：镜像、Compose、Nginx、CI
+  - [x] backend/nginx 镜像、docker-compose 编排、Nginx 反代、CI workflow、部署文档
