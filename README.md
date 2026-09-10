@@ -87,6 +87,7 @@ npm run dev            # http://localhost:5173（/api 已代理到后端 8000）
 
 1. 管理员先在后端创建服务器并生成注册凭证：
    `POST /api/v1/servers` → `POST /api/v1/servers/{id}/agent-token`（Token 明文仅返回一次）
+   > 前端「服务器管理 → 接入」提供向导：一键复制 server_code/token、编辑服务白名单、生成并下载 `config.yaml`、复制部署命令。
 2. 配置并启动 Agent：
 
 ```bash
