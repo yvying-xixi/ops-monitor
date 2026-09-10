@@ -55,14 +55,14 @@ docker compose down -v      # 连同数据卷一起清理
 
 ## 五、Agent 部署（生产）
 
-Agent 不以核心容器运行，以 systemd 部署于被监控服务器：
+Agent 不以核心容器运行，以 systemd 部署于被监控服务器（一键脚本）：
 
 ```bash
-cd /opt/server-agent && python -m venv .venv && .venv/bin/pip install -r requirements.txt
-cp agent/config/config.yaml.example agent/config/config.yaml   # 服务端地址 + server_code + token
-# 安装 /etc/systemd/system/server-agent.service（Restart=always）
-systemctl enable --now server-agent
+cd /path/to/ops-monitor
+sudo ./agent/install.sh          # 安装到 /opt/ops-agent 并启动 server-agent
 ```
+
+> 也支持 Docker 容器方式（宿主指标采集，服务控制默认关闭），详见 [docs/10-agent-deploy.md](10-agent-deploy.md)。
 
 ## 六、验证结论（本地冒烟）
 

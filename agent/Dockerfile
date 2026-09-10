@@ -1,0 +1,32 @@
+# ops-monitor Agent 容器镜像
+#
+# 构建（在仓库根目录执行）：
+#   docker build -f agent/Dockerfile -t ops-monitor-agent:latest .
+#
+# 运行（宿主机指标采集；容器内服务控制默认关闭）：
+#   docker run -d --name ops-agent --restart unless-stopped \
+#     --pid=host --network=host \
+#     -v /proc:/host/proc:ro -v /sys:/host/sys:ro \
+#     -v $(pwd)/config.yaml:/app/agent/config/config.yaml:ro \
+#     ops-monitor-agent:latest
+#
+# 说明：
+#   - --pid=host 让 psutil 能看到宿主机进程；--network=host 采集宿主网络计数
+#   - 只读挂载 /proc、/sys 便于后续按需扩展宿主指标读取
+#   - 磁盘使用率基于容器根文件系统；如需宿主磁盘，请后续扩展代码路径参数
+#   - 默认不授予 --privileged，容器内无法控制系统服务（安全优先）
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY agent/requirements.txt ./agent/requirements.txt
+RUN pip install --no-cache-dir -r agent/requirements.txt
+
+COPY agent ./agent
+
+# 以 root 运行（读取 /proc 与执行 systemctl 需要）
+CMD ["python", "-m", "agent.main"]
