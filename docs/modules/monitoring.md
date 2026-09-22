@@ -11,6 +11,15 @@ CPU、内存、磁盘、网络、Load、TCP 连接数、系统运行时间、进
 - 指标落 `monitor_server_metric`；磁盘/网卡/容器/进程有独立表。
 - 网络为**累计字节数**，展示时按时间桶差分输出速率（MB/s）。
 
+```mermaid
+flowchart LR
+    A[Agent 采集] --> B[上报 /agent/metrics]
+    B --> C[monitor_server_metric]
+    C --> D[latest / history / summary]
+    D --> E[ECharts 展示]
+    C --> F[告警引擎评估]
+```
+
 ## 监控 API
 
 | Method | Endpoint | 说明 | 权限 |

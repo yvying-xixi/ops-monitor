@@ -6,18 +6,31 @@
 
 **定时扫描 + DB 状态机持久化**：APScheduler 每 `ALERT_EVALUATE_INTERVAL_SECONDS`（默认 10s）执行一轮评估。
 
-```text
-读取启用规则 × 启用服务器的最新指标/心跳
-→ 未超阈值且存在活动告警 → RESOLVED
-→ 超阈值无活动告警 → 创建 PENDING（first_fired_at=now）
-→ PENDING 且持续 ≥ duration_seconds → 升级 FIRING
-→ 每次状态变化写 alert_event_log
+```mermaid
+flowchart TD
+    A[读取启用规则 × 启用服务器最新指标/心跳] --> B{超阈值?}
+    B -- 否 --> C[存在活动告警 → RESOLVED]
+    B -- 是 --> D{已有活动告警?}
+    D -- 否 --> E[创建 PENDING first_fired_at=now]
+    D -- 是 --> F[更新 last_fired/current_value]
+    E --> G{持续 ≥ duration_seconds?}
+    G -- 是 --> H[升级 FIRING]
+    C --> I[写 alert_event_log]
+    F --> I
+    H --> I
 ```
 
 ### 状态机
 
-```text
-PENDING → FIRING → ACKNOWLEDGED → RESOLVED
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> FIRING: 持续 ≥ duration
+    FIRING --> ACKNOWLEDGED: 人工确认
+    PENDING --> RESOLVED: 指标恢复
+    FIRING --> RESOLVED: 指标恢复
+    ACKNOWLEDGED --> RESOLVED: 指标恢复
+    RESOLVED --> [*]
 ```
 
 - **去重**：`alert_key = {rule_id}:{server_id}:{metric_type}` + 生成列 `is_active` 唯一键，保证同一告警仅一条活动记录；恢复后 `is_active=NULL`，可再次触发。

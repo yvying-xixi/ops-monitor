@@ -4,29 +4,47 @@
 
 ## 总体机制
 
-```text
-服务状态 = 周期上报      Agent systemctl 采集 → POST /agent/services → ops_server_service
-运维操作 = 任务引擎      后端建任务 → Agent 轮询领取 → 受控执行 → 回传结果 → 状态聚合
+```mermaid
+flowchart LR
+    subgraph 服务状态
+        A1[Agent systemctl 采集] --> A2[POST /agent/services] --> A3[ops_server_service]
+    end
+    subgraph 运维操作
+        B1[后端建任务] --> B2[Agent 轮询领取] --> B3[受控执行] --> B4[回传结果] --> B5[状态聚合]
+    end
 ```
 
 ### 任务分发（Agent 轮询）
 
-```text
-后端创建 ops_task + targets + executions
-  → Agent 每 task_poll_interval(5s) GET /agent/tasks/pending
-  → 后端 PENDING→RUNNING，返回 (execution_id, action, service_name, timeout)
-  → Agent executor 白名单二次校验后执行
-  → POST /agent/task/result 回传
-  → 后端更新 execution/task 状态，写 ops_task_log
+```mermaid
+sequenceDiagram
+    participant BE as Backend
+    participant AG as Agent
+    participant EX as Executor
+    BE->>BE: 创建 ops_task + targets + executions
+    loop 每 task_poll_interval(5s)
+        AG->>BE: GET /agent/tasks/pending
+        BE-->>AG: execution_id/action/service/timeout（PENDING→RUNNING）
+        AG->>EX: 白名单二次校验后执行
+        EX-->>AG: 结果
+        AG->>BE: POST /agent/task/result
+        BE->>BE: 更新状态 + 写 ops_task_log
+    end
 ```
 
 ## 任务模型与状态机
 
-```text
-CREATED(待确认) → PENDING(等待领取) → RUNNING(执行中) → SUCCESS
-                              ├→ FAILED
-                              ├→ TIMEOUT（超时扫描，30s）
-                              └→ CANCELLED（取消未执行）
+```mermaid
+stateDiagram-v2
+    [*] --> CREATED: 需确认
+    CREATED --> PENDING: 确认
+    [*] --> PENDING: 免确认
+    PENDING --> RUNNING: Agent 领取
+    RUNNING --> SUCCESS
+    RUNNING --> FAILED
+    RUNNING --> TIMEOUT: 超时扫描 30s
+    CREATED --> CANCELLED: 取消
+    PENDING --> CANCELLED: 取消
 ```
 
 - `task.status` 由 executions 聚合：任一活跃→RUNNING；任一 FAILED/TIMEOUT→FAILED；全 SUCCESS→SUCCESS。

@@ -10,9 +10,19 @@
 
 ### 登录流程
 
-```text
-输入账号密码 → 查询用户 → 校验密码(bcrypt)
-  → 校验账号状态 → 更新 last_login → 签发 Token → 写 sys_login_log → 返回
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant FE as 前端
+    participant BE as Backend
+    participant DB as MySQL
+    U->>FE: 输入账号密码
+    FE->>BE: POST /auth/login
+    BE->>DB: 查询用户
+    BE->>BE: 校验密码(bcrypt) + 账号状态
+    BE->>DB: 更新 last_login + 写 sys_login_log
+    BE-->>FE: access_token / expires_in
+    FE->>FE: 持久化 Token 并进入控制台
 ```
 
 失败（用户名/密码错误、账号禁用）同样记录登录日志。

@@ -4,8 +4,12 @@
 
 ## 模型
 
-```text
-sys_user ──< sys_user_role >── sys_role ──< sys_role_permission >── sys_permission
+```mermaid
+erDiagram
+    sys_user ||--o{ sys_user_role : has
+    sys_role ||--o{ sys_user_role : assigned
+    sys_role ||--o{ sys_role_permission : has
+    sys_permission ||--o{ sys_role_permission : granted
 ```
 
 - 用户与角色、角色与权限均为多对多。

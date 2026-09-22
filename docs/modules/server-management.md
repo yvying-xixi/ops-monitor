@@ -20,6 +20,15 @@
 
 由调度器周期刷新（默认 30s）。
 
+```mermaid
+stateDiagram-v2
+    [*] --> ONLINE: 心跳 ≤ 30s
+    ONLINE --> WARNING: 30s < 心跳 ≤ 90s
+    WARNING --> OFFLINE: 心跳 > 90s
+    WARNING --> ONLINE: 心跳恢复
+    OFFLINE --> ONLINE: 心跳恢复
+```
+
 ## 服务器管理 API
 
 | Method | Endpoint | 说明 | 权限 |

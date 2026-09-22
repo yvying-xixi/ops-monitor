@@ -18,6 +18,16 @@
 | START / STOP / RESTART | 受控操作，默认需二次确认 |
 | LOGS | `journalctl` 抓取最近日志 |
 
+```mermaid
+flowchart LR
+    A[前端提交服务操作] --> B[创建任务]
+    B --> C[白名单 + 角色 + 操作类型校验]
+    C --> D[Agent 领取]
+    D --> E[Executor 二次校验]
+    E --> F[执行 systemctl/journalctl]
+    F --> G[回传结果 + 写 ops_task_log]
+```
+
 ## 安全约束（双端校验）
 
 1. **服务白名单**：后端任务创建时校验服务在资产表且 `is_whitelisted=1`；Agent executor 执行前再次校验。
