@@ -14,6 +14,13 @@
 
 `data.volume_dir` 由 `deploy/config.yml` 的 `data.volume_dir` 指定（默认 `deploy/data`）。
 
+```mermaid
+flowchart LR
+    A[停止服务 down] --> B[打包 data.volume_dir]
+    B --> C[保存归档]
+    C --> D[启动服务 up -d]
+```
+
 ## 备份方式
 
 ### 停止服务后备份数据目录（简单可靠）

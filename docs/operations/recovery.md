@@ -2,6 +2,13 @@
 
 > 本文描述平台数据与配置的恢复流程。部分步骤需结合实际环境补充。
 
+```mermaid
+flowchart LR
+    A[停止服务 down] --> B[还原 data.volume_dir / 导入 SQL]
+    B --> C[恢复 config.yml → reconfigure.sh]
+    C --> D[启动并验证 health/数据]
+```
+
 ## 数据恢复
 
 ### 从数据目录备份恢复

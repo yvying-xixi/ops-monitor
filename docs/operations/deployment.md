@@ -4,12 +4,13 @@
 
 ## 组件与拓扑
 
-```text
-Internet → Nginx(HTTP_PORT:80)
-             ├── / 前端静态资源（Vue dist）
-             └── /api/* → backend:8000（uvicorn）
-backend ── mysql:8.0（仅内网）
-backend ── redis:7（仅内网）
+```mermaid
+flowchart LR
+    I[Internet] --> N[Nginx :80]
+    N -->|/| FE[前端静态 Vue dist]
+    N -->|/api/*| BE[backend:8000 uvicorn]
+    BE --> M[(mysql:8.0 仅内网)]
+    BE --> R[(redis:7 仅内网)]
 ```
 
 - **单 Nginx 入口**：镜像多阶段（node 构建前端 → nginx:alpine 托管），承担静态与 `/api` 反代。

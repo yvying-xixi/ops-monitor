@@ -27,6 +27,16 @@ curl -fsSL http://<平台地址>/api/v1/agent/install.sh | sudo bash -s -- \
 
 安装包下载：`http://<平台地址>/api/v1/agent/package`。
 
+```mermaid
+flowchart LR
+    A[平台创建服务器/生成 Token] --> B[生成 config.yaml]
+    B --> C[目标机执行一键命令/脚本]
+    C --> D[复制 agent 包 + 建 venv + 装依赖]
+    D --> E[写入 config.yaml]
+    E --> F[安装并启动 server-agent]
+    F --> G[自动注册 → ONLINE]
+```
+
 ### 方式一：本地 systemd 脚本
 
 ```bash
