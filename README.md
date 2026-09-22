@@ -101,6 +101,9 @@ python main.py
 
 生产环境建议以 systemd 服务部署：`/etc/systemd/system/server-agent.service`。
 
+> 一键安装（推荐）：`sudo ./agent/install.sh`（自动建 venv、配置、systemd 服务）。
+> 容器方式与排障详见 [docs/10-agent-deploy.md](docs/10-agent-deploy.md)。
+
 ### 数据库初始化
 
 ```bash
@@ -158,6 +161,7 @@ docker compose down -v        # 停止并清理数据卷
 | [docs/07-phase5-alert.md](docs/07-phase5-alert.md) | 阶段五告警中心：告警引擎、状态机、默认规则、接口 |
 | [docs/08-phase6-task.md](docs/08-phase6-task.md) | 阶段六自动化运维：任务引擎、服务管理、安全约束、接口 |
 | [docs/09-phase7-deploy.md](docs/09-phase7-deploy.md) | 阶段七部署优化：镜像/Compose/Nginx/CI、启动与上线清单 |
+| [docs/10-agent-deploy.md](docs/10-agent-deploy.md) | Agent 部署：systemd 一键脚本、Docker、配置与排障 |
 
 ## 开发进度
 

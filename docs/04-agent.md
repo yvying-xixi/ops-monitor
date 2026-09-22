@@ -119,19 +119,23 @@ Agent 执行受控命令后上报结果，字段包含：`execution_id`、`statu
 ```ini
 [Unit]
 Description=Server Agent
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/server-agent
-ExecStart=/opt/server-agent/.venv/bin/python /opt/server-agent/main.py
+WorkingDirectory=/opt/ops-agent
+ExecStart=/opt/ops-agent/.venv/bin/python -m agent.main
 Restart=always
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 ```
+
+> 注意：Agent 以包形式导入（`agent.*`），须在**部署根目录**（内含 `agent/` 包）以 `python -m agent.main` 运行；
+> 推荐直接使用 `agent/install.sh` 一键安装，详见 [docs/10-agent-deploy.md](10-agent-deploy.md)。
 
 ## 九、配置示例（config/config.yaml）
 
@@ -144,7 +148,13 @@ server:
 collect:
   heartbeat_interval: 30          # 心跳周期（秒）
   metrics_interval: 10            # 指标采集周期（秒）
+  assets_interval: 60             # 资产/服务同步周期（秒）
+  task_poll_interval: 5           # 任务轮询周期（秒）
   retry_max_seconds: 60           # 退避重试封顶（秒）
+  services:                       # 监控与受控服务白名单
+    - "nginx"
+    - "docker"
+    - "ssh"
 
 log:
   level: "INFO"
@@ -153,20 +163,34 @@ log:
 
 ## 十、部署步骤
 
+推荐使用一键脚本（自动完成依赖、配置、systemd 服务）：
+
 ```bash
-# 1. 安装依赖
-cd /opt/server-agent
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-
-# 2. 编写 config/config.yaml（服务端地址、凭证）
-
-# 3. 安装 systemd 服务
-cp deploy/systemd/server-agent.service /etc/systemd/system/
-
-# 4. 启动并设置开机自启
-systemctl daemon-reload
-systemctl enable server-agent
-systemctl start server-agent
-systemctl status server-agent
+cd /path/to/ops-monitor
+sudo ./agent/install.sh                 # 安装到 /opt/ops-agent 并启动 server-agent
 ```
+
+手动部署（等价）：
+
+```bash
+# 1. 复制 agent 包到部署根目录（保持 agent/ 包结构）
+sudo mkdir -p /opt/ops-agent && sudo cp -r agent /opt/ops-agent/
+
+# 2. 虚拟环境与依赖
+cd /opt/ops-agent
+python3.11 -m venv .venv
+.venv/bin/pip install -r agent/requirements.txt
+
+# 3. 配置（服务端地址、token、server_code、服务白名单）
+cp agent/config/config.yaml.example agent/config/config.yaml
+vi agent/config/config.yaml
+
+# 4. 安装 systemd 服务并启动
+sed "s#__INSTALL_DIR__#/opt/ops-agent#g" deploy/systemd/server-agent.service \
+  | sudo tee /etc/systemd/system/server-agent.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now server-agent
+systemctl status server-agent --no-pager
+```
+
+> 完整说明见 [docs/10-agent-deploy.md](10-agent-deploy.md)。

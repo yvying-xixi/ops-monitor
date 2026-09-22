@@ -1,0 +1,20 @@
+[Unit]
+Description=ops-monitor Agent
+Documentation=https://github.com/yvying-xixi/ops-monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Agent 需读取 /proc 并执行 systemctl，建议 root
+User=root
+WorkingDirectory=__INSTALL_DIR__
+ExecStart=__INSTALL_DIR__/.venv/bin/python -m agent.main
+Restart=always
+RestartSec=5
+# 可选：日志
+# StandardOutput=append:/var/log/server-agent/agent.log
+# StandardError=append:/var/log/server-agent/agent.log
+
+[Install]
+WantedBy=multi-user.target
