@@ -7,3 +7,9 @@ MD013: false
 MD033: false
 # 不强制每个文件以一级标题开始
 MD041: false
+# 允许强调代替标题（如 > **TODO**）
+MD036: false
+# 允许同名标题（如多个 "## TODO"）
+MD024: false
+# 不限制顶级标题数量
+MD025: false
