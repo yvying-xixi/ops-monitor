@@ -92,3 +92,42 @@ docker run -d --name ops-agent --restart unless-stopped \
 | `ModuleNotFoundError: No module named 'agent'` | 需在仓库根用 `python -m agent.main`，或 `PYTHONPATH=.. python main.py` |
 | 服务状态 UNKNOWN / 控制失败 | 目标机无 systemd、无该服务或权限不足（`systemctl is-active <svc>` 自查） |
 | 状态一直 OFFLINE | 检查服务端地址可达、心跳周期、后端 `/api/v1/health` |
+
+## 八、排错经验（真实案例）
+
+### 案例 1：注册报 `401 服务器编码与凭证不匹配`
+
+- **症状**：Agent 反复重试注册，日志 `POST /api/v1/agent/register 返回 401: 服务器编码与凭证不匹配`
+- **根因**：`config.yaml` 的 `server_code` 填成了**主机名**（如 `web-01`），而平台注册匹配键是服务器的**编码**（如 `debian13`）。Token 本身有效（能通过鉴权），只是编码对不上。
+- **定位**：
+  ```bash
+  # 查看平台侧该 Token 绑定的服务器编码
+  docker exec <mysql容器> mysql -uroot -p<pwd> ops_monitor \
+    -e "SELECT id,server_code FROM ops_server; SELECT server_id,token_prefix FROM ops_agent_token;"
+  ```
+- **处置**：把 `config.yaml` 的 `server_code` 改为平台「服务器管理」列表里该服务器的**编码**列值。
+- **预防**：使用前端「服务器管理 → 接入」向导**复制** `server_code`，不要手抄；`server_code` 是唯一匹配键，主机名仅展示。
+
+### 案例 2：`python main.py` 报 `No module named 'agent'`
+
+- **症状**：`cd agent && python main.py` 报 `ModuleNotFoundError: No module named 'agent'`
+- **根因**：Agent 采用**包式绝对导入**（`from agent.collector import ...`）。直接运行脚本时 Python 把**脚本所在目录**（`agent/`）加入 `sys.path`，而 `agent` 包位于其父目录（仓库根），因此找不到。
+- **处置**：在仓库根以模块方式运行
+  ```bash
+  ./agent/.venv/bin/python -m agent.main          # 推荐
+  # 或： cd agent && PYTHONPATH=.. .venv/bin/python main.py
+  ```
+- **预防**：`agent/install.sh` 与 systemd 单元统一使用 `-m agent.main` + `WorkingDirectory=部署根`。
+
+### 案例 3：前端看不到「下载 config.yaml」/ 新功能
+
+- **症状**：文档提到前端可下载 `config.yaml`，但页面上没有该按钮
+- **根因**：① 该功能在**未合并的分支**上；② 即使已合并，运行中的前端镜像是**旧构建**（静态资源未重建）
+- **处置**：
+  ```bash
+  git merge <功能分支>            # 先合并
+  docker compose up -d --build nginx   # 再重建前端镜像
+  ```
+  开发模式则重启 `npm run dev`。
+- **预防**：改前端后必须重建镜像或重启 dev server；功能开发完及时合并到主分支，避免"代码在、环境无"。
+
