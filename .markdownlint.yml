@@ -1,0 +1,9 @@
+# markdownlint 宽松配置：中文文档场景
+default: true
+
+# 关闭行长度限制（中文行较长）
+MD013: false
+# 允许必要的 HTML
+MD033: false
+# 不强制每个文件以一级标题开始
+MD041: false
