@@ -87,22 +87,18 @@ npm run dev            # http://localhost:5173（/api 已代理到后端 8000）
 
 1. 管理员先在后端创建服务器并生成注册凭证：
    `POST /api/v1/servers` → `POST /api/v1/servers/{id}/agent-token`（Token 明文仅返回一次）
-   > 前端「服务器管理 → 接入」提供向导：一键复制 server_code/token、编辑服务白名单、生成并下载 `config.yaml`、复制部署命令。
-2. 配置并启动 Agent：
+   > 前端「服务器管理 → 接入」提供向导：一键复制 server_code/token、编辑服务白名单、生成并下载 `config.yaml`、**下载 Agent 包**、复制**一键安装命令**。
+2. 在目标机执行向导生成的一键安装命令（或使用下载的 Agent 包）：
+   ```bash
+   curl -fsSL http://<平台地址>/api/v1/agent/install.sh | sudo bash -s -- \
+     --url http://<平台地址> --token <TOKEN> --code <服务器编码> --services nginx,docker,ssh
+   ```
+3. 本地调试运行（仓库根执行）：
+   ```bash
+   ./agent/.venv/bin/python -m agent.main
+   ```
 
-```bash
-cd agent
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp config/config.yaml.example config/config.yaml   # 填入服务端地址、token、server_code
-python main.py
-```
-
-生产环境建议以 systemd 服务部署：`/etc/systemd/system/server-agent.service`。
-
-> 一键安装（推荐）：`sudo ./agent/install.sh`（自动建 venv、配置、systemd 服务）。
-> 容器方式与排障详见 [docs/10-agent-deploy.md](docs/10-agent-deploy.md)。
+> 部署方式（平台一键 / systemd 脚本 / Docker）与排障详见 [docs/10-agent-deploy.md](docs/10-agent-deploy.md)。
 
 ### 数据库初始化
 

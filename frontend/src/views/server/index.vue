@@ -147,6 +147,23 @@ function downloadConfig() {
   URL.revokeObjectURL(url)
 }
 
+const baseUrl = computed(() => agentForm.serverUrl.replace(/\/+$/, ''))
+
+const installOneLiner = computed(() => {
+  const services = serviceList.value.join(',')
+  return [
+    `curl -fsSL ${baseUrl.value}/api/v1/agent/install.sh | sudo bash -s -- \\`,
+    `  --url ${baseUrl.value} \\`,
+    `  --token ${tokenData.value?.token || ''} \\`,
+    `  --code ${currentServer.value?.server_code || ''} \\`,
+    `  --services ${services}`,
+  ].join('\n')
+})
+
+function downloadPackage() {
+  window.open(`${baseUrl.value}/api/v1/agent/package`, '_blank')
+}
+
 onMounted(loadData)
 </script>
 
@@ -298,15 +315,24 @@ onMounted(loadData)
           </div>
 
           <div class="section">
-            <div class="section-title">4. 部署命令</div>
+            <div class="section-title">
+              4. 部署运行
+              <el-button link type="primary" @click="downloadPackage">下载 Agent 包</el-button>
+            </div>
             <div class="field">
-              <span class="field-label">前台运行
+              <span class="field-label">一键安装（推荐，复制到目标机执行）
+                <el-button link type="primary" size="small" @click="copyText(installOneLiner, '一键安装命令已复制')">复制</el-button>
+              </span>
+              <pre class="cmd-pre">{{ installOneLiner }}</pre>
+            </div>
+            <div class="field">
+              <span class="field-label">前台运行（调试）
                 <el-button link type="primary" size="small" @click="copyText(deployCommands.foreground, '命令已复制')">复制</el-button>
               </span>
               <pre class="cmd-pre">{{ deployCommands.foreground }}</pre>
             </div>
             <div class="field">
-              <span class="field-label">systemd 安装（推荐）
+              <span class="field-label">systemd 安装（本地脚本）
                 <el-button link type="primary" size="small" @click="copyText(deployCommands.systemd, '命令已复制')">复制</el-button>
               </span>
               <pre class="cmd-pre">{{ deployCommands.systemd }}</pre>

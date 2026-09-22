@@ -7,7 +7,8 @@
 
 | 方式 | 适用 | 宿主指标 | 服务控制 | 备注 |
 | --- | --- | --- | --- | --- |
-| **systemd（推荐）** | 生产、真实监控 | 完整 | 支持（需 root） | `install.sh` 一键安装 |
+| **平台一键（推荐）** | 生产、真实监控 | 完整 | 支持（需 root） | 向导生成命令，一键安装 |
+| systemd 本地 | 生产、离线 | 完整 | 支持（需 root） | `install.sh` 一键安装 |
 | 前台运行 | 调试 | 完整 | 支持 | `python -m agent.main` |
 | Docker | 演示/容器环境 | 近似宿主（pid/network host） | **默认关闭** | 见限制说明 |
 
@@ -21,7 +22,23 @@
 
 > 常见错误：把"主机名"当成 server_code 使用 → 注册报 `401 服务器编码与凭证不匹配`。
 
-## 三、方式一：systemd 一键安装（推荐）
+## 三、方式零：平台一键安装（推荐）
+
+平台提供安装包与安装脚本，向导会生成一条命令，在目标机执行即可完成安装与注册：
+
+```bash
+curl -fsSL http://<平台地址>/api/v1/agent/install.sh | sudo bash -s -- \
+  --url http://<平台地址> \
+  --token <向导复制的 Token> \
+  --code <服务器编码> \
+  --services nginx,docker,ssh
+```
+
+- 安装包下载：`http://<平台地址>/api/v1/agent/package`（tar.gz，含源码 + install.sh + systemd 模板）
+- 也可在前端「服务器管理 → 接入」向导中点击「下载 Agent 包」或复制上面的命令
+- 脚本会：复制 agent 包 → 建 venv 装依赖 → 按参数生成 `config.yaml` → 安装并启动 systemd 服务
+
+## 四、方式一：systemd 本地安装
 
 ```bash
 # 将 config.yaml 放在仓库根目录（或安装后编辑目标配置），然后：
@@ -42,9 +59,9 @@ journalctl -u server-agent -f
 - 安装依赖；准备 `config.yaml`（`chmod 600`）
 - 安装 `deploy/systemd/server-agent.service`（`ExecStart=.../.venv/bin/python -m agent.main`，`Restart=always`）并启动
 
-> 支持自定义目录：`sudo ./agent/install.sh /opt/custom-dir`；指定解释器：`PYTHON=python3.11 sudo -E ./agent/install.sh`
+> 自定义目录：`sudo ./agent/install.sh --dir /opt/custom-dir`；指定解释器：`PYTHON=python3.11 sudo -E ./agent/install.sh`；也可 `--url/--token/--code/--services` 直接生成配置
 
-## 四、方式二：前台运行（调试）
+## 五、方式二：前台运行（调试）
 
 ```bash
 cd /path/to/ops-monitor
@@ -52,7 +69,7 @@ cd /path/to/ops-monitor
 # 或先 cd agent && PYTHONPATH=.. .venv/bin/python main.py
 ```
 
-## 五、方式三：Docker 容器
+## 六、方式三：Docker 容器
 
 构建与运行见 `agent/Dockerfile` 顶部注释，简述：
 
@@ -71,7 +88,7 @@ docker run -d --name ops-agent --restart unless-stopped \
 - **默认不授予 `--privileged`**，容器内无法控制宿主 systemd 服务（服务状态读取也可能受限）；如需容器内服务管理，仅在容器内部有意义
 - 容器化主要用于演示/容器环境；**生产真实监控推荐 systemd 方式**
 
-## 六、配置项（config.yaml）
+## 七、配置项（config.yaml）
 
 | 段 | 键 | 说明 |
 | --- | --- | --- |
@@ -83,7 +100,7 @@ docker run -d --name ops-agent --restart unless-stopped \
 | collect | services | 监控与受控服务白名单 |
 | log | level / file | 日志级别与文件 |
 
-## 七、故障排查
+## 八、故障排查
 
 | 现象 | 处理 |
 | --- | --- |
@@ -93,7 +110,7 @@ docker run -d --name ops-agent --restart unless-stopped \
 | 服务状态 UNKNOWN / 控制失败 | 目标机无 systemd、无该服务或权限不足（`systemctl is-active <svc>` 自查） |
 | 状态一直 OFFLINE | 检查服务端地址可达、心跳周期、后端 `/api/v1/health` |
 
-## 八、排错经验（真实案例）
+## 九、排错经验（真实案例）
 
 ### 案例 1：注册报 `401 服务器编码与凭证不匹配`
 
