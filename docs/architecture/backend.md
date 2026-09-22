@@ -6,10 +6,14 @@ FastAPI + SQLAlchemy 2.0 + Pydantic 2 + PyMySQL + Redis + APScheduler。
 
 ## 分层结构
 
-```text
-Router (api/v1)  →  Service  →  Repository  →  Model (ORM)
-        ↘ Schema (Pydantic) → 请求校验 / 响应格式化
-Core：配置 / 安全 / 数据库 / 日志
+```mermaid
+flowchart TD
+    R[Router api/v1] --> S[Service]
+    S --> RP[Repository]
+    RP --> M[Model ORM]
+    R -.-> SC[Schema Pydantic]
+    SC -.->|请求校验 / 响应格式化| R
+    S -.-> CORE[Core: 配置/安全/数据库/日志]
 ```
 
 | 层 | 目录 | 职责 | 约束 |

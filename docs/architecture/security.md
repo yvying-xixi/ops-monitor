@@ -7,6 +7,16 @@
 | 用户 | JWT（HS256，Bearer） | 登录签发，payload 含 `sub`/`iat`/`exp`；有效期 `JWT_EXPIRE_MINUTES`（默认 120 分钟） |
 | Agent | 独立 Token | 平台生成，数据库仅存 SHA-256 哈希；`Authorization: Bearer <token>` 访问 `/api/v1/agent/*` |
 
+```mermaid
+flowchart LR
+    U[用户] -->|账号密码| LOGIN[/auth/login]
+    LOGIN -->|签发 JWT| U
+    U -->|Bearer JWT| API[业务接口 /api/v1/*]
+    AG[Agent] -->|Bearer Agent Token| AGENT[Agent 接口 /api/v1/agent/*]
+    API --> RBAC[RBAC 鉴权]
+    AGENT --> TOKEN[Token 哈希校验 + 绑定服务器]
+```
+
 ## 授权
 
 - RBAC：用户 → 角色 → 权限（多对多）。
@@ -25,8 +35,12 @@
 
 服务操作严格遵守：
 
-```text
-服务名白名单校验 → 角色权限校验 → 操作类型校验 → Agent 端二次校验 → 记录审计日志
+```mermaid
+flowchart LR
+    A[服务名白名单校验] --> B[角色权限校验]
+    B --> C[操作类型校验]
+    C --> D[Agent 端二次校验]
+    D --> E[记录审计日志]
 ```
 
 - 禁止将用户输入拼接进 Shell 命令；Agent 端 `subprocess` 恒用参数列表、`shell=False`。

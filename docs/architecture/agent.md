@@ -56,12 +56,18 @@ agent/
 
 ## 任务流
 
-```text
-后端创建任务(targets/executions)
-  → Agent 轮询 GET /agent/tasks/pending（PENDING→RUNNING）
-  → Executor 白名单校验后执行
-  → POST /agent/task/result 回传
-  → 后端更新状态、写 ops_task_log
+```mermaid
+sequenceDiagram
+    participant BE as Backend
+    participant W as Agent Worker
+    participant EX as Executor
+    BE->>BE: 创建任务(targets/executions)
+    W->>BE: GET /agent/tasks/pending
+    BE-->>W: 执行参数(PENDING→RUNNING)
+    W->>EX: 白名单校验后执行
+    EX-->>W: 执行结果
+    W->>BE: POST /agent/task/result
+    BE->>BE: 更新状态 + 写 ops_task_log
 ```
 
 ## 部署

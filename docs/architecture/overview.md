@@ -6,18 +6,14 @@
 
 `ops-monitor` 是面向 Linux 服务器的轻量级运维监控与自动化管理平台。用户通过浏览器访问 Web 管理端，平台通过 Python Agent 采集被监控服务器状态，并提供监控、告警与服务管理能力。
 
-```text
-用户浏览器
-   │ HTTPS / HTTP
-   ▼
-Nginx（静态资源 + /api 反向代理）
-   ├── Vue 3 前端（静态）
-   └── FastAPI 后端
-          ├── MySQL（业务与监控数据）
-          └── Redis（缓存/任务状态）
-                ▲
-                │ HTTP（Agent 主动上报 / 轮询）
-          Linux Agent（部署在被监控服务器，systemd）
+```mermaid
+flowchart LR
+    U[用户浏览器] -->|HTTPS/HTTP| N[Nginx]
+    N --> FE[Vue 3 前端]
+    N --> BE[FastAPI 后端]
+    BE --> DB[(MySQL)]
+    BE --> RD[(Redis)]
+    A[Linux Agent] -->|上报 / 轮询| BE
 ```
 
 ## 核心组件
@@ -54,14 +50,30 @@ Docker Compose 编排 `nginx`、`backend`、`mysql`、`redis`；平台采用配�
 
 ## 主要数据关系
 
-```text
-sys_user ──< sys_user_role >── sys_role ──< sys_role_permission >── sys_permission
-ops_server ──< ops_server_disk / ops_server_network / ops_server_service / ops_server_container
-ops_server ──< monitor_*_metric（指标）
-ops_server ──< ops_agent_heartbeat / ops_agent_token
-alert_rule ──< alert_event ──< alert_event_log
-ops_task ──< ops_task_target ──< ops_task_execution ──< ops_task_log
-sys_user / ops_server ──< sys_operation_log / sys_login_log
+```mermaid
+erDiagram
+    sys_user ||--o{ sys_user_role : has
+    sys_role ||--o{ sys_user_role : assigned
+    sys_role ||--o{ sys_role_permission : has
+    sys_permission ||--o{ sys_role_permission : granted
+
+    ops_server ||--o{ ops_server_disk : has
+    ops_server ||--o{ ops_server_network : has
+    ops_server ||--o{ ops_server_service : has
+    ops_server ||--o{ ops_server_container : has
+    ops_server ||--o{ ops_agent_token : owns
+    ops_server ||--o{ ops_agent_heartbeat : reports
+    ops_server ||--o{ monitor_server_metric : records
+
+    alert_rule ||--o{ alert_event : triggers
+    alert_event ||--o{ alert_event_log : logs
+
+    ops_task ||--o{ ops_task_target : targets
+    ops_task_target ||--o{ ops_task_execution : executes
+    ops_task_execution ||--o{ ops_task_log : logs
+
+    sys_user ||--o{ sys_operation_log : operates
+    sys_user ||--o{ sys_login_log : logs_in
 ```
 
 ## 认证边界

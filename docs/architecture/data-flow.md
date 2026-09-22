@@ -4,11 +4,12 @@
 
 ## 概览
 
-```text
-Agent ──HTTP──▶ Backend ──SQL──▶ MySQL
-                   │
-                   ├── 查询/聚合 ──▶ Frontend（Dashboard/详情）
-                   └── 告警引擎 ──▶ alert_event
+```mermaid
+flowchart LR
+    AG[Agent] -->|HTTP| BE[Backend]
+    BE -->|SQL| DB[(MySQL)]
+    BE -->|查询/聚合| FE[Frontend Dashboard/详情]
+    BE -->|告警引擎| AE[alert_event]
 ```
 
 ## Agent → Backend
@@ -24,6 +25,27 @@ Agent 主动发起以下请求（详见 [reference/agent-protocol.md](../referen
 | 服务状态 | `POST /agent/services` | 60s | `ops_server_service` |
 | 任务结果 | `POST /agent/task/result` | 执行后 | `ops_task_execution`、`ops_task_log` |
 
+```mermaid
+sequenceDiagram
+    participant AG as Agent
+    participant BE as Backend
+    participant DB as MySQL
+    AG->>BE: POST /agent/register
+    BE->>DB: 回写 ops_server，置 ONLINE
+    loop 周期
+        AG->>BE: POST /agent/heartbeat
+        BE->>DB: ops_agent_heartbeat + last_heartbeat_at
+        AG->>BE: POST /agent/metrics
+        BE->>DB: monitor_server_metric
+        AG->>BE: POST /agent/assets /services
+        BE->>DB: upsert 资产/服务
+    end
+    AG->>BE: GET /agent/tasks/pending
+    BE-->>AG: 执行参数
+    AG->>BE: POST /agent/task/result
+    BE->>DB: ops_task_execution + ops_task_log
+```
+
 ## Backend → Frontend
 
 前端经 Nginx `/api` 调用后端接口获取数据，主要读取：
@@ -37,10 +59,12 @@ Agent 主动发起以下请求（详见 [reference/agent-protocol.md](../referen
 
 ## 监控数据流
 
-```text
-采集(psutil/systemctl) → 标准化 → HTTP 上报 → 校验 → 持久化
-  → 分桶聚合(summary) / 最新值(latest) → ECharts 展示
-  → 告警引擎评估 → alert_event → 告警中心
+```mermaid
+flowchart LR
+    A[采集 psutil/systemctl] --> B[标准化] --> C[HTTP 上报] --> D[校验] --> E[持久化]
+    E --> F[分桶聚合 summary / 最新值 latest]
+    F --> G[ECharts 展示]
+    E --> H[告警引擎评估] --> I[alert_event] --> J[告警中心]
 ```
 
 - 高频指标独立存储；历史查询使用联合索引 `(server_id, collected_at)`。
@@ -49,19 +73,29 @@ Agent 主动发起以下请求（详见 [reference/agent-protocol.md](../referen
 
 ## 任务数据流
 
-```text
-创建任务 → ops_task/ops_task_target/ops_task_execution(PENDING)
-  → Agent 轮询领取(PENDING→RUNNING)
-  → 执行 → 回传 → 状态聚合(SUCCESS/FAILED/TIMEOUT/CANCELLED) → ops_task_log
+```mermaid
+flowchart LR
+    A[创建任务] --> B[ops_task/target/execution PENDING]
+    B --> C[Agent 轮询领取 PENDING→RUNNING]
+    C --> D[执行]
+    D --> E[回传结果]
+    E --> F[状态聚合 SUCCESS/FAILED/TIMEOUT/CANCELLED]
+    F --> G[ops_task_log]
 ```
 
 ## 告警数据流
 
-```text
-调度器评估(规则 × 服务器最新指标/心跳)
-  → 未超阈值且活动告警 → RESOLVED
-  → 超阈值无活动告警 → PENDING → (持续 ≥ duration) → FIRING
-  → 状态变化写 alert_event_log
+调度器周期评估（启用规则 × 服务器最新指标/心跳），驱动以下状态机；每次状态变化写 `alert_event_log`。
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: 超阈值无活动告警
+    PENDING --> FIRING: 持续 ≥ duration
+    FIRING --> ACKNOWLEDGED: 人工确认
+    PENDING --> RESOLVED: 指标恢复
+    FIRING --> RESOLVED: 指标恢复
+    ACKNOWLEDGED --> RESOLVED: 指标恢复
+    RESOLVED --> [*]
 ```
 
 ## TODO

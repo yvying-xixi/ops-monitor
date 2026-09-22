@@ -31,6 +31,17 @@ frontend/src/
 - `utils/request.js` 统一 `baseURL=/api/v1`，注入 `Authorization: Bearer`；响应解包 `data`；`401` 触发登出并跳转登录。
 - 开发环境由 `vite.config.js` 将 `/api` 代理到 `http://127.0.0.1:8000`；生产由 Nginx 同源反代。
 
+```mermaid
+flowchart LR
+    V[Vue 组件] --> API[api/*.js]
+    API --> AX[Axios 实例 request.js]
+    AX -->|注入 Token| GW[Nginx /api 或 Vite 代理]
+    GW --> BE[FastAPI]
+    BE -->|code!=0 或 401| AX
+    AX -->|401| LOGIN[登出并跳转 /login]
+    AX -->|解包 data| V
+```
+
 ## 状态与鉴权
 
 - `store/user.js`：`token` 持久化于 `localStorage`，`fetchMe()` 拉取用户与角色，提供 `hasRole`/`isAdmin`。
