@@ -14,6 +14,73 @@
 | 自动化任务 | `ops_task`、`ops_task_target`、`ops_task_execution`、`ops_task_log` |
 | 登录与审计 | `sys_login_log`、`sys_operation_log` |
 
+## 实体关系（ER）
+
+### 用户与权限
+
+```mermaid
+erDiagram
+    sys_user ||--o{ sys_user_role : has
+    sys_role ||--o{ sys_user_role : assigned
+    sys_role ||--o{ sys_role_permission : has
+    sys_permission ||--o{ sys_role_permission : granted
+    sys_permission ||--o{ sys_permission : parent
+```
+
+### 服务器资产与 Agent
+
+```mermaid
+erDiagram
+    sys_user ||--o{ ops_server : creates
+    ops_server ||--o{ ops_server_disk : has
+    ops_server ||--o{ ops_server_network : has
+    ops_server ||--o{ ops_server_service : has
+    ops_server ||--o{ ops_server_container : has
+    ops_server ||--o{ ops_agent_token : owns
+    ops_server ||--o{ ops_agent_heartbeat : reports
+```
+
+### 监控指标
+
+```mermaid
+erDiagram
+    ops_server ||--o{ monitor_server_metric : has
+    ops_server ||--o{ monitor_process_snapshot : has
+    ops_server_disk ||--o{ monitor_disk_metric : has
+    ops_server_network ||--o{ monitor_network_metric : has
+    ops_server_container ||--o{ monitor_container_metric : has
+```
+
+### 告警
+
+```mermaid
+erDiagram
+    alert_rule ||--o{ alert_event : triggers
+    alert_event ||--o{ alert_event_log : logs
+    ops_server ||--o{ alert_event : relates
+    sys_user ||--o{ alert_event : acknowledges
+```
+
+### 自动化任务
+
+```mermaid
+erDiagram
+    sys_user ||--o{ ops_task : creates
+    ops_task ||--o{ ops_task_target : has
+    ops_task_target ||--o{ ops_task_execution : produces
+    ops_task_execution ||--o{ ops_task_log : logs
+    ops_server ||--o{ ops_task_target : target
+```
+
+### 登录与审计
+
+```mermaid
+erDiagram
+    sys_user ||--o{ sys_login_log : logs_in
+    sys_user ||--o{ sys_operation_log : operates
+    ops_server ||--o{ sys_operation_log : target
+```
+
 ## sys_user
 
 系统用户。

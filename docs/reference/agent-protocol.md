@@ -12,6 +12,26 @@
 - Token 由平台生成，数据库仅存 SHA-256 哈希；`register` 时 Token 在请求体与请求头中同时携带。
 - 校验失败返回 `401`（错误码 `40103`）。
 
+## Interaction Overview
+
+```mermaid
+sequenceDiagram
+    participant AG as Agent
+    participant BE as Backend
+    AG->>BE: POST /agent/register（server_code + token）
+    BE-->>AG: {server_id, agent_status}
+    loop 周期
+        AG->>BE: POST /agent/heartbeat
+        AG->>BE: POST /agent/metrics
+        AG->>BE: POST /agent/assets /services
+    end
+    loop 任务轮询
+        AG->>BE: GET /agent/tasks/pending
+        BE-->>AG: 执行参数
+        AG->>BE: POST /agent/task/result
+    end
+```
+
 ## Registration
 
 `POST /api/v1/agent/register`
