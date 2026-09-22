@@ -4,8 +4,9 @@
 
 ## 流程概览
 
-```text
-Fork/Clone → 建分支 → 开发 → 测试 → 更新文档 → 提交 PR
+```mermaid
+flowchart LR
+    A[Fork/Clone] --> B[建分支] --> C[开发] --> D[测试] --> E[更新文档] --> F[提交 PR]
 ```
 
 ## 建议步骤

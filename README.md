@@ -14,10 +14,14 @@
 
 ## Architecture
 
-```text
-浏览器 → Nginx → Vue 前端 / FastAPI 后端 → MySQL / Redis
-                                      ▲
-                         Linux Agent（主动上报/轮询）
+```mermaid
+flowchart LR
+    U[浏览器] --> N[Nginx]
+    N --> FE[Vue 前端]
+    N --> BE[FastAPI 后端]
+    BE --> DB[(MySQL)]
+    BE --> RD[(Redis)]
+    AG[Linux Agent] -->|上报 / 轮询| BE
 ```
 
 详见 [docs/architecture/overview.md](docs/architecture/overview.md)。
