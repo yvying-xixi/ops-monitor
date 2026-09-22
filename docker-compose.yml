@@ -53,6 +53,11 @@ services:
       METRIC_RETENTION_DAYS: ${METRIC_RETENTION_DAYS:-7}
       OPERATION_LOG_ENABLED: ${OPERATION_LOG_ENABLED:-true}
       CORS_ORIGINS: '${CORS_ORIGINS:-["*"]}'
+      AGENT_BUNDLE_DIR: /opt/agent-bundle
+    volumes:
+      # 供 /api/v1/agent/package 打包下载（只读挂载仓库中的 agent 源码与 systemd 模板）
+      - ./agent:/opt/agent-bundle/agent:ro
+      - ./deploy/systemd:/opt/agent-bundle/deploy/systemd:ro
     depends_on:
       mysql:
         condition: service_healthy

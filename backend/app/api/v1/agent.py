@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
 from app.api.v1.deps import get_agent_server
 from app.core.database import get_db
+from app.exceptions import AppException, ErrorCode
 from app.models import OpsServer
 from app.schemas.agent import (
     AssetsRequest,
@@ -16,12 +18,42 @@ from app.schemas.agent import (
     ServicesRequest,
     TaskResultRequest,
 )
+from app.services.agent_package import (
+    AgentPackageError,
+    build_agent_package,
+    read_install_script,
+)
 from app.services.agent_service import AgentService
 from app.services.task_service import TaskService
 from app.utils.request import get_client_ip
 from app.utils.response import success
 
 router = APIRouter(prefix="/agent", tags=["Agent"])
+
+
+@router.get("/package", summary="下载 Agent 安装包", include_in_schema=True)
+def download_agent_package():
+    """下载 Agent 安装包（tar.gz，含源码、install.sh 与 systemd 模板）。"""
+    try:
+        content, filename = build_agent_package()
+    except AgentPackageError as exc:
+        raise AppException(ErrorCode.NOT_FOUND, str(exc), http_status=404) from exc
+    return Response(
+        content=content,
+        media_type="application/gzip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.get("/install.sh", summary="获取 Agent 安装脚本", response_class=PlainTextResponse)
+def get_install_script():
+    """返回 Agent 一键安装脚本内容。"""
+    try:
+        content = read_install_script()
+    except AgentPackageError as exc:
+        raise AppException(ErrorCode.NOT_FOUND, str(exc), http_status=404) from exc
+    return PlainTextResponse(content, media_type="text/x-shellscript")
+
 
 
 @router.post("/register", summary="Agent 注册", description="使用 server_code + token 注册并回写系统信息。")

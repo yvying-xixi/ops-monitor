@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     ALERT_EVALUATE_INTERVAL_SECONDS: int = 10
     METRIC_RETENTION_DAYS: int = 7
     METRIC_CLEANUP_ENABLED: bool = True
+    # Agent 安装包来源目录（容器内挂载；为空时自动定位仓库根）
+    AGENT_BUNDLE_DIR: str = ""
 
     @property
     def database_url(self) -> str:
