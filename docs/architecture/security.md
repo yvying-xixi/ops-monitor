@@ -9,7 +9,7 @@
 
 ```mermaid
 flowchart LR
-    U[用户] -->|账号密码| LOGIN[/auth/login]
+    U[用户] -->|账号密码| LOGIN["/auth/login"]
     LOGIN -->|签发 JWT| U
     U -->|Bearer JWT| API[业务接口 /api/v1/*]
     AG[Agent] -->|Bearer Agent Token| AGENT[Agent 接口 /api/v1/agent/*]
