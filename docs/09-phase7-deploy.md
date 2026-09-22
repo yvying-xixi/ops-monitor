@@ -20,21 +20,27 @@ backend ── redis:7（仅内网）
 
 ## 二、启动方式
 
-```bash
-# 准备环境变量
-cp .env.example .env        # 修改 DB/REDIS 密码、JWT、种子管理员、HTTP_PORT
+推荐使用配置化部署（见 [docs/11-deploy-config.md](11-deploy-config.md)）：
 
-# 构建并启动
+```bash
+cp deploy/config.yml.tmpl deploy/config.yml   # 编辑 hostname/端口/密码
+./deploy/install.sh                            # 一键构建并启动
+./deploy/check.sh                              # 部署体检
+```
+
+手动方式（等价）：
+
+```bash
 docker compose up -d --build
 docker compose ps           # 全部 healthy
 docker compose logs -f backend
 
 # 停止/清理
-docker compose down         # 保留数据卷
-docker compose down -v      # 连同数据卷一起清理
+docker compose down         # 保留数据
+docker compose down -v      # 连同数据一起清理
 ```
 
-访问 `http://<host>:${HTTP_PORT}`，默认管理员见 `.env` 中 `SEED_ADMIN_*`。
+访问 `http://<host>:${HTTP_PORT}`，默认管理员见 `deploy/config.yml` 的 `admin` 段（或渲染后的 `deploy/.env`）。
 
 ## 三、Nginx 配置
 

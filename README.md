@@ -69,7 +69,7 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # 按需修改环境变量
+cp app/core/.env.example app/core/.env   # 按需修改环境变量
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -124,19 +124,20 @@ mysql -u root -p < sql/ops_monitor_schema.sql
 | `JWT_EXPIRE_MINUTES` | Token 有效期（分钟） | `120` |
 | `AGENT_SERVER_URL` | Agent 上报服务端地址 | `http://127.0.0.1:8000` |
 
-## Docker Compose 部署
+## Docker Compose 部署（配置化）
 
 ```bash
-cp .env.example .env          # 修改 DB/REDIS 密码、JWT、种子管理员
-docker compose up -d --build  # 构建并启动（首启自动建表 + seed）
-docker compose ps             # 全部 healthy 后访问 http://<host>:80
-docker compose logs -f backend   # 查看日志
-docker compose down           # 停止（保留数据卷）
-docker compose down -v        # 停止并清理数据卷
+cp deploy/config.yml.tmpl deploy/config.yml   # 编辑 hostname/端口/密码等
+./deploy/install.sh                            # 一键构建并启动
+./deploy/check.sh                              # 部署体检（只读）
+# 修改 config.yml 后重新渲染并重建：
+./deploy/reconfigure.sh
 ```
 
-- 服务：`nginx`（静态 + `/api` 反代，暴露 `HTTP_PORT`）、`backend`、`mysql`、`redis`
-- 详见 [docs/09-phase7-deploy.md](docs/09-phase7-deploy.md)
+- **配置源**：`deploy/config.yml`（`deploy/.env` 为自动渲染产物）
+- **数据持久化**：`deploy/config.yml` 的 `data.volume_dir`
+- 服务：`nginx`（静态 + `/api` 反代，暴露 `http.port`）、`backend`、`mysql`、`redis`
+- 详见 [docs/11-deploy-config.md](docs/11-deploy-config.md)
 
 ## 端口约定
 
@@ -162,6 +163,7 @@ docker compose down -v        # 停止并清理数据卷
 | [docs/08-phase6-task.md](docs/08-phase6-task.md) | 阶段六自动化运维：任务引擎、服务管理、安全约束、接口 |
 | [docs/09-phase7-deploy.md](docs/09-phase7-deploy.md) | 阶段七部署优化：镜像/Compose/Nginx/CI、启动与上线清单 |
 | [docs/10-agent-deploy.md](docs/10-agent-deploy.md) | Agent 部署：systemd 一键脚本、Docker、配置与排障 |
+| [docs/11-deploy-config.md](docs/11-deploy-config.md) | 平台配置化部署：config.yml、install/reconfigure/check |
 
 ## 开发进度
 
