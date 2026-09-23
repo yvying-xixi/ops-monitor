@@ -44,7 +44,7 @@ jobs:
         run: |
           python - <<'PY'
           import re, pymysql
-          sql = open("sql/ops_monitor_schema.sql", encoding="utf-8").read()
+          sql = open("deploy/mysql/init/ops_monitor_schema.sql", encoding="utf-8").read()
           sql = re.sub(r"CREATE DATABASE[^;]*;", "", sql, flags=re.I | re.S)
           sql = re.sub(r"USE\s+\w+\s*;", "", sql, flags=re.I)
           conn = pymysql.connect(host="127.0.0.1", user="root", password="",

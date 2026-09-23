@@ -40,7 +40,7 @@ cd frontend && npm run build
 
 ## Database Changes
 
-- 表结构变更需同步 `sql/ops_monitor_schema.sql` 与 [docs/reference/database.md](docs/reference/database.md)。
+- 表结构变更需同步 `deploy/mysql/init/ops_monitor_schema.sql` 与 [docs/reference/database.md](docs/reference/database.md)。
 - 索引/字段变更需说明查询场景。
 
 ## API Changes

@@ -26,7 +26,7 @@
 
 | 现象 | 排查/处理 |
 | --- | --- |
-| 表不存在 | 首启应执行 `sql/` 建表；确认 `data.volume_dir` 为空或已初始化 |
+| 表不存在 | 首启应执行 `deploy/mysql/init/` 建表；确认 `data.volume_dir` 为空或已初始化 |
 | 连接被拒 | 确认 mysql healthy 且 `DB_PASSWORD` 与 config 一致 |
 | 数据丢失 | 确认 `data.volume_dir` 未被清空（见 [backup.md](backup.md)） |
 

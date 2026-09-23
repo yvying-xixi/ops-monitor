@@ -16,7 +16,7 @@ flowchart LR
 - **单 Nginx 入口**：镜像多阶段（node 构建前端 → nginx:alpine 托管），承担静态与 `/api` 反代。
 - backend 独立镜像：`python:3.11-slim`、非 root、HEALTHCHECK。
 - mysql/redis 不暴露宿主端口，数据落在 `data.volume_dir`。
-- `./sql` 首启挂载自动建表；lifespan 幂等 seed 默认角色/规则/管理员。
+- `deploy/mysql/init/` 首启挂载自动建表；lifespan 幂等 seed 默认角色/规则/管理员。
 
 ## 前置条件
 

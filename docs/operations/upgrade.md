@@ -16,7 +16,7 @@ git pull                       # 获取新代码
 
 ## 数据库变更
 
-> **TODO**: 补充数据库 Schema 变更流程（当前由 `sql/ops_monitor_schema.sql` 首启建表，无迁移工具）。
+> **TODO**: 补充数据库 Schema 变更流程（当前由 `deploy/mysql/init/ops_monitor_schema.sql` 首启建表，无迁移工具）。
 
 ## Agent 升级
 

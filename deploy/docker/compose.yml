@@ -10,7 +10,7 @@ services:
     volumes:
       - ${DATA_VOLUME_DIR:-../data}/mysql:/var/lib/mysql
       # 首启自动执行建表脚本（含 CREATE DATABASE IF NOT EXISTS）
-      - ./sql:/docker-entrypoint-initdb.d:ro
+      - ../mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_PASSWORD:-change-me}"]
       interval: 10s

@@ -29,7 +29,7 @@ npm install
 ## 数据库准备
 
 ```bash
-mysql -u root -p < sql/ops_monitor_schema.sql
+mysql -u root -p < deploy/mysql/init/ops_monitor_schema.sql
 ```
 
 ## 配置

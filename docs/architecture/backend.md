@@ -21,7 +21,7 @@ flowchart TD
 | Router | `app/api/v1/` | 路由注册、参数校验、统一响应 | 不含业务逻辑；不直接操作数据库 |
 | Service | `app/services/` | 业务逻辑、权限、告警计算、任务调度 | 事务提交/回滚在此层 |
 | Repository | `app/repositories/` | 数据访问、分页、查询封装 | 只做数据读写，不做业务判断 |
-| Model | `app/models/` | SQLAlchemy ORM 实体 | 与 `sql/ops_monitor_schema.sql` 一致 |
+| Model | `app/models/` | SQLAlchemy ORM 实体 | 与 `deploy/mysql/init/ops_monitor_schema.sql` 一致 |
 | Schema | `app/schemas/` | Pydantic 模型 | 请求校验与响应格式化分离 |
 | Core | `app/core/` | 配置、安全、数据库、调度、种子 | 全局单例 |
 | Middleware | `app/middleware/` | 请求上下文、操作审计 | — |
