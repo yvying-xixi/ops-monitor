@@ -24,12 +24,18 @@ for tool in sed od tr; do
   command -v "$tool" >/dev/null 2>&1 || err "缺少 $tool"
 done
 
-# 2. 配置：不存在则从模板生成
+# 2. 配置：不存在则迁移旧配置或从模板生成
 if [ ! -f "$CONFIG" ]; then
-  cp "$DEPLOY_DIR/config.env.tmpl" "$CONFIG"
-  chmod 600 "$CONFIG"
-  log "已生成默认配置 $CONFIG（HOSTNAME=127.0.0.1）"
-  log "如需外部访问，请编辑 HOSTNAME/HTTP_PORT 后重新运行本脚本"
+  if [ -f "$DEPLOY_DIR/config.yml" ]; then
+    "$DEPLOY_DIR/migrate-config.sh"
+    log "已从 deploy/config.yml 迁移到 $CONFIG"
+    log "原文件已保留为备份，确认无误后可手动删除"
+  else
+    cp "$DEPLOY_DIR/config.env.tmpl" "$CONFIG"
+    chmod 600 "$CONFIG"
+    log "已生成默认配置 $CONFIG（HOSTNAME=127.0.0.1）"
+    log "如需外部访问，请编辑 HOSTNAME/HTTP_PORT 后重新运行本脚本"
+  fi
 fi
 
 # 3. 渲染 .env（并回写自动生成的密钥）
