@@ -31,9 +31,12 @@ yget() {
   awk -v sec="$sec" -v key="$key" '
     function clean(v) {
       sub(/^[[:space:]]+/, "", v); sub(/[[:space:]]+$/, "", v);
-      if (v !~ /^["'"'"']/) { sub(/[[:space:]]+#.*$/, "", v); sub(/[[:space:]]+$/, "", v); }
-      if (v ~ /^".*"$/) { v = substr(v, 2, length(v)-2); }
-      else if (v ~ /^'"'"'.*'"'"'$/) { v = substr(v, 2, length(v)-2); }
+      if (v ~ /^["'"'"']/) {
+        q = substr(v, 1, 1); rest = substr(v, 2); i = index(rest, q);
+        v = (i > 0) ? substr(rest, 1, i - 1) : rest;
+      } else {
+        sub(/[[:space:]]+#.*$/, "", v); sub(/[[:space:]]+$/, "", v);
+      }
       return v
     }
     BEGIN { insec = (sec == "") ? 1 : 0 }
