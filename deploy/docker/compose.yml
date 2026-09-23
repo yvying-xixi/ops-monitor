@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-change-me}
       MYSQL_DATABASE: ${DB_NAME:-ops_monitor}
     volumes:
-      - ${DATA_VOLUME_DIR:-./deploy/data}/mysql:/var/lib/mysql
+      - ${DATA_VOLUME_DIR:-../data}/mysql:/var/lib/mysql
       # 首启自动执行建表脚本（含 CREATE DATABASE IF NOT EXISTS）
       - ./sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
@@ -25,7 +25,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-change-me}
     volumes:
-      - ${DATA_VOLUME_DIR:-./deploy/data}/redis:/data
+      - ${DATA_VOLUME_DIR:-../data}/redis:/data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -a $REDIS_PASSWORD ping | grep PONG"]
       interval: 10s
@@ -57,8 +57,8 @@ services:
       AGENT_BUNDLE_DIR: /opt/agent-bundle
     volumes:
       # 供 /api/v1/agent/package 打包下载（只读挂载仓库中的 agent 源码与 systemd 模板）
-      - ./agent:/opt/agent-bundle/agent:ro
-      - ./deploy/systemd:/opt/agent-bundle/deploy/systemd:ro
+      - ../../agent:/opt/agent-bundle/agent:ro
+      - ../../deploy/systemd:/opt/agent-bundle/deploy/systemd:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -75,7 +75,7 @@ services:
     ports:
       - "${HTTP_PORT:-80}:80"
     volumes:
-      - ./deploy/nginx/certs:/etc/nginx/certs:ro
+      - ../../deploy/nginx/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
     networks: [ops-net]
