@@ -4,12 +4,12 @@
 
 ## Scope
 
-覆盖平台一键安装、本地 systemd 脚本与 Docker 方式；宿主指标采集与受控服务管理。
+覆盖平台一键安装、本地 systemd 脚本与前台运行；宿主指标采集与受控服务管理。
 
 ## Prerequisites
 
 - 目标机为 Linux（Debian/Ubuntu 等），具备 systemd（systemd 方式）。
-- Python 3.11+（systemd 方式）或 Docker（容器方式）。
+- Python 3.11+（systemd / 前台方式）。
 - 目标机能访问平台地址。
 - 已在平台创建服务器并取得 `server_code` 与 Token。
 
@@ -51,19 +51,6 @@ sudo ./agent/install.sh                 # 安装到 /opt/ops-agent 并启动 ser
 cd /path/to/ops-monitor
 ./agent/.venv/bin/python -m agent.main
 ```
-
-### 方式三：Docker（宿主指标近似）
-
-```bash
-docker build -f deploy/docker/Dockerfile.agent -t ops-monitor-agent .
-docker run -d --name ops-agent --restart unless-stopped \
-  --pid=host --network=host \
-  -v /proc:/host/proc:ro -v /sys:/host/sys:ro \
-  -v $(pwd)/config.yaml:/app/agent/config/config.yaml:ro \
-  ops-monitor-agent
-```
-
-> 容器方式默认不授予 `--privileged`，容器内无法控制宿主 systemd 服务；磁盘使用率基于容器根文件系统。生产真实监控推荐 systemd 方式。
 
 ## Configuration
 

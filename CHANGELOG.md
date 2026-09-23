@@ -8,9 +8,16 @@
 
 ### Changed
 
+- 部署配置收敛：Docker 相关文件集中到 `deploy/docker/`（`compose.yml`、`Dockerfile.backend`）。
+- SQL 初始化脚本由 `sql/` 归位到 `deploy/mysql/init/`。
+
 ### Fixed
 
+- 修复 compose 迁移导致的相对挂载失效（agent/systemd/certs 挂载与数据默认路径）。
+
 ### Removed
+
+- 移除 Agent 容器化部署（`Dockerfile.agent`）；Agent 统一以 systemd 原生部署。
 
 ## [0.1.0] - 2026-09-23
 

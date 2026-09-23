@@ -24,7 +24,7 @@ agent/
 └── VERSION
 ```
 
-> Agent 的容器镜像 Dockerfile 位于 `deploy/docker/Dockerfile.agent`（容器方式为宿主指标近似，服务控制默认关闭）。
+> Agent 以 systemd 原生部署（需要宿主 `systemctl` 与 `/proc` 访问），不提供容器化部署。
 
 ## 职责分层
 
