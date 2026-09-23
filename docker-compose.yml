@@ -37,6 +37,7 @@ services:
     image: ${BACKEND_IMAGE:-ops-monitor-backend:local}
     build:
       context: ./backend
+      dockerfile: ../deploy/docker/Dockerfile.backend
     restart: unless-stopped
     environment:
       DB_HOST: mysql

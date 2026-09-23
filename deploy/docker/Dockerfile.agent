@@ -1,7 +1,7 @@
 # ops-monitor Agent 容器镜像
 #
 # 构建（在仓库根目录执行）：
-#   docker build -f agent/Dockerfile -t ops-monitor-agent:latest .
+#   docker build -f deploy/docker/Dockerfile.agent -t ops-monitor-agent:latest .
 #
 # 运行（宿主机指标采集；容器内服务控制默认关闭）：
 #   docker run -d --name ops-agent --restart unless-stopped \
