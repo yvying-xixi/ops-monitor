@@ -60,7 +60,7 @@ server {
 }
 NGINX
 
-  cat > "$DEPLOY_DIR/docker-compose.https.yml" <<EOF
+  cat > "$DEPLOY_DIR/docker/compose.https.yml" <<EOF
 services:
   nginx:
     ports:
@@ -68,7 +68,7 @@ services:
 EOF
   log "HTTPS 已启用（443 端口映射 + 证书就位）"
 else
-  rm -f "$DEPLOY_DIR/nginx/conf.d/https.conf" "$DEPLOY_DIR/docker-compose.https.yml"
+  rm -f "$DEPLOY_DIR/nginx/conf.d/https.conf" "$DEPLOY_DIR/docker/compose.https.yml"
 fi
 
 log "完成：$ENV_FILE"

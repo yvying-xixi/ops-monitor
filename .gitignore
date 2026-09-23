@@ -36,7 +36,7 @@ agent/config/config.yaml
 deploy/config.yml
 deploy/.env
 deploy/data/
-deploy/docker-compose.https.yml
+deploy/docker/compose.https.yml
 deploy/nginx/certs/*
 !deploy/nginx/certs/.gitkeep
 deploy/nginx/conf.d/https.conf

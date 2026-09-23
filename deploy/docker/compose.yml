@@ -36,7 +36,7 @@ services:
   backend:
     image: ${BACKEND_IMAGE:-ops-monitor-backend:local}
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: ../deploy/docker/Dockerfile.backend
     restart: unless-stopped
     environment:
@@ -69,7 +69,7 @@ services:
   nginx:
     image: ${NGINX_IMAGE:-ops-monitor-nginx:local}
     build:
-      context: .
+      context: ../..
       dockerfile: deploy/nginx/Dockerfile
     restart: unless-stopped
     ports:

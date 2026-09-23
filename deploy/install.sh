@@ -39,9 +39,9 @@ set -a
 . "$ENV_FILE"
 set +a
 
-COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/docker-compose.yml")
+COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/deploy/docker/compose.yml")
 if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
-  COMPOSE+=(-f "$DEPLOY_DIR/docker-compose.https.yml")
+  COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.https.yml")
 fi
 
 # 5. 拉取或构建
@@ -74,4 +74,4 @@ fi
 echo "  访问地址 : http://${HOSTNAME}${HTTP_PORT:+:$HTTP_PORT}"
 echo "  管理员   : ${SEED_ADMIN_USERNAME} / ${SEED_ADMIN_PASSWORD}"
 echo "  配置源   : $CONFIG（修改后执行 ./deploy/reconfigure.sh）"
-echo "  停止     : docker compose --env-file $ENV_FILE down"
+echo "  停止     : ${COMPOSE[*]} down"

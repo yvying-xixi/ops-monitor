@@ -25,9 +25,9 @@ set -a
 . "$ENV_FILE"
 set +a
 
-COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/docker-compose.yml")
+COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/deploy/docker/compose.yml")
 if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
-  COMPOSE+=(-f "$DEPLOY_DIR/docker-compose.https.yml")
+  COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.https.yml")
 fi
 
 log "应用变更（重建受影响服务，数据卷保留）..."
