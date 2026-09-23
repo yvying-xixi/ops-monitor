@@ -27,15 +27,15 @@ flowchart LR
 
 ```bash
 cd /path/to/ops-monitor
-docker compose --env-file deploy/.env down
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env down
 tar czf ops-monitor-data-$(date +%F).tar.gz -C deploy data
-docker compose --env-file deploy/.env up -d
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d
 ```
 
 ### 仅备份数据库（逻辑备份）
 
 ```bash
-docker compose --env-file deploy/.env exec -T mysql \
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env exec -T mysql \
   mysqldump -uroot -p"$DB_PASSWORD" --databases ops_monitor > ops_monitor-$(date +%F).sql
 ```
 

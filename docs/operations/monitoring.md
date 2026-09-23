@@ -14,7 +14,7 @@
 
 ## 容器健康
 
-- Compose 为 mysql/redis/backend/nginx 配置 healthcheck；`docker compose ps` 显示 healthy。
+- Compose 为 mysql/redis/backend/nginx 配置 healthcheck；`docker compose -f deploy/docker/compose.yml --env-file deploy/.env ps` 显示 healthy。
 - backend 镜像内置 HEALTHCHECK（`/api/v1/health`）。
 
 ## 平台日志

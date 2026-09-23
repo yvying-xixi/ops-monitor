@@ -15,18 +15,18 @@ flowchart LR
 
 ```bash
 cd /path/to/ops-monitor
-docker compose --env-file deploy/.env down
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env down
 # 还原备份到 data.volume_dir（默认 deploy/data）
 tar xzf ops-monitor-data-<date>.tar.gz -C deploy
-docker compose --env-file deploy/.env up -d
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d
 ```
 
 ### 从 SQL 逻辑备份恢复
 
 ```bash
-docker compose --env-file deploy/.env up -d mysql
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d mysql
 cat ops_monitor-<date>.sql | \
-  docker compose --env-file deploy/.env exec -T mysql \
+  docker compose -f deploy/docker/compose.yml --env-file deploy/.env exec -T mysql \
   mysql -uroot -p"$DB_PASSWORD"
 ```
 
@@ -37,7 +37,7 @@ cat ops_monitor-<date>.sql | \
 
 ## 验证
 
-1. `docker compose ps` 全部 healthy。
+1. `docker compose -f deploy/docker/compose.yml --env-file deploy/.env ps` 全部 healthy。
 2. `curl http://<host>:<port>/api/v1/health`。
 3. 登录并抽查服务器/指标/告警数据。
 

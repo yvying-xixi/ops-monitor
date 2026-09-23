@@ -49,11 +49,11 @@ cp deploy/config.yml.tmpl deploy/config.yml   # 编辑 hostname/端口/密码
 ## 手动方式（等价）
 
 ```bash
-docker compose up -d --build
-docker compose ps
-docker compose logs -f backend
-docker compose down       # 保留数据
-docker compose down -v    # 连同数据清理
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d --build
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env ps
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env logs -f backend
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env down       # 保留数据
+docker compose -f deploy/docker/compose.yml --env-file deploy/.env down -v    # 连同数据清理
 ```
 
 ## Nginx 配置
@@ -68,7 +68,7 @@ docker compose down -v    # 连同数据清理
 
 ## 部署验证
 
-1. `docker compose ps` 全部 healthy。
+1. `docker compose -f deploy/docker/compose.yml --env-file deploy/.env ps` 全部 healthy。
 2. `curl http://<host>:<port>/api/v1/health` 返回 `{db:true, redis:true}`。
 3. 浏览器登录并进入 Dashboard。
 4. 生成服务器凭证 → 部署 Agent → 服务器变 ONLINE（见 [agent-deployment.md](agent-deployment.md)）。

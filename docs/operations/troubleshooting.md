@@ -8,9 +8,9 @@
 
 | 检查 | 命令 |
 | --- | --- |
-| 容器状态 | `docker compose --env-file deploy/.env ps` |
+| 容器状态 | `docker compose -f deploy/docker/compose.yml --env-file deploy/.env ps` |
 | 健康检查 | `curl http://<host>:<port>/api/v1/health` |
-| 后端日志 | `docker compose --env-file deploy/.env logs -f backend` |
+| 后端日志 | `docker compose -f deploy/docker/compose.yml --env-file deploy/.env logs -f backend` |
 | Agent 状态 | `systemctl status server-agent --no-pager` |
 | Agent 日志 | `journalctl -u server-agent -f` |
 
@@ -34,7 +34,7 @@
 
 | 现象 | 排查/处理 |
 | --- | --- |
-| 页面空白/资源 404 | 前端镜像是否随代码重建（`docker compose up -d --build nginx`） |
+| 页面空白/资源 404 | 前端镜像是否随代码重建（`docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d --build nginx`） |
 | 接口 401 反复跳登录 | Token 失效或后端 `JWT_SECRET_KEY` 变更 |
 | 刷新后菜单/权限异常 | 会话恢复依赖 `/auth/me`，确认后端可达 |
 

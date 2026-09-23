@@ -55,7 +55,7 @@ cd /path/to/ops-monitor
 ### 方式三：Docker（宿主指标近似）
 
 ```bash
-docker build -f agent/Dockerfile -t ops-monitor-agent .
+docker build -f deploy/docker/Dockerfile.agent -t ops-monitor-agent .
 docker run -d --name ops-agent --restart unless-stopped \
   --pid=host --network=host \
   -v /proc:/host/proc:ro -v /sys:/host/sys:ro \
