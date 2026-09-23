@@ -21,9 +21,10 @@ agent/
 ├── worker.py      # TaskWorker：轮询任务并执行回传
 ├── main.py        # Agent 主控（注册 + 多线程循环）
 ├── install.sh     # 一键安装（systemd）
-├── Dockerfile     # 容器方式（宿主指标近似，服务控制默认关闭）
 └── VERSION
 ```
+
+> Agent 的容器镜像 Dockerfile 位于 `deploy/docker/Dockerfile.agent`（容器方式为宿主指标近似，服务控制默认关闭）。
 
 ## 职责分层
 
