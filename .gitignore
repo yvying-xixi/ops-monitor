@@ -4,6 +4,7 @@ backend/.venv/
 agent/.venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # Frontend
 frontend/node_modules/
@@ -13,10 +14,6 @@ frontend/dist/
 .env
 .env.local
 .env.*.local
-
-# Docker data
-deploy/mysql/data/
-deploy/redis/data/
 
 # IDE / OS
 .idea/

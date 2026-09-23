@@ -24,5 +24,4 @@ frontend/dist
 *.key
 
 # 本地数据
-deploy/mysql/data
-deploy/redis/data
+deploy/data
