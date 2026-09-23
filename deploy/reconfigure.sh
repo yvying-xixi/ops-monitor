@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# 修改 deploy/config.yml 后：体检 → 重新渲染 → 重建/重启（数据保留）
+# 修改 deploy/config.env 后：体检 → 重新渲染 → 重建/重启（数据保留）
 #
 set -euo pipefail
 
 DEPLOY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
-CONFIG="${DEPLOY_CONFIG:-$DEPLOY_DIR/config.yml}"
+CONFIG="${DEPLOY_CONFIG:-$DEPLOY_DIR/config.env}"
 ENV_FILE="$DEPLOY_DIR/.env"
 
 log() { echo -e "\033[32m[reconfigure]\033[0m $*"; }

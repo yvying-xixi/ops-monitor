@@ -29,7 +29,8 @@ Thumbs.db
 # Agent 运行时配置（含 Token，禁止提交）
 agent/config/config.yaml
 
-# 平台部署配置（config.yml 含密钥，.env 为生成物）
+# 平台部署配置（config.env 含密钥；config.yml 为旧格式备份）
+deploy/config.env
 deploy/config.yml
 deploy/.env
 deploy/data/
