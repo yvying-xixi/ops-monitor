@@ -4,8 +4,8 @@
 
 ```mermaid
 flowchart LR
-    A[停止服务 down] --> B[还原 data.volume_dir / 导入 SQL]
-    B --> C[恢复 config.yml → reconfigure.sh]
+    A[停止服务 down] --> B[还原 DATA_VOLUME_DIR / 导入 SQL]
+    B --> C[恢复 config.env → reconfigure.sh]
     C --> D[启动并验证 health/数据]
 ```
 
@@ -16,7 +16,7 @@ flowchart LR
 ```bash
 cd /path/to/ops-monitor
 docker compose -f deploy/docker/compose.yml --env-file deploy/.env down
-# 还原备份到 data.volume_dir（默认 deploy/data）
+# 还原备份到 DATA_VOLUME_DIR（默认 deploy/data）
 tar xzf ops-monitor-data-<date>.tar.gz -C deploy
 docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d
 ```
@@ -32,7 +32,7 @@ cat ops_monitor-<date>.sql | \
 
 ## 配置恢复
 
-- 恢复 `deploy/config.yml` 后执行 `./deploy/reconfigure.sh` 重新渲染并重建。
+- 恢复 `deploy/config.env` 后执行 `./deploy/reconfigure.sh` 重新渲染并重建。
 - Agent 配置恢复后重启 `server-agent`。
 
 ## 验证

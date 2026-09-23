@@ -4,8 +4,8 @@
 
 | 服务 | 容器端口 | 宿主端口 | 说明 |
 | --- | ---: | --- | --- |
-| Nginx（入口） | 80 | `${http.port}`（默认 80） | 静态资源 + `/api` 反代 |
-| Nginx（HTTPS） | 443 | `${https.port}`（默认 443） | 启用 HTTPS 时 |
+| Nginx（入口） | 80 | `HTTP_PORT`（默认 80） | 静态资源 + `/api` 反代 |
+| Nginx（HTTPS） | 443 | `HTTPS_PORT`（默认 443） | 启用 HTTPS 时 |
 | Backend（uvicorn） | 8000 | 仅内网 | 经 Nginx 反代访问 |
 | MySQL | 3306 | 仅内网 | 不暴露宿主 |
 | Redis | 6379 | 仅内网 | 不暴露宿主 |

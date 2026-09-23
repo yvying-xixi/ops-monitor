@@ -30,7 +30,7 @@ flowchart LR
 
 ```bash
 # 平台（配置化部署）
-cp deploy/config.yml.tmpl deploy/config.yml   # 编辑 hostname/端口/密码
+cp deploy/config.env.tmpl deploy/config.env   # 编辑 HOSTNAME/HTTP_PORT/密码
 ./deploy/install.sh
 ```
 

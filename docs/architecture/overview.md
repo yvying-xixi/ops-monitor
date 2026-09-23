@@ -44,7 +44,7 @@ MySQL 8.0 存储，业务数据与监控数据逻辑分离。核心域：用户�
 
 ### Deployment
 
-Docker Compose 编排 `nginx`、`backend`、`mysql`、`redis`；平台采用配置化部署（`deploy/config.yml` + `install.sh`）。Agent 单独以 systemd 部署。
+Docker Compose 编排 `nginx`、`backend`、`mysql`、`redis`；平台采用配置化部署（`deploy/config.env` + `install.sh`）。Agent 单独以 systemd 部署。
 
 详见 [operations/deployment.md](../operations/deployment.md)。
 

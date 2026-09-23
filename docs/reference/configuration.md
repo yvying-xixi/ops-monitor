@@ -1,30 +1,34 @@
 # 配置 Reference
 
-> 本文档描述后端、部署与 Agent 的配置项。可复制模板：`backend/app/core/.env.example`（后端本地开发）、`deploy/config.yml.tmpl`（平台部署）、`agent/config/config.yaml.example`（Agent）。
+> 本文档描述后端、部署与 Agent 的配置项。可复制模板：`backend/app/core/.env.example`（后端本地开发）、`deploy/config.env.tmpl`（平台部署）、`agent/config/config.yaml.example`（Agent）。
 
-## 平台部署（`deploy/config.yml`）
+## 平台部署（`deploy/config.env`）
 
-配置源为 `deploy/config.yml`（由 `config.yml.tmpl` 生成），经 `prepare.py` 渲染为 `deploy/.env` 供 Compose 使用。
+配置源为 `deploy/config.env`（由 `config.env.tmpl` 生成），经 `prepare.sh` 渲染为 `deploy/.env` 供 Compose 使用。
 
-| 段 | 键 | 默认 | 说明 |
-| --- | --- | --- | --- |
-| — | `hostname` | 127.0.0.1 | 平台对外地址（CORS 与访问提示） |
-| `http` | `port` | 80 | 对外 HTTP 端口 |
-| `https` | `enabled` | false | 启用 HTTPS |
-| `https` | `port` | 443 | HTTPS 端口 |
-| `https` | `certificate` / `private_key` | — | 证书/私钥路径 |
-| `database` | `name` | ops_monitor | 业务库名 |
-| `database` | `password` | 自动生成 | MySQL 密码 |
-| `redis` | `password` | 自动生成 | Redis 密码 |
-| `jwt` | `secret_key` | 自动生成 | JWT 签名密钥 |
-| `jwt` | `expire_minutes` | 120 | Token 有效期（分钟） |
-| `admin` | `username` / `password` | admin / 自动生成 | 初始管理员（仅首次 seed） |
-| `seed` | `init` | true | 启动时是否初始化种子数据 |
-| `metrics` | `retention_days` | 7 | 指标保留天数 |
-| `operation_log` | `enabled` | true | 操作审计开关 |
-| `image` | `registry` | 空 | 镜像 registry（空则本地构建） |
-| `image` | `tag` | latest | 镜像标签 |
-| `data` | `volume_dir` | ./data | 数据持久化目录（宿主，相对 `deploy/`） |
+`config.env` 是 Bash-compatible 配置文件（由 shell `source` 执行），**仅允许受信任的部署管理员编辑**。
+
+| 键 | 默认 | 说明 |
+| --- | --- | --- |
+| `HOSTNAME` | 127.0.0.1 | 平台对外地址（CORS 与访问提示） |
+| `HTTP_PORT` | 80 | 对外 HTTP 端口 |
+| `HTTPS_ENABLED` | false | 启用 HTTPS |
+| `HTTPS_PORT` | 443 | HTTPS 端口 |
+| `HTTPS_CERTIFICATE` / `HTTPS_PRIVATE_KEY` | — | 证书/私钥路径 |
+| `DB_NAME` | ops_monitor | 业务库名 |
+| `DB_PASSWORD` | 自动生成 | MySQL 密码 |
+| `REDIS_PASSWORD` | 自动生成 | Redis 密码 |
+| `JWT_SECRET_KEY` | 自动生成 | JWT 签名密钥 |
+| `JWT_EXPIRE_MINUTES` | 120 | Token 有效期（分钟） |
+| `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD` | admin / 自动生成 | 初始管理员（仅首次 seed） |
+| `SEED_INIT_DATA` | true | 启动时是否初始化种子数据 |
+| `METRIC_RETENTION_DAYS` | 7 | 指标保留天数 |
+| `OPERATION_LOG_ENABLED` | true | 操作审计开关 |
+| `IMAGE_REGISTRY` | 空 | 镜像 registry（空则本地构建） |
+| `IMAGE_TAG` | latest | 镜像标签 |
+| `DATA_VOLUME_DIR` | ./data | 数据持久化目录（宿主，相对 `deploy/`） |
+
+> 以下键由 `prepare.sh` 派生写入 `deploy/.env`，不在 `config.env` 中：`CORS_ORIGINS`、`BACKEND_IMAGE`、`NGINX_IMAGE`。
 
 ## 后端环境变量
 

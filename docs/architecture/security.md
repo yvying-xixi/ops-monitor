@@ -49,7 +49,7 @@ flowchart LR
 
 ## 传输与部署
 
-- 生产建议启用 HTTPS（`deploy/config.yml` 的 `https` 段）。
+- 生产建议启用 HTTPS（`deploy/config.env` 的 `HTTPS_ENABLED` 等）。
 - mysql/redis 不暴露宿主端口，仅在 Compose 内网访问。
 - Agent 上报接口鉴权与绑定服务器（Token → server）。
 

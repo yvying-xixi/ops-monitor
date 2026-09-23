@@ -26,9 +26,9 @@
 
 | 现象 | 排查/处理 |
 | --- | --- |
-| 表不存在 | 首启应执行 `deploy/mysql/init/` 建表；确认 `data.volume_dir` 为空或已初始化 |
+| 表不存在 | 首启应执行 `deploy/mysql/init/` 建表；确认 `DATA_VOLUME_DIR` 为空或已初始化 |
 | 连接被拒 | 确认 mysql healthy 且 `DB_PASSWORD` 与 config 一致 |
-| 数据丢失 | 确认 `data.volume_dir` 未被清空（见 [backup.md](backup.md)） |
+| 数据丢失 | 确认 `DATA_VOLUME_DIR` 未被清空（见 [backup.md](backup.md)） |
 
 ## Frontend Issues
 
@@ -52,10 +52,10 @@
 
 | 现象 | 排查/处理 |
 | --- | --- |
-| 端口被占用 | 修改 `config.yml` 的 `http.port` 或释放端口 |
-| 缺少 PyYAML | `apt install -y python3-yaml` 或 `pip install pyyaml` |
+| 端口被占用 | 修改 `config.env` 的 `HTTP_PORT` 或释放端口 |
+| 缺少 `config.env` | 有旧 `config.yml` 时运行 `./deploy/install.sh` 自动迁移；否则从 `config.env.tmpl` 生成 |
 | 健康检查超时 | 查看 backend 日志；确认 mysql/redis 就绪 |
-| 外网无法访问 | 检查防火墙/安全组与 `hostname` 配置；公网建议 HTTPS |
+| 外网无法访问 | 检查防火墙/安全组与 `HOSTNAME` 配置；公网建议 HTTPS |
 
 ## Logs and Diagnostics
 

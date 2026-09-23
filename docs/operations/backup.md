@@ -6,17 +6,17 @@
 
 | 对象 | 位置 | 说明 |
 | --- | --- | --- |
-| MySQL 数据 | `data.volume_dir/mysql` | 业务与监控数据 |
-| Redis 数据 | `data.volume_dir/redis` | 缓存/任务状态 |
-| 部署配置 | `deploy/config.yml` | 配置源（含密钥，妥善保管） |
+| MySQL 数据 | `DATA_VOLUME_DIR/mysql` | 业务与监控数据 |
+| Redis 数据 | `DATA_VOLUME_DIR/redis` | 缓存/任务状态 |
+| 部署配置 | `deploy/config.env` | 配置源（含密钥，妥善保管） |
 | 部署环境变量 | `deploy/.env` | 渲染产物 |
 | Agent 配置 | 各服务器 `agent/config/config.yaml` | 含 Token |
 
-`data.volume_dir` 由 `deploy/config.yml` 的 `data.volume_dir` 指定（默认 `deploy/data`）。
+数据目录由 `deploy/config.env` 的 `DATA_VOLUME_DIR` 指定（默认 `deploy/data`）。
 
 ```mermaid
 flowchart LR
-    A[停止服务 down] --> B[打包 data.volume_dir]
+    A[停止服务 down] --> B[打包 DATA_VOLUME_DIR]
     B --> C[保存归档]
     C --> D[启动服务 up -d]
 ```

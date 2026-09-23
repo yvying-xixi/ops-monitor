@@ -11,8 +11,8 @@ git pull                       # 获取新代码
 ./deploy/reconfigure.sh        # 重新渲染并重建（数据保留）
 ```
 
-- 配置变更：修改 `deploy/config.yml` 后执行 `reconfigure.sh`。
-- 使用预构建镜像：在 `config.yml` 设置 `image.registry` 与 `tag`，`reconfigure.sh` 会拉取镜像。
+- 配置变更：修改 `deploy/config.env` 后执行 `reconfigure.sh`。
+- 使用预构建镜像：在 `config.env` 设置 `IMAGE_REGISTRY` 与 `IMAGE_TAG`，`reconfigure.sh` 会拉取镜像。
 
 ## 数据库变更
 
