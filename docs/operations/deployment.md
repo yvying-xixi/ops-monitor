@@ -18,6 +18,16 @@ flowchart LR
 - mysql/redis 不暴露宿主端口，数据落在 `data.volume_dir`。
 - `deploy/mysql/init/` 首启挂载自动建表；lifespan 幂等 seed 默认角色/规则/管理员。
 
+### 部署文件位置
+
+| 文件 | 位置 |
+| --- | --- |
+| Compose 编排 | `deploy/docker/compose.yml` |
+| backend 镜像 | `deploy/docker/Dockerfile.backend` |
+| nginx + 前端镜像 | `deploy/nginx/Dockerfile` |
+| Nginx 配置 | `deploy/nginx/conf.d/default.conf` |
+| 建表脚本 | `deploy/mysql/init/ops_monitor_schema.sql` |
+
 ## 前置条件
 
 - Docker 与 Docker Compose v2

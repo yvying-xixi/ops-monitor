@@ -1,6 +1,6 @@
 # 配置 Reference
 
-> 本文档描述后端、部署与 Agent 的配置项。`.env.example` / `config.yml.tmpl` 是可复制模板，本文件是完整说明。
+> 本文档描述后端、部署与 Agent 的配置项。可复制模板：`backend/app/core/.env.example`（后端本地开发）、`deploy/config.yml.tmpl`（平台部署）、`agent/config/config.yaml.example`（Agent）。
 
 ## 平台部署（`deploy/config.yml`）
 

@@ -33,6 +33,17 @@ erDiagram
   - 告警确认/恢复、任务操作：`SYSTEM_ADMIN`/`OPS_ENGINEER`
   - 监控查询：登录用户
 
+## 用户与角色管理 API
+
+| Method | Endpoint | 说明 | 权限 |
+| --- | --- | --- | --- |
+| GET | `/api/v1/users` | 用户分页列表（username/status 筛选） | SYSTEM_ADMIN |
+| POST | `/api/v1/users` | 创建用户（可分配角色） | SYSTEM_ADMIN |
+| GET | `/api/v1/users/{id}` | 用户详情 | SYSTEM_ADMIN |
+| PUT | `/api/v1/users/{id}` | 更新用户/角色 | SYSTEM_ADMIN |
+| DELETE | `/api/v1/users/{id}` | 软删除用户 | SYSTEM_ADMIN |
+| GET | `/api/v1/roles` | 角色列表（用户管理下拉） | SYSTEM_ADMIN |
+
 ## 前端权限
 
 - `store/user.js` 提供 `hasRole`/`isAdmin`。
