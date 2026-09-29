@@ -68,7 +68,7 @@ docker compose -f deploy/docker/compose.yml --env-file deploy/.env down -v    # 
 
 ## Nginx 配置
 
-- `location /api/` → `proxy_pass http://backend:8000`（Host/X-Forwarded-For/X-Request-ID 透传）。
+- `location /api/` → `proxy_pass http://backend:8000`（Host/X-Forwarded-For/X-Request-ID 透传）；后端未就绪时对 `502/503/504` 统一返回 JSON（`code=50300`），前端提示“服务暂未就绪”并对 GET 自动重试。
 - `location /` → SPA history 路由回退 `index.html`；静态缓存、gzip。
 - HTTPS：`config.env` 的 `HTTPS_ENABLED=true` 时自动生成 443 配置与端口映射。
 

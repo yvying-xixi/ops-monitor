@@ -6,13 +6,23 @@
 
 ### Added
 
+- 部署配置源改为 KV 文件 `deploy/config.env`（Bash `source`），新增 `deploy/migrate-config.sh` 自动迁移旧 `deploy/config.yml` 并逐项保留密钥。
+- 前端新增剪贴板降级工具 `frontend/src/utils/clipboard.js`。
+- 后端新增查询参数工具 `backend/app/utils/params.py`（`optional_int`：空串按未传处理并保留范围校验）。
+
 ### Changed
 
+- 移除部署脚本的宿主机 Python/PyYAML 依赖：`prepare.py` → 纯 bash `prepare.sh`；配置模板 `config.yml.tmpl` → `config.env.tmpl`。
+- 部署相关文档同步为 KV 配置与无宿主 Python。
 - 部署配置收敛：Docker 相关文件集中到 `deploy/docker/`（`compose.yml`、`Dockerfile.backend`）。
 - SQL 初始化脚本由 `sql/` 归位到 `deploy/mysql/init/`。
 
 ### Fixed
 
+- 修复接入向导复制在非安全上下文（HTTP 访问）下静默失效；脚本预览由居中改为左对齐。
+- 修复用户管理 `status` 传空串导致的参数校验失败（`40000`）；请求层统一剔除空查询参数。
+- 修复服务器管理在平台冷启动/后端重启期间显示 `502` 原始错误：Nginx 等待后端健康、`/api` 网关错误返回 JSON，前端友好提示并对 GET 自动重试。
+- 修复后端种子初始化在数据库未就绪时崩溃重启（`OperationalError` 退避重试）。
 - 修复 compose 迁移导致的相对挂载失效（agent/systemd/certs 挂载与数据默认路径）。
 
 ### Removed

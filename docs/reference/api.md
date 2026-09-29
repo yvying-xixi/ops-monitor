@@ -45,11 +45,13 @@
 
 - 过滤：按各接口文档声明的字段（如 `status`、`agent_status`、`severity`）。
 - 排序：后端默认按主键/时间倒序；具体以 OpenAPI 为准。
+- 空值过滤：前端请求层会自动剔除值为 `''`/`null`/`undefined` 的查询参数；后端对可空整型（如 `status`）也将空串按未传处理。
 
 ## Error Handling
 
 - 参数校验失败：HTTP 400 + `code=40000`。
 - 未认证/无权限：401/403；资源不存在：404；冲突：409；内部错误：500。
+- 网关错误：后端未就绪时 Nginx 对 `/api/` 返回 HTTP 503 + `code=50300`（统一 JSON），前端对 `GET` 自动退避重试。
 - 错误码与 HTTP 状态映射见 [error-codes.md](error-codes.md)。
 
 ## Idempotency

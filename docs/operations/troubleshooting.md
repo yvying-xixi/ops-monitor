@@ -20,6 +20,7 @@
 | --- | --- |
 | 健康检查 503 | `/health` 返回 `{db, redis}`；确认 mysql/redis 容器 healthy、密码一致 |
 | 启动即退出 | 查看日志；常见为 `CORS_ORIGINS` 等环境变量解析失败或数据库不可达 |
+| 接口 502/503（冷启动） | 后端尚未就绪时 Nginx 返回 `50300`（服务暂未就绪）；等待 backend healthy，或 `docker compose logs backend` 确认是否崩溃重启（种子初始化已带 DB 退避重试） |
 | 接口 500 | 查看后端日志与 `sys_operation_log` 的 `error_message` |
 
 ## Database Issues
@@ -37,6 +38,8 @@
 | 页面空白/资源 404 | 前端镜像是否随代码重建（`docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d --build nginx`） |
 | 接口 401 反复跳登录 | Token 失效或后端 `JWT_SECRET_KEY` 变更 |
 | 刷新后菜单/权限异常 | 会话恢复依赖 `/auth/me`，确认后端可达 |
+| 接入向导“复制”无反应 | 非 HTTPS/`localhost` 访问时浏览器禁用 Clipboard API，现已自动降级 `execCommand`；仍失败可手动选择文本复制 |
+| 用户管理报 `query.status ... integer` | 清空过滤不应发送空 `status`；确认前端为最新构建（请求层会剔除空查询参数） |
 
 ## Agent Issues
 

@@ -44,6 +44,9 @@ stateDiagram-v2
 
 前端「服务器管理 → 接入」提供向导：复制 `server_code`/`Token`、编辑服务端地址与服务白名单、生成/下载 `config.yaml`、下载 Agent 包、复制一键安装命令。
 
+- Token 明文仅返回一次；引导内所有复制走统一剪贴板工具，非安全上下文（HTTP 访问）下自动降级 `execCommand`。
+- 脚本预览区左对齐，便于直接核对/粘贴。
+
 > `server_code` 是 Agent 注册匹配键，须与平台「编码」一致（非主机名）。
 
 ## 相关文档

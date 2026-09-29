@@ -9,7 +9,8 @@ Vue 3 + Vite + Element Plus + Pinia + Vue Router + Axios + ECharts。
 ```text
 frontend/src/
 ├── utils/
-│   ├── request.js      # Axios 实例与拦截器（Token 注入、401 跳登录、统一解包）
+│   ├── request.js      # Axios 实例与拦截器（Token 注入、空参清理、401 跳登录、解包、网关错误友好化/重试）
+│   ├── clipboard.js    # 复制工具（Clipboard API，失败降级 execCommand）
 │   └── format.js       # 字节/时长/时间格式化
 ├── api/                # auth server monitor user role alert task 接口封装
 ├── store/user.js       # Pinia：Token 持久化、登录/登出、角色判断
@@ -28,8 +29,10 @@ frontend/src/
 
 ## 请求层
 
-- `utils/request.js` 统一 `baseURL=/api/v1`，注入 `Authorization: Bearer`；响应解包 `data`；`401` 触发登出并跳转登录。
+- `utils/request.js` 统一 `baseURL=/api/v1`，注入 `Authorization: Bearer`；请求前剔除值为 `''`/`null`/`undefined` 的查询参数（避免整型/枚举校验失败）；响应解包 `data`；`401` 触发登出并跳转登录。
+- 网关抖动（`502/503/504`）对幂等 `GET` 退避重试 2 次，最终提示“服务暂未就绪，请稍后重试”。
 - 开发环境由 `vite.config.js` 将 `/api` 代理到 `http://127.0.0.1:8000`；生产由 Nginx 同源反代。
+- 复制操作统一走 `utils/clipboard.js`：优先 Clipboard API，非安全上下文或失败时降级 `execCommand`。
 
 ```mermaid
 flowchart LR
