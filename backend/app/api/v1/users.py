@@ -9,6 +9,7 @@ from app.api.v1.deps import require_roles
 from app.core.database import get_db
 from app.schemas.user import UserCreate, UserOut, UserUpdate
 from app.services.user_service import UserService
+from app.utils.params import optional_int
 from app.utils.response import page, success
 
 router = APIRouter(prefix="/users", tags=["用户管理"])
@@ -21,7 +22,7 @@ def list_users(
     page_num: int = Query(1, ge=1, alias="page"),
     page_size: int = Query(20, ge=1, le=100),
     username: str | None = Query(None, max_length=64),
-    status: int | None = Query(None, ge=0, le=1),
+    status: optional_int(0, 1) = None,
     db: Session = Depends(get_db),
 ):
     """分页查询用户列表。

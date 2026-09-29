@@ -74,6 +74,33 @@ def test_list_users_pagination(client, db, admin_headers):
     assert len(body["items"]) == 2
 
 
+def test_list_users_empty_status(client, db, admin_headers):
+    """status 传空串（前端清空过滤条件）不应触发校验错误。"""
+    _create_user(db, "emptystatus")
+    resp = client.get(
+        "/api/v1/users",
+        headers=admin_headers,
+        params={"page": 1, "page_size": 10, "status": ""},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["data"]["total"] == 2  # emptystatus + test-admin
+
+
+def test_list_users_filter_status(client, db, admin_headers):
+    """status 过滤仍应生效。"""
+    _create_user(db, "activeuser")
+    disabled = _create_user(db, "disableduser")
+    disabled.status = 0
+    db.commit()
+
+    resp = client.get(
+        "/api/v1/users", headers=admin_headers, params={"status": 0}
+    )
+    assert resp.status_code == 200
+    usernames = [u["username"] for u in resp.json()["data"]["items"]]
+    assert usernames == ["disableduser"]
+
+
 def test_get_user(client, db, admin_headers):
     user = _create_user(db, "getme")
     resp = client.get(f"/api/v1/users/{user.id}", headers=admin_headers)
