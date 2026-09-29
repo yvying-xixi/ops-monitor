@@ -169,6 +169,12 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_next_upstream error timeout http_502 http_503 http_504;
+        error_page 502 503 504 @api_unavailable;
+    }
+    location @api_unavailable {
+        default_type application/json;
+        return 503 '{"code":50300,"message":"服务暂未就绪，请稍后重试","data":null}';
     }
     location / {
         try_files $uri $uri/ /index.html;
