@@ -8,7 +8,7 @@ import { formatTime } from '../../utils/format'
 const loading = ref(false)
 const rows = ref([])
 const total = ref(0)
-const query = reactive({ page: 1, page_size: 10, status: '' })
+const query = reactive({ page: 1, page_size: 10, status: undefined })
 const roles = ref([])
 
 const dialogVisible = ref(false)
