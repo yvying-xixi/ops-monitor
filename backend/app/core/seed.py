@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import logging
+import time
+
+from sqlalchemy.exc import OperationalError
 
 from app.core.config import settings
 from app.core.database import SessionLocal
@@ -46,8 +49,31 @@ DEFAULT_ALERT_RULES = [
 ]
 
 
-def init_seed_data() -> None:
-    """幂等初始化种子数据。
+def init_seed_data(max_attempts: int = 10, delay_seconds: float = 2.0) -> None:
+    """幂等初始化种子数据，数据库未就绪时带退避重试。
+
+    全新部署时 backend 可能先于 MySQL 完全可用而启动；重试可避免启动阶段
+    worker 崩溃重启（进而导致 Nginx 502）。
+    """
+    for attempt in range(1, max_attempts + 1):
+        try:
+            _init_seed_data_once()
+            return
+        except OperationalError as exc:
+            if attempt >= max_attempts:
+                raise
+            logger.warning(
+                "种子数据初始化失败（%d/%d），%.1fs 后重试: %s",
+                attempt,
+                max_attempts,
+                delay_seconds,
+                exc,
+            )
+            time.sleep(delay_seconds)
+
+
+def _init_seed_data_once() -> None:
+    """执行一次种子数据初始化（幂等）。
 
     按角色编码、权限编码、用户名检查存在性，缺失时补建；
     admin 账号密码来自 `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD` 配置，
