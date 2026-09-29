@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createServerApi, generateAgentTokenApi, listServersApi } from '../../api/server'
 import { AGENT_STATUS_MAP } from '../../config'
+import { copyText as copyToClipboard } from '../../utils/clipboard'
 import { formatTime } from '../../utils/format'
 
 const router = useRouter()
@@ -71,9 +72,12 @@ async function openToken(server) {
 }
 
 async function copyText(text, label = '已复制') {
-  if (!text) return
-  await navigator.clipboard.writeText(text)
-  ElMessage.success(label)
+  const ok = await copyToClipboard(text)
+  if (ok) {
+    ElMessage.success(label)
+  } else {
+    ElMessage.error('复制失败，请手动选择复制')
+  }
 }
 
 function copyToken() {
@@ -392,6 +396,7 @@ onMounted(loadData)
 .config-pre,
 .cmd-pre {
   margin: 0;
+  text-align: left;
   background: #0f172a;
   color: #d1e3ff;
   font-size: 12px;
