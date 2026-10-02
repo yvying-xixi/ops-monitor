@@ -102,10 +102,10 @@ registry="${IMAGE_REGISTRY:-}"; registry="${registry%/}"
 tag="${IMAGE_TAG:-latest}"; [ -n "$tag" ] || tag="latest"
 if [ -n "$registry" ]; then
   backend_image="$registry/ops-monitor-backend:$tag"
-  nginx_image="$registry/ops-monitor-nginx:$tag"
+  nginx_image="$registry/ops-monitor-frontend:$tag"
 else
   backend_image="ops-monitor-backend:local"
-  nginx_image="ops-monitor-nginx:local"
+  nginx_image="ops-monitor-frontend:local"
 fi
 if [ "${HTTP_PORT:-80}" = "80" ]; then
   origin="http://${HOSTNAME}"

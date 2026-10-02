@@ -67,7 +67,7 @@ services:
     networks: [ops-net]
 
   nginx:
-    image: ${NGINX_IMAGE:-ops-monitor-nginx:local}
+    image: ${NGINX_IMAGE:-ops-monitor-frontend:local}
     build:
       context: ../..
       dockerfile: deploy/nginx/Dockerfile
