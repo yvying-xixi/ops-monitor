@@ -10,7 +10,7 @@
 | [architecture/](architecture/) | 系统为什么这样设计？ | 系统边界、组件关系、数据流、安全模型 |
 | [modules/](modules/) | 某个功能如何工作？ | 认证、权限、服务器管理、监控、告警、服务管理、自动化、审计 |
 | [reference/](reference/) | 具体参数、API 或 Schema 是什么？ | API 规范、数据库、配置、Agent 协议、错误码、端口 |
-| [operations/](operations/) | 如何部署、升级和排错？ | 部署、Agent 部署、升级、备份、恢复、平台可观测性、排错 |
+| [operations/](operations/) | 如何部署、升级和排错？ | 部署、Agent 部署、镜像发布、升级、备份、恢复、平台可观测性、排错 |
 | [decisions/](decisions/) | 为什么当初这样设计？ | 架构决策记录（ADR） |
 | [CHANGELOG](../CHANGELOG.md) | 版本发生了什么变化？ | 版本变更历史 |
 

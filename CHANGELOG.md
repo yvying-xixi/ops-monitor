@@ -6,13 +6,27 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.0] - 2026-10-02
+
+### Added
+
 - 部署配置源改为 KV 文件 `deploy/config.env`（Bash `source`），新增 `deploy/migrate-config.sh` 自动迁移旧 `deploy/config.yml` 并逐项保留密钥。
 - 前端新增剪贴板降级工具 `frontend/src/utils/clipboard.js`。
 - 后端新增查询参数工具 `backend/app/utils/params.py`（`optional_int`：空串按未传处理并保留范围校验）。
+- 镜像发布：`.github/workflows/publish.yml` 在 tag `v*` 时构建并推送 Docker Hub；`deploy/publish.sh` 本地构建并推送 Harbor。
+- 新增根 `VERSION` 文件作为发布版本来源。
 
 ### Changed
 
 - 移除部署脚本的宿主机 Python/PyYAML 依赖：`prepare.py` → 纯 bash `prepare.sh`；配置模板 `config.yml.tmpl` → `config.env.tmpl`。
+- nginx 镜像仓库名由 `ops-monitor-nginx` 统一为 `ops-monitor-frontend`（`prepare.sh`、`compose.yml`）。
+- CI 增加手动触发、并发取消与依赖缓存，并支持被发布流程 `workflow_call` 复用。
 - 部署相关文档同步为 KV 配置与无宿主 Python。
 - 部署配置收敛：Docker 相关文件集中到 `deploy/docker/`（`compose.yml`、`Dockerfile.backend`）。
 - SQL 初始化脚本由 `sql/` 归位到 `deploy/mysql/init/`。
