@@ -18,16 +18,21 @@ _scheduler: BackgroundScheduler | None = None
 
 
 def _cleanup_old_task_executions() -> None:
-    """删除超过保留期的终态任务执行记录与日志。"""
+    """删除超过保留期的终态执行记录、日志与已结束的单次任务。"""
     if not settings.TASK_CLEANUP_ENABLED:
         return
     db = SessionLocal()
     try:
-        deleted = TaskService(db).cleanup_executions(settings.TASK_RETENTION_DAYS)
-        if deleted:
-            logger.info("清理过期任务执行 %s 条（保留 %s 天）", deleted, settings.TASK_RETENTION_DAYS)
+        result = TaskService(db).cleanup_history(settings.TASK_RETENTION_DAYS)
+        if result["executions"] or result["tasks"]:
+            logger.info(
+                "清理过期任务历史：执行 %s 条，任务 %s 条（保留 %s 天）",
+                result["executions"],
+                result["tasks"],
+                settings.TASK_RETENTION_DAYS,
+            )
     except Exception:
-        logger.exception("任务执行清理失败")
+        logger.exception("任务历史清理失败")
     finally:
         db.close()
 

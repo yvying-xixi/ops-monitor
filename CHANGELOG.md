@@ -10,6 +10,11 @@
 - 后端 OpenTelemetry 链路追踪（`OTEL_ENABLED` / `OTEL_SERVICE_NAME` / `OTEL_EXPORTER_OTLP_ENDPOINT`）：FastAPI / SQLAlchemy / Redis 自动埋点，`trace_id` 注入结构化日志。
 - 部署容器资源上限（CPU/内存）与 json-file 日志轮转（`compose.yml`）。
 
+### Changed
+
+- 前端网关抖动重试：带 `Idempotency-Key` 的 POST 与幂等 GET 均可安全重试（此前仅 GET）。
+- 任务历史保留扩展：同时清理过期的终态单次任务及其目标（保留 CRON 调度定义）。
+
 ## [0.3.0] - 2026-10-03
 
 ### Added

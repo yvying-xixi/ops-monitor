@@ -334,12 +334,17 @@ class TaskService:
         self.db.commit()
         return created
 
-    def cleanup_executions(self, retention_days: int) -> int:
-        """清理超过保留期的终态执行记录及其日志。"""
+    def cleanup_history(self, retention_days: int) -> dict:
+        """清理超过保留期的终态执行记录、日志与已结束的单次任务。
+
+        Returns:
+            `{"executions": n, "tasks": n}`。
+        """
         cutoff = _utcnow() - timedelta(days=retention_days)
-        deleted = self.execution_repo.delete_terminal_before(cutoff)
+        executions = self.execution_repo.delete_terminal_before(cutoff)
+        tasks = self.task_repo.delete_finished_tasks_before(cutoff)
         self.db.commit()
-        return deleted
+        return {"executions": executions, "tasks": tasks}
 
     @staticmethod
     def _can_retry(task: OpsTask, execution: OpsTaskExecution) -> bool:

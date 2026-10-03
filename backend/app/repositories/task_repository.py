@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, exists, func, select
 
 from app.models import OpsTask, OpsTaskExecution, OpsTaskLog, OpsTaskTarget
 from app.repositories.base import BaseRepository
@@ -47,6 +47,28 @@ class TaskRepository(BaseRepository[OpsTask]):
         if not key:
             return None
         return self.get_by(idempotency_key=key)
+
+    def delete_finished_tasks_before(self, cutoff: datetime) -> int:
+        """删除过期的终态单次任务及其目标，返回删除的任务数。
+
+        仅清理 `ONCE` 且已结束、且已无执行记录的任务；保留 `CRON` 调度定义。
+        """
+        task_ids = list(
+            self.db.scalars(
+                select(OpsTask.id).where(
+                    OpsTask.schedule_type == "ONCE",
+                    OpsTask.status.in_(("SUCCESS", "FAILED", "TIMEOUT", "CANCELLED", "DEAD")),
+                    OpsTask.finished_at.isnot(None),
+                    OpsTask.finished_at < cutoff,
+                    ~exists().where(OpsTaskExecution.task_id == OpsTask.id),
+                )
+            ).all()
+        )
+        if not task_ids:
+            return 0
+        self.db.execute(delete(OpsTaskTarget).where(OpsTaskTarget.task_id.in_(task_ids)))
+        result = self.db.execute(delete(OpsTask).where(OpsTask.id.in_(task_ids)))
+        return result.rowcount or 0
 
     def count_by_status(self) -> dict:
         """按状态统计任务数量（指标用）。"""

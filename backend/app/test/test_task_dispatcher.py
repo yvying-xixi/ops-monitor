@@ -259,20 +259,23 @@ def test_timeout_scan_uses_per_task_timeout(db):
     assert TaskExecutionRepository(db).list_by_task(long.id)[0].status == "RUNNING"
 
 
-def test_cleanup_old_executions(db):
+def test_cleanup_old_executions_and_tasks(db):
     server = _make_server(db)
     task = _make_task(db, _creator_id(db), [server.id])
     execution = TaskExecutionRepository(db).list_by_task(task.id)[0]
     execution.status = "SUCCESS"
     execution.finished_at = _utcnow() - timedelta(days=60)
+    task.status = "SUCCESS"
+    task.finished_at = _utcnow() - timedelta(days=60)
     db.flush()
     TaskLogRepository(db).record(execution.id, "done")
 
-    deleted = TaskService(db).cleanup_executions(30)
-    assert deleted == 1
+    result = TaskService(db).cleanup_history(30)
+    assert result == {"executions": 1, "tasks": 1}
     db.expire_all()
     assert TaskExecutionRepository(db).get(execution.id) is None
     assert TaskLogRepository(db).list_by_execution(execution.id) == []
+    assert TaskService(db).task_repo.get(task.id) is None
 
 
 def test_retry_exhausted_becomes_dead(db):
