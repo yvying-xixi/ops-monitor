@@ -8,6 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from app.core.logging import request_id_ctx, user_id_ctx
 from app.core.security import decode_access_token
 
 
@@ -35,6 +36,12 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 user_id = None
         request.state.user_id = user_id
 
-        response = await call_next(request)
+        token_request = request_id_ctx.set(request_id)
+        token_user = user_id_ctx.set(user_id)
+        try:
+            response = await call_next(request)
+        finally:
+            request_id_ctx.reset(token_request)
+            user_id_ctx.reset(token_user)
         response.headers["X-Request-ID"] = request_id
         return response

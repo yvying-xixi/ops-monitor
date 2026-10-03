@@ -9,10 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import agent, alerts, auth, dashboard, health, monitor, roles, servers, tasks, users
 from app.core.config import settings
+from app.core.logging import setup_logging
 from app.core.scheduler import setup_scheduler, shutdown_scheduler
 from app.core.seed import init_seed_data
 from app.exceptions.handlers import register_exception_handlers
 from app.middleware import OperationLogMiddleware, RequestContextMiddleware
+
+setup_logging(settings.LOG_LEVEL)
 
 
 @asynccontextmanager

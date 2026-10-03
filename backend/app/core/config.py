@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # 定位.env文件
 _ENV_FILE = Path(__file__).resolve().parent / ".env"
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
     SEED_ADMIN_USERNAME: str = "admin"
     SEED_ADMIN_PASSWORD: str = "admin123456"
     OPERATION_LOG_ENABLED: bool = True
+    LOG_LEVEL: str = "INFO"
     AGENT_STATUS_REFRESH_SECONDS: int = 30
     ALERT_EVALUATE_INTERVAL_SECONDS: int = 10
     METRIC_RETENTION_DAYS: int = 7
