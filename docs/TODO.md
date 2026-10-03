@@ -1,6 +1,8 @@
 # Remaining Documentation TODOs
 
 > 本文档汇总当前文档欠账。可通过 `grep -R "TODO" docs/` 核对。
+>
+> 工程优化路线（代码、CI、可观测性、安全）见 [`optimization-plan.md`](optimization-plan.md)；本文只保留文档类欠账，与之重叠的条目以 `optimization-plan.md` 为准。
 
 ## Architecture
 
@@ -32,6 +34,6 @@
 
 ## Governance
 
-- [ ] 确认最终项目许可证并新增 `LICENSE`。
+- [x] 确认最终项目许可证并新增 `LICENSE`（Apache-2.0，见根目录 `LICENSE`）。
 - [ ] 评估是否需要 OpenAPI 一致性检查。
 - [ ] 补充 PR 模板与 Reviewer 检查清单。
