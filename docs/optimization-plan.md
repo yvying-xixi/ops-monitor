@@ -205,7 +205,7 @@ Phase 4（高级能力，后续）
 - **做法**：`compose.yml` 为各服务补充 `deploy.resources.limits`（或 `mem_limit` / `cpus`）与日志轮转配置。
 - **验收**：容器受限于设定上限。
 
-### P2-12：备份与恢复自动化
+### P2-12：备份与恢复自动化 — 已完成
 
 - **目标**：备份可执行、可恢复、可演练。
 - **现状**：文档已有流程（`operations/backup.md`、`operations/recovery.md`）。

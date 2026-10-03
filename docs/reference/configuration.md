@@ -29,6 +29,12 @@
 | `METRICS_TOKEN` | 空 | `/metrics` 访问令牌（空则不鉴权，仅内网可达） |
 | `AGENT_REQUIRE_SIGNATURE` | false | 是否强制 Agent 请求签名 |
 | `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
+| `BACKUP_DIR` | ./backups | 备份归档目录（相对 `deploy/` 或绝对路径） |
+| `BACKUP_RETENTION_DAYS` | 14 | 备份保留天数 |
+| `BACKUP_INCLUDE_CONFIG` | true | 备份是否包含 `config.env` |
+| `BACKUP_INCLUDE_REDIS` | false | 备份是否包含 Redis 快照 |
+| `BACKUP_INCLUDE_NGINX` | false | 备份是否包含 nginx 配置与证书 |
+| `BACKUP_POST_CMD` | 空 | 备份后钩子（可读取 `$ARCHIVE`） |
 | `IMAGE_REGISTRY` | 空 | 镜像 registry（空则本地构建；Docker Hub 用 `docker.io/<namespace>`） |
 | `IMAGE_TAG` | latest | 镜像标签 |
 | `IMAGE_PULL_ONLY` | false | true 时纯拉取（加载 `compose.hub.yml`，不本地构建） |

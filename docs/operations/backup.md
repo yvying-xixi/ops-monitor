@@ -1,50 +1,81 @@
 # 备份
 
-> 本文描述平台数据与配置的备份方式。
+> 本文描述平台数据与配置的备份方式：`deploy/backup.sh` 自动化备份与保留策略。
 
 ## 备份对象
 
-| 对象 | 位置 | 说明 |
+| 对象 | 默认 | 说明 |
 | --- | --- | --- |
-| MySQL 数据 | `DATA_VOLUME_DIR/mysql` | 业务与监控数据 |
-| Redis 数据 | `DATA_VOLUME_DIR/redis` | 缓存/任务状态 |
-| 部署配置 | `deploy/config.env` | 配置源（含密钥，妥善保管） |
-| 部署环境变量 | `deploy/.env` | 渲染产物 |
-| Agent 配置 | 各服务器 `agent/config/config.yaml` 或 `agent-go/config/config.yaml`（或 `/opt/ops-agent/config/config.yaml`） | 含 Token |
+| MySQL 数据 | ✅ | `mysqldump --single-transaction` 逻辑备份（在线一致） |
+| 部署配置 `deploy/config.env` | ✅ | 含密钥，归档内权限 0600 |
+| Redis | 可选 | 仅缓存/防重放/健康，默认不备份（`BACKUP_INCLUDE_REDIS=true` 开启） |
+| nginx 配置与证书 | 可选 | `BACKUP_INCLUDE_NGINX=true` 开启 |
+| Agent 配置 | ❌ | 各主机本地，Token 可再生，不集中备份 |
 
-数据目录由 `deploy/config.env` 的 `DATA_VOLUME_DIR` 指定（默认 `deploy/data`）。
+## 配置（`deploy/config.env`）
 
-```mermaid
-flowchart LR
-    A[停止服务 down] --> B[打包 DATA_VOLUME_DIR]
-    B --> C[保存归档]
-    C --> D[启动服务 up -d]
-```
+| 键 | 默认 | 说明 |
+| --- | --- | --- |
+| `BACKUP_DIR` | `./backups` | 归档目录（相对 `deploy/` 或绝对路径） |
+| `BACKUP_RETENTION_DAYS` | 14 | 保留天数，超期归档自动删除 |
+| `BACKUP_INCLUDE_CONFIG` | true | 是否包含 `config.env` |
+| `BACKUP_INCLUDE_REDIS` | false | 是否包含 Redis 快照 |
+| `BACKUP_INCLUDE_NGINX` | false | 是否包含 nginx 配置与证书 |
+| `BACKUP_POST_CMD` | 空 | 备份后钩子，可读取 `$ARCHIVE`（如异地同步） |
 
-## 备份方式
-
-### 停止服务后备份数据目录（简单可靠）
-
-```bash
-cd /path/to/ops-monitor
-docker compose -f deploy/docker/compose.yml --env-file deploy/.env down
-tar czf ops-monitor-data-$(date +%F).tar.gz -C deploy data
-docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d
-```
-
-### 仅备份数据库（逻辑备份）
+## 手动执行
 
 ```bash
-docker compose -f deploy/docker/compose.yml --env-file deploy/.env exec -T mysql \
-  mysqldump -uroot -p"$DB_PASSWORD" --databases ops_monitor > ops_monitor-$(date +%F).sql
+./deploy/backup.sh                 # 按 config.env 的 BACKUP_* 配置
+./deploy/backup.sh --dry-run       # 仅打印将执行的动作
+./deploy/backup.sh --out /data/backups --retention 30
+./deploy/backup.sh --include-redis --include-nginx
+./deploy/backup.sh --no-config
 ```
 
-> `$DB_PASSWORD` 取自 `deploy/.env`。
+前置：`deploy/config.env` 与 `deploy/.env` 已存在（先 `./deploy/prepare.sh` 或 `install.sh`），mysql 容器运行中。
+
+### 归档内容
+
+`ops-monitor-backup-<UTC>.tar.gz`：
+
+```text
+mysql.sql.gz     MySQL 逻辑备份
+config.env       config.env（含密钥，0600）——若包含
+dump.rdb         Redis 快照——若包含
+nginx.tar.gz     nginx 配置与证书——若包含
+manifest.txt     创建时间、版本、git commit、DB 名、sha256 校验和
+```
+
+## 定时备份
+
+### systemd timer（推荐）
+
+```bash
+sudo ./deploy/backup-timer.sh --install     # 每日 03:30 + 随机延迟
+systemctl list-timers ops-monitor-backup.timer
+sudo ./deploy/backup-timer.sh --uninstall
+```
+
+### cron 备选
+
+```cron
+30 3 * * * /path/to/ops-monitor/deploy/backup.sh >> /var/log/ops-monitor-backup.log 2>&1
+```
+
+## 异地保存
+
+通过 `BACKUP_POST_CMD` 钩子接入外部存储，例如：
+
+```bash
+BACKUP_POST_CMD='rclone sync "$ARCHIVE" remote:ops-monitor-backups'
+```
 
 ## 恢复
 
-见 [recovery.md](recovery.md)。
+见 [recovery.md](recovery.md)（`deploy/restore.sh`）。
 
-## TODO
+## 风险提示
 
-> **TODO**: 补充定时备份与保留策略（cron/脚本）。
+- **归档含密钥**：`config.env` 等同平台密钥，请置于受控目录并限制权限。
+- 失败告警：脚本失败返回非零；建议结合监控/告警接入（如 systemd `OnFailure`）。
