@@ -2,11 +2,11 @@ name: Release Go Agent
 
 on:
   push:
-    tags: ["v*"]
+    tags: ["agent-v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "发布 tag（如 v0.3.0）；留空则使用 agent-go/VERSION"
+        description: "发布 tag（如 agent-v1.0.0）；留空则使用 agent-go/VERSION"
         required: false
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
           else
             version="$(cat agent-go/VERSION)"
           fi
-          version="${version#v}"
+          version="${version#*v}"
           echo "value=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Test
@@ -79,7 +79,7 @@ jobs:
       - name: Upload release assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.value) }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('agent-v{0}', steps.version.outputs.value) }}
           generate_release_notes: true
           files: |
             agent-go/dist/ops-agent-linux-amd64

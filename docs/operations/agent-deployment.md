@@ -42,6 +42,8 @@ curl -fsSL http://<平台地址>/api/v1/agent/install.sh?runtime=go | sudo bash 
 安装包下载：`http://<平台地址>/api/v1/agent/package[?runtime=go]`。
 
 > Go 版安装脚本会按 `uname -m` 选择 amd64/arm64 二进制；包内 `dist/` 需已包含对应架构产物（由 `deploy/build-agent-go.sh` 或 Release 提供）。
+>
+> 预编译二进制与 tar.gz 安装包由 GitHub Release 提供，tag 形如 `agent-vX.Y.Z`（如 `agent-v1.0.0`），含 linux/amd64、arm64 与 `ops-agent-go-<version>.tar.gz`。
 
 ```mermaid
 flowchart LR

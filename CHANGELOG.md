@@ -23,6 +23,7 @@
 - 前端仪表盘与服务器详情栅格改为响应式；`MetricChart` 改用 `ResizeObserver` 随容器自适应；各列表页补充空状态。
 - `main.js` 移除重复的 Element Plus CSS 引入与图标全量注册。
 - `install.sh` / `reconfigure.sh` 支持纯拉取模式：`IMAGE_PULL_ONLY=true` 时只 `pull` 不本地构建。
+- Go Agent 发布改用独立 tag 命名空间 `agent-v*`（与平台镜像 `v*` 区分，避免 tag 误触发平台镜像发布）。
 
 ### Fixed
 
