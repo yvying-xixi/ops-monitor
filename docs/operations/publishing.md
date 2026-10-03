@@ -19,7 +19,7 @@
 
 触发方式：
 
-- 推送 tag：`git push origin v0.2.0` 自动触发。
+- 推送 tag：`git push origin v0.4.0` 自动触发。
 - 手动触发（`workflow_dispatch`，可填发布 tag）。
 
 流程：先复用 `.github/workflows/ci.yml` 跑测试，全部通过后再 buildx 构建并推送。
@@ -67,8 +67,8 @@ HARBOR_USERNAME='<机器人账号名>' HARBOR_PASSWORD='<令牌>' ./deploy/publi
 推送结果：
 
 ```text
-192.168.10.24/ops-monitor/ops-monitor-backend:v0.2.0 与 :latest
-192.168.10.24/ops-monitor/ops-monitor-frontend:v0.2.0 与 :latest
+192.168.10.24/ops-monitor/ops-monitor-backend:v0.4.0 与 :latest
+192.168.10.24/ops-monitor/ops-monitor-frontend:v0.4.0 与 :latest
 ```
 
 ## 版本发布流程
@@ -78,11 +78,11 @@ HARBOR_USERNAME='<机器人账号名>' HARBOR_PASSWORD='<令牌>' ./deploy/publi
 #    修改 VERSION、CHANGELOG.md
 # 2. 提交并推送
 git add VERSION CHANGELOG.md
-git commit -m "chore(release): v0.2.0"
+git commit -m "chore(release): v0.4.0"
 git push origin master
 # 3. 打 tag 触发 Docker Hub 发布
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.4.0
+git push origin v0.4.0
 # 4. 本地推送 Harbor
 HARBOR_USERNAME='<机器人账号名>' HARBOR_PASSWORD='<令牌>' ./deploy/publish.sh 0.2.0
 ```
@@ -90,7 +90,7 @@ HARBOR_USERNAME='<机器人账号名>' HARBOR_PASSWORD='<令牌>' ./deploy/publi
 ## 从 Harbor 部署
 
 ```bash
-IMAGE_REGISTRY=192.168.10.24/ops-monitor IMAGE_TAG=v0.2.0 ./deploy/install.sh
+IMAGE_REGISTRY=192.168.10.24/ops-monitor IMAGE_TAG=v0.4.0 ./deploy/install.sh
 ```
 
 `deploy/prepare.sh` 会据此派生 `BACKEND_IMAGE` / `NGINX_IMAGE` 写入 `deploy/.env`，`install.sh` 检测到 `IMAGE_REGISTRY` 非空时改为 `docker compose pull`。

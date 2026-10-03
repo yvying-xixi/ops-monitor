@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-03
+
 ### Added
 
 - 平台自有 Prometheus 指标端点 `GET /metrics`（`ops_agent_status`、`ops_server_total`、`ops_alert_active`、`ops_task_status`），支持 `METRICS_ENABLED` / `METRICS_TOKEN` 控制。
