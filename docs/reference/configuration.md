@@ -63,6 +63,9 @@
 | `LOG_LEVEL` | INFO | 日志级别（结构化 JSON） |
 | `METRICS_ENABLED` | true | Prometheus `/metrics` 开关 |
 | `METRICS_TOKEN` | 空 | `/metrics` 访问令牌（空则不鉴权） |
+| `OTEL_ENABLED` | false | OpenTelemetry 链路追踪开关 |
+| `OTEL_SERVICE_NAME` | ops-monitor-backend | 上报到追踪后端的服务名 |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | 空 | OTLP/HTTP traces 端点（空则仅生成 span 不导出） |
 | `AGENT_BUNDLE_DIR` | 空 | Agent 安装包来源目录（容器内挂载；空则自动定位仓库根） |
 
 ## Agent 配置（Python 与 Go 通用）

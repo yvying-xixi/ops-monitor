@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     METRICS_ENABLED: bool = True
     METRICS_TOKEN: str = ""
+    OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "ops-monitor-backend"
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = ""
     AGENT_STATUS_REFRESH_SECONDS: int = 30
     ALERT_EVALUATE_INTERVAL_SECONDS: int = 10
     METRIC_RETENTION_DAYS: int = 7

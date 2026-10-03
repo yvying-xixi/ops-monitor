@@ -9,9 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import agent, alerts, auth, dashboard, health, metrics, monitor, roles, servers, tasks, users
 from app.core.config import settings
+from app.core.database import engine
 from app.core.logging import setup_logging
 from app.core.scheduler import setup_scheduler, shutdown_scheduler
 from app.core.seed import init_seed_data
+from app.core.tracing import setup_tracing
 from app.exceptions.handlers import register_exception_handlers
 from app.middleware import OperationLogMiddleware, RequestContextMiddleware
 
@@ -61,3 +63,6 @@ app.include_router(agent.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 # Prometheus 指标暴露在根路径（约定），不参与 /api 网关与统一响应封装
 app.include_router(metrics.router)
+
+# 链路追踪（默认关闭，由 OTEL_ENABLED 控制）
+setup_tracing(app, engine)

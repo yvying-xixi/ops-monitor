@@ -16,6 +16,8 @@ from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any
 
+from app.core.tracing import current_trace_id
+
 SERVICE_NAME = "backend"
 
 request_id_ctx: ContextVar[str | None] = ContextVar("request_id", default=None)
@@ -36,7 +38,7 @@ class JsonFormatter(logging.Formatter):
             "service": SERVICE_NAME,
             "logger": record.name,
             "request_id": request_id_ctx.get(),
-            "trace_id": trace_id_ctx.get(),
+            "trace_id": trace_id_ctx.get() or current_trace_id(),
             "user_id": user_id_ctx.get(),
             "message": record.getMessage(),
         }

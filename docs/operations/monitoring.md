@@ -60,6 +60,18 @@ scrape_configs:
       - targets: ["backend:8000"]
 ```
 
+## OpenTelemetry 链路追踪
+
+默认关闭；`OTEL_ENABLED=true` 时对以下组件自动埋点：
+
+- FastAPI 请求（排除 `/metrics`、`/api/v1/health`）
+- SQLAlchemy 数据库调用（使用应用 engine）
+- Redis 调用
+
+- 配置 `OTEL_EXPORTER_OTLP_ENDPOINT`（OTLP/HTTP，如 `http://otel-collector:4318/v1/traces`）后经 `BatchSpanProcessor` 导出；为空时仅生成 span。
+- `trace_id` 自动注入结构化日志（`app/core/logging.py`），可与日志关联。
+- 后端链路覆盖：前端 → Nginx → FastAPI → MySQL/Redis → Task 派发；Agent 侧归因通过请求头透传 `trace_id`（后续项）。
+
 ## 系统资源
 
 > **TODO**: 补充平台容器自身的资源监控方式（cgroup/宿主监控）。
