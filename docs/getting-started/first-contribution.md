@@ -28,4 +28,4 @@ flowchart LR
 
 ## TODO
 
-> **TODO**: 补充 PR 模板与 Reviewer 检查清单。
+- [x] PR 模板与 Reviewer 检查清单：见 [PR 模板](../../.github/pull_request_template.md) 与 [CONTRIBUTING](../../CONTRIBUTING.md#pull-request)。

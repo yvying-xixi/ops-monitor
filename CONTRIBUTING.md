@@ -26,16 +26,29 @@
 
 ## Pull Request
 
-- 说明变更内容与影响范围。
-- 关联相关文档更新。
-- 通过测试与文档检查。
+提交 PR 时使用 [PR 模板](.github/pull_request_template.md)，至少满足：
+
+- [ ] 说明变更内容与影响范围，范围单一
+- [ ] 关联相关文档更新
+- [ ] Backend `ruff` / `mypy` / `pytest` 通过
+- [ ] 按改动范围通过 Agent（Python/Go）与 Frontend（lint/test/build）
+- [ ] 涉及 Schema 提供 Alembic 迁移（`alembic check` 差异为 0）
+- [ ] 涉及架构决策新增/更新 ADR；无密钥入库
 
 ## Testing
 
 ```bash
-cd backend && .venv/bin/python -m pytest app/test/ -q
+# Backend
+cd backend && .venv/bin/ruff check app && .venv/bin/mypy && .venv/bin/python -m pytest app/test/ -q
+
+# Agent（Python）
 agent/.venv/bin/python -m pytest agent/tests/ -q
-cd frontend && npm run build
+
+# Agent（Go）
+cd agent-go && gofmt -l . && go vet ./... && go test ./...
+
+# Frontend
+cd frontend && npm run lint && npm run test && npm run build
 ```
 
 ## Database Changes

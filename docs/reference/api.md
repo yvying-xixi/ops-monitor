@@ -57,7 +57,10 @@
 
 ## Idempotency
 
-> **TODO**: 补充需要幂等处理的请求（如 Agent 上报、任务结果回传）及幂等键规则。
+- 创建任务 `POST /api/v1/tasks`：支持 `Idempotency-Key` 请求头，同键返回既有任务（唯一约束）。
+- Agent 任务结果回传 `POST /api/v1/agent/task/result`：对已结束 `execution_id` 幂等重放，返回既有结果。
+- Agent 签名请求：`X-Request-Id` 在时间窗口内去重，防重放。
+- 前端对网关错误重试时，`GET` 与**带 `Idempotency-Key` 的 POST** 才重试。
 
 ## Date and Time
 
@@ -66,4 +69,5 @@
 
 ## Compatibility
 
-> **TODO**: 补充 API 版本演进与破坏性变更策略（当前仅 `/api/v1`）。
+- 当前仅 `/api/v1`；新增字段保持向后兼容，破坏性变更需标注并提升平台版本。
+- 平台/数据库/Agent 的升级、回滚与协议兼容见 [operations/upgrade.md](../operations/upgrade.md) 与 [agent-protocol.md](agent-protocol.md#compatibility)。

@@ -387,4 +387,5 @@ SELECT * FROM alert_event WHERE is_active = 1 ORDER BY created_at DESC;
 ## TODO
 
 > **TODO**: 补充索引与典型查询的执行计划验证结论。
-> **TODO**: 补充监控数据的归档/分区策略。
+
+- [x] 监控数据生命周期：原始保留 7 天 → 日聚合归档 180 天；因含外键不做 MySQL 分区，见 [monitoring.md](../operations/monitoring.md#指标生命周期与归档)。

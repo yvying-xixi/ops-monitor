@@ -104,7 +104,7 @@ journalctl -u server-agent -f          # 应出现"注册成功 server_id=..."
 
 ## Upgrade
 
-> **TODO**: 补充 Agent 升级流程（替换代码/重启服务/兼容旧配置）。
+见 [upgrade.md](upgrade.md#agent-升级)：保留 `config.yaml` 与签名私钥，替换程序后重启 `server-agent`。
 
 ## Uninstallation
 
@@ -127,4 +127,4 @@ sudo systemctl daemon-reload
 
 ## TODO
 
-> **TODO**: 补充 Agent 版本与协议兼容矩阵。
+- [x] Agent 版本与协议兼容矩阵：见 [agent-protocol.md](../reference/agent-protocol.md#compatibility)。
