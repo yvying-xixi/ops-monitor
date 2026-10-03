@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/yvying-xixi/ops-monitor/agent-go/internal/signer"
 )
 
 const (
@@ -34,6 +36,7 @@ type Client struct {
 	httpClient      *http.Client
 	retryMaxSeconds int
 	retryMaxCount   int
+	signer          *signer.Signer
 	logger          *slog.Logger
 }
 
@@ -42,6 +45,7 @@ type Options struct {
 	Timeout         time.Duration
 	RetryMaxSeconds int
 	RetryMaxCount   int
+	Signer          *signer.Signer
 	HTTPClient      *http.Client
 	Logger          *slog.Logger
 }
@@ -75,8 +79,17 @@ func NewClient(baseURL, token string, opts Options) *Client {
 		httpClient:      httpClient,
 		retryMaxSeconds: opts.RetryMaxSeconds,
 		retryMaxCount:   opts.RetryMaxCount,
+		signer:          opts.Signer,
 		logger:          opts.Logger,
 	}
+}
+
+// SigningPublicKey 返回 base64 Ed25519 公钥；未配置签名时返回空串。
+func (c *Client) SigningPublicKey() string {
+	if c.signer == nil {
+		return ""
+	}
+	return c.signer.PublicKeyB64()
 }
 
 // envelope 后端统一响应结构 {code, message, data}。
@@ -97,6 +110,11 @@ func (c *Client) request(ctx context.Context, method, path string, body any) (js
 		}
 	}
 
+	var headers map[string]string
+	if c.signer != nil {
+		headers = c.signer.SignHeaders(method, path, payload)
+	}
+
 	delay := time.Second
 	maxDelay := time.Duration(c.retryMaxSeconds) * time.Second
 	if maxDelay > maxRetryDelay {
@@ -104,7 +122,7 @@ func (c *Client) request(ctx context.Context, method, path string, body any) (js
 	}
 	attempt := 0
 	for {
-		raw, retryable, err := c.doOnce(ctx, method, path, payload)
+		raw, retryable, err := c.doOnce(ctx, method, path, payload, headers)
 		if err == nil {
 			c.logger.Info("上报成功", "method", method, "path", path)
 			return raw, nil
@@ -138,7 +156,7 @@ func (c *Client) request(ctx context.Context, method, path string, body any) (js
 }
 
 // doOnce 执行单次请求。返回 (data, 是否可重试, error)。
-func (c *Client) doOnce(ctx context.Context, method, path string, payload []byte) (json.RawMessage, bool, error) {
+func (c *Client) doOnce(ctx context.Context, method, path string, payload []byte, headers map[string]string) (json.RawMessage, bool, error) {
 	fullURL, err := url.JoinPath(c.baseURL, path)
 	if err != nil {
 		return nil, false, &ReporterError{msg: fmt.Sprintf("拼接 URL 失败: %v", err)}
@@ -152,7 +170,10 @@ func (c *Client) doOnce(ctx context.Context, method, path string, payload []byte
 		return nil, false, &ReporterError{msg: fmt.Sprintf("构造请求失败: %v", err)}
 	}
 	req.Header.Set("Authorization", "Bearer "+c.token)
-	if payload != nil {
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+	if payload != nil && req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 

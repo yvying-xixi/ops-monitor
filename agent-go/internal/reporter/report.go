@@ -46,6 +46,9 @@ func Register(ctx context.Context, c *Client, serverCode, token string, info col
 		"disk_total_bytes":   info.DiskTotalBytes,
 		"agent_version":      agentVersion,
 	}
+	if pk := c.SigningPublicKey(); pk != "" {
+		payload["signing_public_key"] = pk
+	}
 	raw, err := c.Post(ctx, PathRegister, payload)
 	if err != nil {
 		return nil, err

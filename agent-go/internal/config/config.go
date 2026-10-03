@@ -15,9 +15,10 @@ import (
 
 // ServerConfig 服务端连接配置。
 type ServerConfig struct {
-	URL        string `yaml:"url"`
-	Token      string `yaml:"token"`
-	ServerCode string `yaml:"server_code"`
+	URL            string `yaml:"url"`
+	Token          string `yaml:"token"`
+	ServerCode     string `yaml:"server_code"`
+	SigningKeyFile string `yaml:"signing_key_file"`
 }
 
 // CollectConfig 采集与上报周期配置。
@@ -49,6 +50,7 @@ type AgentConfig struct {
 // Default 返回内置默认值，用于在加载时补齐缺失字段。
 func defaults() AgentConfig {
 	return AgentConfig{
+		Server: ServerConfig{SigningKeyFile: "agent_ed25519.key"},
 		Collect: CollectConfig{
 			HeartbeatInterval: 30,
 			MetricsInterval:   10,
@@ -90,6 +92,9 @@ func applyDefaults(c *AgentConfig) {
 	}
 	if c.Collect.RequestTimeout == 0 {
 		c.Collect.RequestTimeout = d.Collect.RequestTimeout
+	}
+	if c.Server.SigningKeyFile == "" {
+		c.Server.SigningKeyFile = d.Server.SigningKeyFile
 	}
 	if len(c.Collect.Services) == 0 {
 		c.Collect.Services = d.Collect.Services
@@ -151,6 +156,10 @@ func Load(path string) (*AgentConfig, error) {
 		return nil, fmt.Errorf("解析配置失败 %s: %w", path, err)
 	}
 	applyDefaults(&cfg)
+	// 私钥路径相对配置文件目录解析，避免受运行目录影响
+	if !filepath.IsAbs(cfg.Server.SigningKeyFile) {
+		cfg.Server.SigningKeyFile = filepath.Join(filepath.Dir(path), cfg.Server.SigningKeyFile)
+	}
 	if err := validate(&cfg); err != nil {
 		return nil, err
 	}

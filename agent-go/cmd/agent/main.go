@@ -19,6 +19,7 @@ import (
 	"github.com/yvying-xixi/ops-monitor/agent-go/internal/executor"
 	"github.com/yvying-xixi/ops-monitor/agent-go/internal/logger"
 	"github.com/yvying-xixi/ops-monitor/agent-go/internal/reporter"
+	"github.com/yvying-xixi/ops-monitor/agent-go/internal/signer"
 	"github.com/yvying-xixi/ops-monitor/agent-go/internal/syscmd"
 	"github.com/yvying-xixi/ops-monitor/agent-go/internal/worker"
 )
@@ -52,10 +53,18 @@ func main() {
 	}
 	slog.SetDefault(log)
 
+	sig, err := signer.LoadOrCreate(cfg.Server.SigningKeyFile, cfg.Server.ServerCode)
+	if err != nil {
+		log.Error("初始化请求签名密钥失败", "err", err, "file", cfg.Server.SigningKeyFile)
+		os.Exit(1)
+	}
+	log.Info("请求签名密钥已加载", "file", sig.KeyPath)
+
 	client := reporter.NewClient(cfg.Server.URL, cfg.Server.Token, reporter.Options{
 		Timeout:         time.Duration(cfg.Collect.RequestTimeout * float64(time.Second)),
 		RetryMaxSeconds: cfg.Collect.RetryMaxSeconds,
 		RetryMaxCount:   cfg.Collect.RetryMaxCount,
+		Signer:          sig,
 		Logger:          log,
 	})
 
