@@ -8,6 +8,7 @@ import {
   Bell,
   User,
   Aim,
+  Search,
   SwitchButton,
   Fold,
   Expand,
@@ -42,6 +43,7 @@ const menus = computed(() => {
     { index: '/tasks', title: '任务中心', icon: Aim },
   ]
   if (userStore.isAdmin) {
+    items.push({ index: '/discovery', title: '服务器发现', icon: Search })
     items.push({ index: '/system/users', title: '用户管理', icon: User })
   }
   return items

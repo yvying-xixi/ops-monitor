@@ -45,6 +45,12 @@ const routes = [
         meta: { title: '任务中心' },
       },
       {
+        path: 'discovery',
+        name: 'Discovery',
+        component: () => import('../views/discovery/index.vue'),
+        meta: { title: '服务器发现', roles: ['SYSTEM_ADMIN'] },
+      },
+      {
         path: 'system/users',
         name: 'Users',
         component: () => import('../views/system/user.vue'),
