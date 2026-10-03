@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import functools
 import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.core.config import settings
 from app.core.database import SessionLocal
+from app.core.scheduler_lock import run_with_lock
 from app.repositories import MetricRepository, ServerRepository
 from app.services.alert_engine import AlertEngine
 from app.services.task_service import TaskService
@@ -17,6 +19,20 @@ logger = logging.getLogger(__name__)
 _scheduler: BackgroundScheduler | None = None
 
 
+def _locked(job_name: str):
+    """为作业加分布式锁，确保多 worker / 多实例下每轮只执行一次。"""
+
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            run_with_lock(job_name, lambda: fn(*args, **kwargs), settings.SCHEDULER_LOCK_TTL_SECONDS)
+
+        return wrapper
+
+    return decorator
+
+
+@_locked("cleanup_old_task_executions")
 def _cleanup_old_task_executions() -> None:
     """删除超过保留期的终态执行记录、日志与已结束的单次任务。"""
     if not settings.TASK_CLEANUP_ENABLED:
@@ -37,6 +53,7 @@ def _cleanup_old_task_executions() -> None:
         db.close()
 
 
+@_locked("scan_task_timeouts")
 def _scan_task_timeouts() -> None:
     """将超时执行的任务置为 TIMEOUT。"""
     db = SessionLocal()
@@ -50,6 +67,7 @@ def _scan_task_timeouts() -> None:
         db.close()
 
 
+@_locked("dispatch_task_retries")
 def _dispatch_task_retries() -> None:
     """将到期的 RETRYING 执行派发为下一次尝试。"""
     db = SessionLocal()
@@ -63,6 +81,7 @@ def _dispatch_task_retries() -> None:
         db.close()
 
 
+@_locked("fire_due_cron_tasks")
 def _fire_due_cron_tasks() -> None:
     """触发到期的 CRON 任务。"""
     db = SessionLocal()
@@ -76,6 +95,7 @@ def _fire_due_cron_tasks() -> None:
         db.close()
 
 
+@_locked("evaluate_alerts")
 def _evaluate_alerts() -> None:
     """执行一轮告警规则评估。"""
     db = SessionLocal()
@@ -89,6 +109,7 @@ def _evaluate_alerts() -> None:
         db.close()
 
 
+@_locked("refresh_agent_status")
 def _refresh_agent_statuses() -> None:
     """按最后心跳时间刷新所有服务器的 Agent 状态。"""
     db = SessionLocal()
@@ -103,6 +124,7 @@ def _refresh_agent_statuses() -> None:
         db.close()
 
 
+@_locked("cleanup_old_metrics")
 def _cleanup_old_metrics() -> None:
     """删除超过保留期的历史指标。"""
     if not settings.METRIC_CLEANUP_ENABLED:

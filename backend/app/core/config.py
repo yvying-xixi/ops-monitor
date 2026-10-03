@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     METRICS_TOKEN: str = ""
     AGENT_REQUIRE_SIGNATURE: bool = False
     AGENT_SIGNATURE_MAX_SKEW: int = 300
+    SCHEDULER_LOCK_ENABLED: bool = True
+    SCHEDULER_LOCK_TTL_SECONDS: int = 600
     OTEL_ENABLED: bool = False
     OTEL_SERVICE_NAME: str = "ops-monitor-backend"
     OTEL_EXPORTER_OTLP_ENDPOINT: str = ""
