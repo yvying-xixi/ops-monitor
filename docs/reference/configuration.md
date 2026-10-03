@@ -22,7 +22,8 @@
 | `JWT_EXPIRE_MINUTES` | 120 | Token 有效期（分钟） |
 | `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD` | admin / 自动生成 | 初始管理员（仅首次 seed） |
 | `SEED_INIT_DATA` | true | 启动时是否初始化种子数据 |
-| `METRIC_RETENTION_DAYS` | 7 | 指标保留天数 |
+| `METRIC_RETENTION_DAYS` | 7 | 原始指标保留天数 |
+| `METRIC_AGG_RETENTION_DAYS` | 180 | 指标日聚合归档保留天数 |
 | `TASK_RETENTION_DAYS` | 30 | 任务执行记录保留天数 |
 | `OPERATION_LOG_ENABLED` | true | 操作审计开关 |
 | `METRICS_ENABLED` | true | Prometheus `/metrics` 开关 |
@@ -66,8 +67,9 @@
 | `OPERATION_LOG_ENABLED` | true | 操作审计中间件开关 |
 | `AGENT_STATUS_REFRESH_SECONDS` | 30 | Agent 状态刷新周期 |
 | `ALERT_EVALUATE_INTERVAL_SECONDS` | 10 | 告警评估周期 |
-| `METRIC_RETENTION_DAYS` | 7 | 指标保留天数 |
-| `METRIC_CLEANUP_ENABLED` | true | 指标清理开关 |
+| `METRIC_RETENTION_DAYS` | 7 | 原始指标保留天数（超期先聚合归档再删除） |
+| `METRIC_AGG_RETENTION_DAYS` | 180 | 指标日聚合归档保留天数 |
+| `METRIC_CLEANUP_ENABLED` | true | 指标归档/清理开关 |
 | `TASK_RETENTION_DAYS` | 30 | 终态任务执行记录保留天数 |
 | `TASK_CLEANUP_ENABLED` | true | 任务执行清理开关 |
 | `LOG_LEVEL` | INFO | 日志级别（结构化 JSON） |

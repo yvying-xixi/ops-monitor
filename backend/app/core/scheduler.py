@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import logging
+from datetime import UTC, datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -126,17 +127,30 @@ def _refresh_agent_statuses() -> None:
 
 @_locked("cleanup_old_metrics")
 def _cleanup_old_metrics() -> None:
-    """删除超过保留期的历史指标。"""
+    """将过期原始指标聚合归档到日表，并清理超期原始与聚合数据。"""
     if not settings.METRIC_CLEANUP_ENABLED:
         return
     db = SessionLocal()
     try:
-        deleted = MetricRepository(db).delete_older_than(settings.METRIC_RETENTION_DAYS)
+        repo = MetricRepository(db)
+        cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(
+            days=settings.METRIC_RETENTION_DAYS
+        )
+        archived = repo.aggregate_daily(cutoff)
+        deleted = repo.delete_older_than(settings.METRIC_RETENTION_DAYS)
+        agg_deleted = repo.delete_daily_before(settings.METRIC_AGG_RETENTION_DAYS)
         db.commit()
-        if deleted:
-            logger.info("清理过期指标 %s 条（保留 %s 天）", deleted, settings.METRIC_RETENTION_DAYS)
+        if archived or deleted or agg_deleted:
+            logger.info(
+                "指标归档/清理：日聚合 %s 行，删除原始 %s 条（保留 %s 天），删除聚合 %s 条（保留 %s 天）",
+                archived,
+                deleted,
+                settings.METRIC_RETENTION_DAYS,
+                agg_deleted,
+                settings.METRIC_AGG_RETENTION_DAYS,
+            )
     except Exception:
-        logger.exception("指标清理失败")
+        logger.exception("指标归档/清理失败")
     finally:
         db.close()
 

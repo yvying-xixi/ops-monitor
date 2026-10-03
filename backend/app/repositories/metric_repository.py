@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import delete, func, select
+from sqlalchemy.dialects.mysql import insert as mysql_insert
 
-from app.models import MonitorServerMetric
+from app.models import MonitorServerMetric, MonitorServerMetricDaily
 from app.repositories.base import BaseRepository
 
 # summary 聚合的数值字段
@@ -154,5 +155,65 @@ class MetricRepository(BaseRepository[MonitorServerMetric]):
         cutoff = _utcnow() - timedelta(days=days)
         result = self.db.execute(
             delete(MonitorServerMetric).where(MonitorServerMetric.collected_at < cutoff)
+        )
+        return result.rowcount or 0
+
+    def aggregate_daily(self, cutoff: datetime) -> int:
+        """将早于 cutoff 的原始指标按 (server, 日期) 聚合写入日归档表（幂等 upsert）。
+
+        Returns:
+            写入/更新的聚合行数。
+        """
+        day = func.date(MonitorServerMetric.collected_at)
+        stmt = (
+            select(
+                MonitorServerMetric.server_id,
+                day.label("metric_date"),
+                func.avg(MonitorServerMetric.cpu_usage).label("cpu_usage_avg"),
+                func.max(MonitorServerMetric.cpu_usage).label("cpu_usage_max"),
+                func.avg(MonitorServerMetric.memory_usage).label("memory_usage_avg"),
+                func.max(MonitorServerMetric.memory_usage).label("memory_usage_max"),
+                func.avg(MonitorServerMetric.disk_usage).label("disk_usage_avg"),
+                func.max(MonitorServerMetric.disk_usage).label("disk_usage_max"),
+                func.avg(MonitorServerMetric.load_1m).label("load_1m_avg"),
+                func.max(MonitorServerMetric.load_1m).label("load_1m_max"),
+                func.avg(MonitorServerMetric.tcp_connections).label("tcp_connections_avg"),
+                func.max(MonitorServerMetric.tcp_connections).label("tcp_connections_max"),
+                func.count().label("sample_count"),
+            )
+            .where(MonitorServerMetric.collected_at < cutoff)
+            .group_by(MonitorServerMetric.server_id, day)
+        )
+
+        written = 0
+        for row in self.db.execute(stmt).all():
+            values = {
+                "server_id": row.server_id,
+                "metric_date": row.metric_date,
+                "cpu_usage_avg": row.cpu_usage_avg,
+                "cpu_usage_max": row.cpu_usage_max,
+                "memory_usage_avg": row.memory_usage_avg,
+                "memory_usage_max": row.memory_usage_max,
+                "disk_usage_avg": row.disk_usage_avg,
+                "disk_usage_max": row.disk_usage_max,
+                "load_1m_avg": row.load_1m_avg,
+                "load_1m_max": row.load_1m_max,
+                "tcp_connections_avg": row.tcp_connections_avg,
+                "tcp_connections_max": row.tcp_connections_max,
+                "sample_count": row.sample_count,
+            }
+            insert_stmt = mysql_insert(MonitorServerMetricDaily).values(**values)
+            update_cols = {
+                key: value for key, value in values.items() if key not in ("server_id", "metric_date")
+            }
+            self.db.execute(insert_stmt.on_duplicate_key_update(**update_cols))
+            written += 1
+        return written
+
+    def delete_daily_before(self, days: int) -> int:
+        """删除早于保留期的日聚合记录。"""
+        cutoff = (_utcnow() - timedelta(days=days)).date()
+        result = self.db.execute(
+            delete(MonitorServerMetricDaily).where(MonitorServerMetricDaily.metric_date < cutoff)
         )
         return result.rowcount or 0

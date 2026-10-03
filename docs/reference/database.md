@@ -3,13 +3,13 @@
 > 建表与演进由 Alembic 迁移管理：`backend/migrations/`（MySQL 8.0，utf8mb4），基线为 `0001_initial`。
 > 设计原则：监控数据与业务数据分离；密码与 Agent Token 仅存哈希；时间字段使用 `DATETIME(3)`，应用层统一 UTC。
 
-## 表总览（26 张）
+## 表总览（27 张）
 
 | 域 | 表 |
 | --- | --- |
 | 用户与权限 | `sys_user`、`sys_role`、`sys_permission`、`sys_user_role`、`sys_role_permission` |
 | 服务器资产与 Agent | `ops_server`、`ops_server_disk`、`ops_server_network`、`ops_agent_token`、`ops_agent_heartbeat`、`ops_server_service`、`ops_server_container` |
-| 监控指标 | `monitor_server_metric`、`monitor_disk_metric`、`monitor_network_metric`、`monitor_container_metric`、`monitor_process_snapshot` |
+| 监控指标 | `monitor_server_metric`、`monitor_disk_metric`、`monitor_network_metric`、`monitor_container_metric`、`monitor_process_snapshot`、`monitor_server_metric_daily` |
 | 告警管理 | `alert_rule`、`alert_event`、`alert_event_log` |
 | 自动化任务 | `ops_task`、`ops_task_target`、`ops_task_execution`、`ops_task_log` |
 | 登录与审计 | `sys_login_log`、`sys_operation_log` |

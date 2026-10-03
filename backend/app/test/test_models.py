@@ -25,6 +25,7 @@ EXPECTED_TABLES = {
     "monitor_network_metric",
     "monitor_container_metric",
     "monitor_process_snapshot",
+    "monitor_server_metric_daily",
     "alert_rule",
     "alert_event",
     "alert_event_log",

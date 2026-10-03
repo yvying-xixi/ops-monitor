@@ -33,6 +33,12 @@
 - 通过 `ops_task_execution.status` 观察 PENDING/RUNNING 数量。
 - 超时扫描（30s）将长时间 RUNNING 置 TIMEOUT。
 
+## 指标生命周期与归档
+
+- 原始指标（`monitor_server_metric` 等）：保留 `METRIC_RETENTION_DAYS`（默认 7 天）。
+- 每日归档任务：先把超期原始指标按 `(server, 日期)` 聚合写入 `monitor_server_metric_daily`（AVG/MAX/样本数，幂等 upsert），再删除超期原始指标；聚合保留 `METRIC_AGG_RETENTION_DAYS`（默认 180 天）。
+- 说明：原始指标表含外键，**不做 MySQL 分区**；以「聚合归档 + 保留清理」实现数据生命周期。
+
 ## Prometheus 指标
 
 `GET /metrics`（backend 根路径，非 `/api`，默认仅内网可达）暴露平台自有指标：

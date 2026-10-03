@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Index, Numeric, String, Text, text
+from sqlalchemy import Date, ForeignKey, Index, Numeric, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.mysql import BIGINT, DATETIME, INTEGER
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -44,6 +44,45 @@ class MonitorServerMetric(Base):
     )
 
     server: Mapped[OpsServer] = relationship("OpsServer", back_populates="metrics")
+
+
+class MonitorServerMetricDaily(Base):
+    """服务器指标日聚合（原始指标过期后的长期归档）。"""
+
+    __tablename__ = "monitor_server_metric_daily"
+    __table_args__ = (
+        UniqueConstraint("server_id", "metric_date", name="uk_metric_daily_server_date"),
+        Index("idx_metric_daily_date", "metric_date"),
+        {"comment": "服务器指标日聚合（长期归档）"},
+    )
+
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True, comment="聚合记录ID")
+    server_id: Mapped[int] = mapped_column(
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server.id", name="fk_metric_daily_server"),
+        comment="服务器ID",
+    )
+    metric_date: Mapped[date] = mapped_column(Date, comment="统计日期")
+    cpu_usage_avg: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="CPU 使用率均值")
+    cpu_usage_max: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="CPU 使用率峰值")
+    memory_usage_avg: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="内存使用率均值")
+    memory_usage_max: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="内存使用率峰值")
+    disk_usage_avg: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="磁盘使用率均值")
+    disk_usage_max: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="磁盘使用率峰值")
+    load_1m_avg: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="1分钟Load均值")
+    load_1m_max: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="1分钟Load峰值")
+    tcp_connections_avg: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="TCP连接数均值")
+    tcp_connections_max: Mapped[float | None] = mapped_column(Numeric(12, 4), comment="TCP连接数峰值")
+    sample_count: Mapped[int] = mapped_column(INTEGER(unsigned=True), comment="参与聚合的原始样本数")
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=3), server_default=text("CURRENT_TIMESTAMP(3)"), comment="创建时间"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=3),
+        server_default=text("CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)"),
+        server_onupdate=text("CURRENT_TIMESTAMP(3)"),
+        comment="更新时间",
+    )
 
 
 class MonitorDiskMetric(Base):

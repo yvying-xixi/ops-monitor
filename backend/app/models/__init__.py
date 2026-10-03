@@ -6,6 +6,7 @@ from app.models.metric import (
     MonitorNetworkMetric,
     MonitorProcessSnapshot,
     MonitorServerMetric,
+    MonitorServerMetricDaily,
 )
 from app.models.server import (
     OpsAgentHeartbeat,
@@ -37,6 +38,7 @@ __all__ = [
     "MonitorNetworkMetric",
     "MonitorContainerMetric",
     "MonitorProcessSnapshot",
+    "MonitorServerMetricDaily",
     "AlertRule",
     "AlertEvent",
     "AlertEventLog",
