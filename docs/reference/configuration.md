@@ -29,6 +29,8 @@
 | `METRICS_TOKEN` | 空 | `/metrics` 访问令牌（空则不鉴权，仅内网可达） |
 | `AGENT_REQUIRE_SIGNATURE` | false | 是否强制 Agent 请求签名 |
 | `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
+| `SCHEDULER_LOCK_ENABLED` | true | 调度作业 Redis 分布式锁开关 |
+| `SCHEDULER_LOCK_TTL_SECONDS` | 600 | 调度锁 TTL（秒） |
 | `BACKUP_DIR` | ./backups | 备份归档目录（相对 `deploy/` 或绝对路径） |
 | `BACKUP_RETENTION_DAYS` | 14 | 备份保留天数 |
 | `BACKUP_INCLUDE_CONFIG` | true | 备份是否包含 `config.env` |
@@ -76,6 +78,8 @@
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | 空 | OTLP/HTTP traces 端点（空则仅生成 span 不导出） |
 | `AGENT_REQUIRE_SIGNATURE` | false | 是否强制 Agent 请求签名（Ed25519） |
 | `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
+| `SCHEDULER_LOCK_ENABLED` | true | 调度作业 Redis 分布式锁（多 worker/多实例每轮只执行一次） |
+| `SCHEDULER_LOCK_TTL_SECONDS` | 600 | 调度锁 TTL（进程崩溃兜底，应大于最长作业耗时） |
 | `AGENT_BUNDLE_DIR` | 空 | Agent 安装包来源目录（容器内挂载；空则自动定位仓库根） |
 
 ## Agent 配置（Python 与 Go 通用）
