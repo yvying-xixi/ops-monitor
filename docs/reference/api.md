@@ -24,6 +24,7 @@
 
 - 用户接口：`Authorization: Bearer <JWT>`，登录接口 `POST /api/v1/auth/login` 获取。
 - Agent 接口：`Authorization: Bearer <Agent Token>`，Token 由平台生成。
+- Agent 安装包/脚本下载为公开接口，支持 `runtime=python|go`（默认 `python`），非法值回退 `python`。
 
 ## Response Format
 

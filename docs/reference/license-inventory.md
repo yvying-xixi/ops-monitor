@@ -37,6 +37,21 @@
 | pyyaml | 6.0.2 | Direct | MIT |
 | pytest | 8.3.2 | Direct (dev) | MIT |
 
+### Agent（Go）
+
+| Dependency | Version | Type | License |
+| --- | --- | --- | --- |
+| github.com/shirou/gopsutil/v4 | 4.24.12 | Direct | BSD-3-Clause |
+| gopkg.in/yaml.v3 | 3.0.1 | Direct | MIT |
+| golang.org/x/sys | 0.28.0 | Indirect | BSD-3-Clause |
+| github.com/tklauser/go-sysconf | 0.3.12 | Indirect | BSD-3-Clause |
+| github.com/tklauser/numcpus | 0.6.1 | Indirect | Apache-2.0 |
+| github.com/yusufpapurcu/wmi | 1.2.4 | Indirect | MIT |
+| github.com/go-ole/go-ole | 1.2.6 | Indirect | MIT |
+| github.com/power-devops/perfstat | 0.0.0-2021… | Indirect | MIT |
+| github.com/lufia/plan9stats | 0.0.0-2021… | Indirect | BSD-3-Clause |
+| github.com/ebitengine/purego | 0.8.1 | Indirect | Apache-2.0 |
+
 ### Frontend（Node）
 
 | Dependency | Version | Type | License |

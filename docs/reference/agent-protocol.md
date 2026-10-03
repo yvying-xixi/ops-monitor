@@ -1,10 +1,12 @@
 # Agent Protocol
 
-> 本文描述 Agent 与 Backend 之间的通信协议。实现见 `agent/` 与 `backend/app/api/v1/agent.py`。
+> 本文描述 Agent 与 Backend 之间的通信协议。实现见 `agent/`（Python）与 `agent-go/`（Go），两者功能对等、可互换。后端接口见 `backend/app/api/v1/agent.py`。
 
 ## Overview
 
 通信方向恒为 **Agent → Backend**（主动上报/轮询），后端不主动连接 Agent。所有 Agent 接口位于 `/api/v1/agent/*`，使用独立 Token 鉴权。
+
+协议与具体实现无关：Python 与 Go 两个 Agent 使用同一份接口契约与 `config.yaml` schema，后端无需区分。安装包按 `runtime` 参数区分（`/api/v1/agent/package?runtime=python|go`，默认 `python`）。
 
 ## Authentication
 
@@ -115,8 +117,11 @@ sequenceDiagram
 
 ## Package and Installer
 
-- `GET /api/v1/agent/package`：下载 Agent 安装包（tar.gz，公开）。
-- `GET /api/v1/agent/install.sh`：获取一键安装脚本（公开）。
+- `GET /api/v1/agent/package?runtime=python|go`：下载 Agent 安装包（tar.gz，公开）。
+  - `python`（默认）：源码 + `install.sh` + systemd 模板。
+  - `go`：预编译二进制（`dist/ops-agent-linux-{amd64,arm64}`）+ 配置样例 + `install.sh` + systemd 模板。
+- `GET /api/v1/agent/install.sh?runtime=python|go`：获取一键安装脚本（公开）。
+- 非法 `runtime` 回退为 `python`。
 
 ## Retry Policy
 

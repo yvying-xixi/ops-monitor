@@ -48,6 +48,11 @@ fi
 log "登录 $HARBOR_REGISTRY ..."
 printf '%s' "$HARBOR_PASSWORD" | docker login "$HARBOR_REGISTRY" -u "$HARBOR_USERNAME" --password-stdin
 
+# 预构建 Go Agent 二进制（供平台打包下载；随仓库/部署分发）
+if [ -x "$DEPLOY_DIR/build-agent-go.sh" ]; then
+  FORCE=1 "$DEPLOY_DIR/build-agent-go.sh" || warn "Go Agent 构建失败，跳过（不影响平台镜像）"
+fi
+
 build_push() {
   local local_tag="$1" repo="$2" context="$3" dockerfile="$4"
   log "构建 $repo（$PLATFORM）..."

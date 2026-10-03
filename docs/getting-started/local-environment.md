@@ -3,6 +3,7 @@
 ## 前置依赖
 
 - Python 3.11+
+- Go 1.24+（仅开发 Go 版 Agent 时需要）
 - Node.js 18+
 - MySQL 8.x、Redis 7.x（本地或容器）
 - Docker / Docker Compose（部署与联调）
@@ -16,10 +17,15 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp app/core/.env.example app/core/.env   # 按需修改
 
-# Agent
+# Agent（Python 版）
 cd agent
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+
+# Agent（Go 版，可选）
+# 需 Go 1.24+；无需虚拟环境
+cd agent-go
+go mod download
 
 # 前端
 cd frontend
@@ -53,8 +59,15 @@ cd frontend && npm run dev
 ## Agent 联调
 
 1. 平台「服务器管理」创建服务器并生成 Token。
-2. 配置 `agent/config/config.yaml`（url/token/server_code）后运行：
-   `./agent/.venv/bin/python -m agent.main`
+2. 配置 Agent 的 `config.yaml`（url/token/server_code）后运行：
+
+```bash
+# Python 版
+./agent/.venv/bin/python -m agent.main
+
+# Go 版（先构建或 go run）
+cd agent-go && go run ./cmd/agent --config ../agent/config/config.yaml
+```
 
 ## 常见问题
 

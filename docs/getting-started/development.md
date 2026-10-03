@@ -6,8 +6,10 @@
 
 - 后端：Python 3.11、FastAPI、SQLAlchemy 2、Pydantic 2
 - 前端：Vue 3、Vite、Element Plus、Tailwind CSS v4、Pinia、ECharts
-- Agent：Python 3.11、psutil、httpx
+- Agent：Python 3.11（psutil、httpx）与 Go 1.24+（gopsutil、yaml.v3）双运行时
 - 存储：MySQL 8、Redis 7
+
+前端样式体系（Tailwind 与 Element Plus 的分工与层序）见 [ADR-006](../decisions/006-frontend-styling-tailwind.md)；Agent 双运行时见 [ADR-007](../decisions/007-go-agent-dual-runtime.md)。
 
 前端样式体系（Tailwind 与 Element Plus 的分工与层序）见 [ADR-006](../decisions/006-frontend-styling-tailwind.md)。
 
@@ -33,12 +35,17 @@ npm run dev            # http://localhost:5173
 # 后端
 cd backend && .venv/bin/python -m pytest app/test/ -q
 
-# Agent
+# Agent（Python）
 agent/.venv/bin/python -m pytest agent/tests/ -q
+
+# Agent（Go）
+cd agent-go && gofmt -l . && go vet ./... && go test ./... && go build ./...
 
 # 前端构建校验
 cd frontend && npm run build
 ```
+
+> Go Agent 的安装包由后端打包；本地需要预构建二进制时运行 `./deploy/build-agent-go.sh`（宿主无 Go 时自动使用 `golang` 容器）。
 
 ## 后端分层
 

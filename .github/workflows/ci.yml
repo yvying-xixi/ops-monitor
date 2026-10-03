@@ -82,6 +82,35 @@ jobs:
       - name: Run agent tests
         run: python -m pytest agent/tests/ -q
 
+  agent-go:
+    name: Go Agent Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+          cache-dependency-path: agent-go/go.sum
+      - name: Verify formatting
+        working-directory: agent-go
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "以下文件未按 gofmt 格式化："
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: Vet
+        working-directory: agent-go
+        run: go vet ./...
+      - name: Test
+        working-directory: agent-go
+        run: go test ./... -race -count=1
+      - name: Build
+        working-directory: agent-go
+        run: go build ./...
+
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest

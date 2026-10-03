@@ -21,6 +21,7 @@ from app.schemas.agent import (
 from app.services.agent_package import (
     AgentPackageError,
     build_agent_package,
+    normalize_runtime,
     read_install_script,
 )
 from app.services.agent_service import AgentService
@@ -32,10 +33,15 @@ router = APIRouter(prefix="/agent", tags=["Agent"])
 
 
 @router.get("/package", summary="下载 Agent 安装包", include_in_schema=True)
-def download_agent_package():
-    """下载 Agent 安装包（tar.gz，含源码、install.sh 与 systemd 模板）。"""
+def download_agent_package(runtime: str = "python"):
+    """下载 Agent 安装包（tar.gz，含源码/二进制、install.sh 与 systemd 模板）。
+
+    Args:
+        runtime: `python`（默认）或 `go`；非法值回退为 python。
+    """
+    runtime = normalize_runtime(runtime)
     try:
-        content, filename = build_agent_package()
+        content, filename = build_agent_package(runtime)
     except AgentPackageError as exc:
         raise AppException(ErrorCode.NOT_FOUND, str(exc), http_status=404) from exc
     return Response(
@@ -46,10 +52,15 @@ def download_agent_package():
 
 
 @router.get("/install.sh", summary="获取 Agent 安装脚本", response_class=PlainTextResponse)
-def get_install_script():
-    """返回 Agent 一键安装脚本内容。"""
+def get_install_script(runtime: str = "python"):
+    """返回 Agent 一键安装脚本内容。
+
+    Args:
+        runtime: `python`（默认）或 `go`；非法值回退为 python。
+    """
+    runtime = normalize_runtime(runtime)
     try:
-        content = read_install_script()
+        content = read_install_script(runtime)
     except AgentPackageError as exc:
         raise AppException(ErrorCode.NOT_FOUND, str(exc), http_status=404) from exc
     return PlainTextResponse(content, media_type="text/x-shellscript")

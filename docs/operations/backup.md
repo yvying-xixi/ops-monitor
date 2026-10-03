@@ -10,7 +10,7 @@
 | Redis 数据 | `DATA_VOLUME_DIR/redis` | 缓存/任务状态 |
 | 部署配置 | `deploy/config.env` | 配置源（含密钥，妥善保管） |
 | 部署环境变量 | `deploy/.env` | 渲染产物 |
-| Agent 配置 | 各服务器 `agent/config/config.yaml` | 含 Token |
+| Agent 配置 | 各服务器 `agent/config/config.yaml` 或 `agent-go/config/config.yaml`（或 `/opt/ops-agent/config/config.yaml`） | 含 Token |
 
 数据目录由 `deploy/config.env` 的 `DATA_VOLUME_DIR` 指定（默认 `deploy/data`）。
 

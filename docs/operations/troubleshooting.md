@@ -47,7 +47,10 @@
 | --- | --- |
 | `401 服务器编码与凭证不匹配` | `server_code` 用了主机名；改为平台「编码」 |
 | `401 Agent 凭证无效` | Token 错误/撤销/过期，重新生成 |
-| `ModuleNotFoundError: No module named 'agent'` | 需在部署根用 `python -m agent.main` |
+| `ModuleNotFoundError: No module named 'agent'`（Python 版） | 需在部署根用 `python -m agent.main` |
+| Go 版安装报「未找到匹配的二进制」 | 包内 `dist/` 缺少对应架构产物；运行 `./deploy/build-agent-go.sh` 或从 Release 获取 |
+| Go 版启动即退出并提示 `加载配置失败` | 检查 `--config` 路径及 `server.url/token/server_code` 是否填写 |
+| Go 二进制报 `Exec format error` | 架构不匹配；确认目标机 `uname -m` 与安装包内二进制一致（amd64/arm64） |
 | 服务状态 UNKNOWN / 控制失败 | 目标机无 systemd/服务或权限不足（`systemctl is-active <svc>` 自查） |
 | 状态一直 OFFLINE | 检查服务端地址可达、心跳周期、`/api/v1/health` |
 

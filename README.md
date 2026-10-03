@@ -1,6 +1,6 @@
 # Ops Monitor
 
-轻量级服务器运维监控与自动化管理平台：通过 Python Agent 采集 Linux 服务器状态，由 FastAPI 后端统一处理，经 Vue 管理端提供监控、告警与服务管理能力。
+轻量级服务器运维监控与自动化管理平台：通过 Agent（Python / Go 双运行时）采集 Linux 服务器状态，由 FastAPI 后端统一处理，经 Vue 管理端提供监控、告警与服务管理能力。
 
 ## Features
 

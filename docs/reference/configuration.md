@@ -57,7 +57,9 @@
 | `METRIC_CLEANUP_ENABLED` | true | 指标清理开关 |
 | `AGENT_BUNDLE_DIR` | 空 | Agent 安装包来源目录（容器内挂载；空则自动定位仓库根） |
 
-## Agent 配置（`agent/config/config.yaml`）
+## Agent 配置（Python 与 Go 通用）
+
+Python 与 Go 两个 Agent 使用**同一份配置 schema**，可复用平台向导生成的 `config.yaml`。
 
 | 段 | 键 | 默认 | 说明 |
 | --- | --- | --- | --- |
@@ -73,6 +75,8 @@
 | `collect` | `request_timeout` | 10 | 请求超时（秒） |
 | `collect` | `services` | nginx,docker,ssh | 监控与受控服务白名单 |
 | `log` | `level` / `file` | INFO / 空 | 日志级别与文件 |
+
+> Go Agent 的日志级别同义映射：`DEBUG/INFO/WARN/ERROR`（`WARNING` 亦识别为 `WARN`）。
 
 ## 相关文档
 

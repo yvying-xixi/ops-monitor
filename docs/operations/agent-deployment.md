@@ -9,13 +9,17 @@
 ## Prerequisites
 
 - 目标机为 Linux（Debian/Ubuntu 等），具备 systemd（systemd 方式）。
-- Python 3.11+（systemd / 前台方式）。
 - 目标机能访问平台地址。
 - 已在平台创建服务器并取得 `server_code` 与 Token。
+- 运行时依赖：
+  - Python 版：Python 3.11+（systemd / 前台方式）。
+  - Go 版：无外部运行时（静态单二进制）。
 
 ## Installation
 
 ### 方式零：平台一键安装（推荐）
+
+Python 版（默认）：
 
 ```bash
 curl -fsSL http://<平台地址>/api/v1/agent/install.sh | sudo bash -s -- \
@@ -25,13 +29,25 @@ curl -fsSL http://<平台地址>/api/v1/agent/install.sh | sudo bash -s -- \
   --services nginx,docker,ssh
 ```
 
-安装包下载：`http://<平台地址>/api/v1/agent/package`。
+Go 版（单二进制，免 Python 运行时）：
+
+```bash
+curl -fsSL http://<平台地址>/api/v1/agent/install.sh?runtime=go | sudo bash -s -- \
+  --url http://<平台地址> \
+  --token <TOKEN> \
+  --code <服务器编码> \
+  --services nginx,docker,ssh
+```
+
+安装包下载：`http://<平台地址>/api/v1/agent/package[?runtime=go]`。
+
+> Go 版安装脚本会按 `uname -m` 选择 amd64/arm64 二进制；包内 `dist/` 需已包含对应架构产物（由 `deploy/build-agent-go.sh` 或 Release 提供）。
 
 ```mermaid
 flowchart LR
     A[平台创建服务器/生成 Token] --> B[生成 config.yaml]
     B --> C[目标机执行一键命令/脚本]
-    C --> D[复制 agent 包 + 建 venv + 装依赖]
+    C --> D[复制 agent 包/二进制 + 建 venv 或安装二进制]
     D --> E[写入 config.yaml]
     E --> F[安装并启动 server-agent]
     F --> G[自动注册 → ONLINE]
@@ -41,20 +57,33 @@ flowchart LR
 
 ```bash
 cd /path/to/ops-monitor
+
+# Python 版
 sudo ./agent/install.sh                 # 安装到 /opt/ops-agent 并启动 server-agent
 # 或：sudo ./agent/install.sh --config ./config.yaml
+
+# Go 版（需先构建二进制）
+./deploy/build-agent-go.sh
+sudo ./agent-go/install.sh              # 或：sudo ./agent-go/install.sh --config ./config.yaml
 ```
 
 ### 方式二：前台运行（调试）
 
 ```bash
 cd /path/to/ops-monitor
+
+# Python 版
 ./agent/.venv/bin/python -m agent.main
+
+# Go 版（安装后）
+sudo /opt/ops-agent/bin/ops-agent --config /opt/ops-agent/config/config.yaml
+# 或直接运行构建产物
+./agent-go/dist/ops-agent-linux-amd64 --config /path/to/config.yaml
 ```
 
 ## Configuration
 
-`agent/config/config.yaml`：见 [reference/configuration.md](../reference/configuration.md#agent-配置agentconfigconfigyaml)。
+Python 与 Go 版使用同一份 `config.yaml`：见 [reference/configuration.md](../reference/configuration.md#agent-配置python-与-go-通用)。
 
 > `server_code` 必须与平台「编码」一致，否则注册报 `401 服务器编码与凭证不匹配`。
 

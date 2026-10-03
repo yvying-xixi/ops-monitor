@@ -61,7 +61,7 @@ cp deploy/config.dockerhub.env.tmpl deploy/config.env
 
 - `IMAGE_PULL_ONLY=true` 会追加加载 `deploy/docker/compose.hub.yml`，只拉取不构建；`reconfigure.sh` 同样以 `pull` 应用变更。
 - 默认 `v0.2.0` 保证可复现；`latest` 为可选项。
-- 仍需本仓库检出：compose、`deploy/mysql/init`（首启建表）、`deploy/nginx/conf.d`、`agent/`、`deploy/systemd/`。
+- 仍需本仓库检出：compose、`deploy/mysql/init`（首启建表）、`deploy/nginx/conf.d`、`agent/`、`agent-go/`（含预构建二进制）、`deploy/systemd/`。
 - 公共仓库匿名拉取受 Docker Hub 速率限制（约 100 次/6 小时/IP）。
 
 ## 脚本职责

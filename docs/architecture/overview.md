@@ -4,7 +4,7 @@
 
 ## 系统上下文
 
-`ops-monitor` 是面向 Linux 服务器的轻量级运维监控与自动化管理平台。用户通过浏览器访问 Web 管理端，平台通过 Python Agent 采集被监控服务器状态，并提供监控、告警与服务管理能力。
+`ops-monitor` 是面向 Linux 服务器的轻量级运维监控与自动化管理平台。用户通过浏览器访问 Web 管理端，平台通过 Agent（Python / Go 双运行时）采集被监控服务器状态，并提供监控、告警与服务管理能力。
 
 ```mermaid
 flowchart LR
@@ -32,9 +32,9 @@ FastAPI 应用，采用 `Router → Service → Repository → Model` 分层，�
 
 ### Agent
 
-部署在被监控 Linux 服务器上的 Python 程序，负责系统指标采集、服务状态采集、心跳上报与受控任务执行。以 systemd 原生部署（不做核心容器化）。
+部署在被监控 Linux 服务器上的采集与执行程序，提供 **Python 与 Go 双运行时**（功能对等、共享协议与配置）：Python 版为源码 + venv，Go 版为静态单二进制。负责系统指标采集、服务状态采集、心跳上报与受控任务执行。以 systemd 原生部署（不做核心容器化）。
 
-详见 [agent.md](agent.md) 与 [reference/agent-protocol.md](../reference/agent-protocol.md)。
+详见 [agent.md](agent.md)、[reference/agent-protocol.md](../reference/agent-protocol.md) 与 [decisions/007-go-agent-dual-runtime.md](../decisions/007-go-agent-dual-runtime.md)。
 
 ### Database
 

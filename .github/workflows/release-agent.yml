@@ -1,0 +1,87 @@
+name: Release Go Agent
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "发布 tag（如 v0.3.0）；留空则使用 agent-go/VERSION"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-agent-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and Release Go Agent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
+          cache-dependency-path: agent-go/go.sum
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            version="${{ inputs.tag }}"
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            version="${GITHUB_REF_NAME}"
+          else
+            version="$(cat agent-go/VERSION)"
+          fi
+          version="${version#v}"
+          echo "value=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        working-directory: agent-go
+        run: go test ./... -count=1
+
+      - name: Build linux/amd64
+        working-directory: agent-go
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          GOOS=linux GOARCH=amd64 go build -trimpath \
+            -ldflags "-s -w -X main.agentVersion=${{ steps.version.outputs.value }}" \
+            -o dist/ops-agent-linux-amd64 ./cmd/agent
+
+      - name: Build linux/arm64
+        working-directory: agent-go
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          GOOS=linux GOARCH=arm64 go build -trimpath \
+            -ldflags "-s -w -X main.agentVersion=${{ steps.version.outputs.value }}" \
+            -o dist/ops-agent-linux-arm64 ./cmd/agent
+
+      - name: Build install bundle (tar.gz)
+        working-directory: agent-go
+        run: |
+          # 平台打包格式：install.sh + config 样例 + dist 二进制 + systemd 模板
+          mkdir -p bundle/ops-agent/dist bundle/ops-agent/config bundle/ops-agent/deploy/systemd
+          cp install.sh bundle/ops-agent/install.sh
+          cp VERSION bundle/ops-agent/VERSION
+          cp config/config.yaml.example bundle/ops-agent/config/config.yaml.example
+          cp dist/ops-agent-linux-amd64 dist/ops-agent-linux-arm64 bundle/ops-agent/dist/
+          cp ../deploy/systemd/server-agent-go.service bundle/ops-agent/deploy/systemd/
+          tar -C bundle -czf "dist/ops-agent-go-${{ steps.version.outputs.value }}.tar.gz" ops-agent
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.value) }}
+          generate_release_notes: true
+          files: |
+            agent-go/dist/ops-agent-linux-amd64
+            agent-go/dist/ops-agent-linux-arm64
+            agent-go/dist/ops-agent-go-${{ steps.version.outputs.value }}.tar.gz

@@ -47,6 +47,10 @@ set -a
 . "$ENV_FILE"
 set +a
 
+# 4.1 预构建 Go Agent 二进制（供平台打包下载与容器只读挂载）
+#     宿主机需有 go 或 docker（无 go 时自动用 golang 容器）；失败不阻断平台启动。
+"$DEPLOY_DIR/build-agent-go.sh" || log "Go Agent 构建跳过（可稍后运行 ./deploy/build-agent-go.sh）"
+
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/deploy/docker/compose.yml")
 if [ "${IMAGE_PULL_ONLY:-false}" = "true" ]; then
   COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.hub.yml")

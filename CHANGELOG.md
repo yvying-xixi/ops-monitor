@@ -6,6 +6,10 @@
 
 ### Added
 
+- 新增 Go 版 Agent（`agent-go/`），与 Python 版双运行时并存、协议与配置 schema 对等（[ADR-007](docs/decisions/007-go-agent-dual-runtime.md)）。
+- 平台支持按 `runtime` 打包/分发 Agent：`/api/v1/agent/package`、`/api/v1/agent/install.sh` 新增 `runtime=python|go`（默认 python）。
+- 前端 Agent 接入向导新增运行时选择（Python 默认 / Go），安装命令与包下载按选择生成。
+- 新增 `deploy/build-agent-go.sh` 与 `.github/workflows/release-agent.yml`（交叉编译 linux/amd64、arm64 并发布 Release）。
 - 前端引入 Tailwind CSS v4（`@tailwindcss/vite`）并建立样式层序与主题 token（[ADR-006](docs/decisions/006-frontend-styling-tailwind.md)）。
 - 前端新增暗色主题切换（浅色/深色/跟随系统），持久化于 `localStorage`（`store/theme.js`）。
 - 前端布局新增桌面折叠侧栏与小屏抽屉；顶栏新增主题切换入口。
@@ -13,6 +17,8 @@
 
 ### Changed
 
+- 后端 `agent_package` 服务重构为按运行时构建安装包；compose 追加 `agent-go/` 只读挂载。
+- 部署流程接入 Go Agent 构建：`install.sh` 安装阶段、`publish.sh` 发布阶段调用 `build-agent-go.sh`。
 - 前端样式体系：Tailwind 负责布局/间距/响应式/主题，Element Plus 负责组件；语义色改用 `var(--el-color-*)`。
 - 前端仪表盘与服务器详情栅格改为响应式；`MetricChart` 改用 `ResizeObserver` 随容器自适应；各列表页补充空状态。
 - `main.js` 移除重复的 Element Plus CSS 引入与图标全量注册。

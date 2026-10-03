@@ -22,8 +22,14 @@ const tokenLoading = ref(false)
 const tokenData = ref(null)
 const currentServer = ref(null)
 
-// 接入向导表单：后端地址与服务白名单可编辑
-const agentForm = reactive({ serverUrl: window.location.origin, services: 'nginx,docker,ssh' })
+// 接入向导表单：后端地址、服务白名单与运行时（python 默认 / go）可编辑
+const RUNTIME_OPTIONS = [
+  { value: 'python', label: 'Python', tip: '需目标机 Python 3.11+，源码部署' },
+  { value: 'go', label: 'Go', tip: '单二进制，无需额外运行时' },
+]
+const agentForm = reactive({ serverUrl: window.location.origin, services: 'nginx,docker,ssh', runtime: 'python' })
+
+const runtimeLabel = computed(() => agentForm.runtime === 'go' ? 'Go' : 'Python')
 
 function statusLabel(status) {
   return AGENT_STATUS_MAP[status] || AGENT_STATUS_MAP.UNKNOWN
@@ -62,6 +68,7 @@ async function openToken(server) {
   tokenData.value = null
   agentForm.serverUrl = window.location.origin
   agentForm.services = 'nginx,docker,ssh'
+  agentForm.runtime = 'python'
   tokenVisible.value = true
   tokenLoading.value = true
   try {
@@ -121,25 +128,43 @@ const configYaml = computed(() => {
   ].join('\n')
 })
 
-const deployCommands = computed(() => ({
-  foreground: [
-    '# 前台运行（调试）',
-    'cd /path/to/ops-monitor',
-    './agent/.venv/bin/python -m agent.main',
-  ].join('\n'),
-  systemd: [
-    '# 将上方 config.yaml 保存到目标机后，一键安装为 systemd 服务',
-    'sudo ./agent/install.sh',
-  ].join('\n'),
-  docker: [
-    '# 容器化运行（宿主机指标采集；容器内服务控制默认关闭）',
-    'docker run -d --name ops-agent --restart unless-stopped \\',
-    '  --pid=host --network=host \\',
-    '  -v /proc:/host/proc:ro -v /sys:/host/sys:ro \\',
-    '  -v $(pwd)/config.yaml:/app/agent/config/config.yaml:ro \\',
-    '  ops-monitor-agent:latest',
-  ].join('\n'),
-}))
+const deployCommands = computed(() => {
+  if (agentForm.runtime === 'go') {
+    return {
+      foreground: [
+        '# 前台运行（调试，需先安装二进制与配置）',
+        'sudo /opt/ops-agent/bin/ops-agent --config /opt/ops-agent/config/config.yaml',
+      ].join('\n'),
+      systemd: [
+        '# 将上方 config.yaml 保存到目标机后，一键安装为 systemd 服务',
+        'sudo ./agent-go/install.sh',
+      ].join('\n'),
+      docker: [
+        '# Go Agent 为宿主二进制，直接以 systemd 部署即可；无需容器运行',
+        '# 如需容器，请自行基于二进制构建镜像并挂载 /proc 与 docker.sock',
+      ].join('\n'),
+    }
+  }
+  return {
+    foreground: [
+      '# 前台运行（调试）',
+      'cd /path/to/ops-monitor',
+      './agent/.venv/bin/python -m agent.main',
+    ].join('\n'),
+    systemd: [
+      '# 将上方 config.yaml 保存到目标机后，一键安装为 systemd 服务',
+      'sudo ./agent/install.sh',
+    ].join('\n'),
+    docker: [
+      '# 容器化运行（宿主机指标采集；容器内服务控制默认关闭）',
+      'docker run -d --name ops-agent --restart unless-stopped \\',
+      '  --pid=host --network=host \\',
+      '  -v /proc:/host/proc:ro -v /sys:/host/sys:ro \\',
+      '  -v $(pwd)/config.yaml:/app/agent/config/config.yaml:ro \\',
+      '  ops-monitor-agent:latest',
+    ].join('\n'),
+  }
+})
 
 function downloadConfig() {
   const blob = new Blob([configYaml.value], { type: 'text/yaml;charset=utf-8' })
@@ -156,7 +181,7 @@ const baseUrl = computed(() => agentForm.serverUrl.replace(/\/+$/, ''))
 const installOneLiner = computed(() => {
   const services = serviceList.value.join(',')
   return [
-    `curl -fsSL ${baseUrl.value}/api/v1/agent/install.sh | sudo bash -s -- \\`,
+    `curl -fsSL ${baseUrl.value}/api/v1/agent/install.sh?runtime=${agentForm.runtime} | sudo bash -s -- \\`,
     `  --url ${baseUrl.value} \\`,
     `  --token ${tokenData.value?.token || ''} \\`,
     `  --code ${currentServer.value?.server_code || ''} \\`,
@@ -165,7 +190,7 @@ const installOneLiner = computed(() => {
 })
 
 function downloadPackage() {
-  window.open(`${baseUrl.value}/api/v1/agent/package`, '_blank')
+  window.open(`${baseUrl.value}/api/v1/agent/package?runtime=${agentForm.runtime}`, '_blank')
 }
 
 onMounted(loadData)
@@ -303,6 +328,13 @@ onMounted(loadData)
           <div class="section">
             <div class="section-title">2. Agent 配置（可编辑）</div>
             <div class="field">
+              <span class="field-label">运行时（Python 需目标机 Python 3.11+；Go 为单二进制，无需额外运行时）</span>
+              <el-radio-group v-model="agentForm.runtime">
+                <el-radio-button v-for="r in RUNTIME_OPTIONS" :key="r.value" :value="r.value">{{ r.label }}</el-radio-button>
+              </el-radio-group>
+              <span class="runtime-tip">{{ RUNTIME_OPTIONS.find((r) => r.value === agentForm.runtime)?.tip }}</span>
+            </div>
+            <div class="field">
               <span class="field-label">服务端地址（Agent 所在网络可访问的地址）</span>
               <el-input v-model="agentForm.serverUrl" placeholder="http://<平台IP>:8000 或 http://<平台IP>" />
             </div>
@@ -314,7 +346,7 @@ onMounted(loadData)
 
           <div class="section">
             <div class="section-title">
-              3. config.yaml
+              3. config.yaml（{{ runtimeLabel }} 运行时通用）
               <el-button link type="primary" @click="copyConfig">复制</el-button>
               <el-button link type="primary" @click="downloadConfig">下载</el-button>
             </div>
@@ -323,7 +355,7 @@ onMounted(loadData)
 
           <div class="section">
             <div class="section-title">
-              4. 部署运行
+              4. 部署运行（{{ runtimeLabel }}）
               <el-button link type="primary" @click="downloadPackage">下载 Agent 包</el-button>
             </div>
             <div class="field">
@@ -395,6 +427,11 @@ onMounted(loadData)
   color: var(--el-text-color-secondary);
   font-size: 13px;
   margin-bottom: 4px;
+}
+.runtime-tip {
+  margin-left: 8px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
 }
 .config-pre,
 .cmd-pre {
