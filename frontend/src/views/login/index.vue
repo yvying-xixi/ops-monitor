@@ -24,7 +24,7 @@ async function handleLogin() {
     await userStore.login(form.value.username, form.value.password)
     ElMessage.success('登录成功')
     router.push('/dashboard')
-  } catch (e) {
+  } catch {
     // 错误提示由拦截器统一处理
   } finally {
     loading.value = false

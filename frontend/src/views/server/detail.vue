@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getLatestMetricApi, getServerAssetsApi, getSummaryMetricApi } from '../../api/monitor'
 import { createTaskApi, listServerServicesApi, updateServiceWhitelistApi } from '../../api/task'
@@ -10,7 +10,6 @@ import { AGENT_STATUS_MAP, SERVICE_STATUS_MAP, TIME_RANGES } from '../../config'
 import { formatBytes, formatTime, formatUptime } from '../../utils/format'
 
 const route = useRoute()
-const router = useRouter()
 const serverId = Number(route.params.id)
 const userStore = useUserStore()
 

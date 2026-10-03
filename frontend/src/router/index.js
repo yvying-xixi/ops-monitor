@@ -79,7 +79,7 @@ router.beforeEach(async (to) => {
     restoreAttempted = true
     try {
       await userStore.fetchMe()
-    } catch (e) {
+    } catch {
       // 401 已由拦截器登出并跳转；其余错误放行（角色受限页由服务端鉴权兜底）
     }
     if (!userStore.isLoggedIn) {
