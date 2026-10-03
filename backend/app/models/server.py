@@ -153,6 +153,11 @@ class OpsAgentToken(Base):
     token_name: Mapped[str] = mapped_column(String(64), comment="Token名称")
     token_prefix: Mapped[str] = mapped_column(String(16), comment="Token前缀，用于识别")
     token_hash: Mapped[str] = mapped_column(CHAR(64), comment="Token哈希，不保存明文")
+    signing_public_key: Mapped[str | None] = mapped_column(String(128), comment="Ed25519 公钥（base64），用于请求签名")
+    signing_algorithm: Mapped[str | None] = mapped_column(
+        String(16), default="ed25519", server_default=text("'ed25519'"), comment="签名算法"
+    )
+    key_registered_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=3), comment="公钥注册时间")
     status: Mapped[int] = mapped_column(TINYINT, default=1, server_default=text("1"), comment="状态：0撤销，1有效")
     expires_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=3), comment="过期时间")
     last_used_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=3), comment="最后使用时间")

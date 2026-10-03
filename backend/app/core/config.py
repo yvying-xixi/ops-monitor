@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     METRICS_ENABLED: bool = True
     METRICS_TOKEN: str = ""
+    AGENT_REQUIRE_SIGNATURE: bool = False
+    AGENT_SIGNATURE_MAX_SKEW: int = 300
     OTEL_ENABLED: bool = False
     OTEL_SERVICE_NAME: str = "ops-monitor-backend"
     OTEL_EXPORTER_OTLP_ENDPOINT: str = ""

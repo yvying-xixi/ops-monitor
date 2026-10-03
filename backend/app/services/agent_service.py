@@ -73,6 +73,11 @@ class AgentService:
         if ip:
             server.ip_address = ip
         self.heartbeat_repo.record(server_id=server.id, agent_version=data.agent_version, ip_address=ip)
+        # 首次注册（或原 Token 尚无公钥）时登记签名公钥，防止覆盖已有公钥
+        if data.signing_public_key and not token.signing_public_key:
+            token.signing_public_key = data.signing_public_key
+            token.signing_algorithm = "ed25519"
+            token.key_registered_at = _utcnow()
         self.token_repo.update_last_used(token)
         self.db.commit()
         return {"server_id": server.id, "agent_status": "ONLINE"}

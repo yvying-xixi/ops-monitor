@@ -22,6 +22,9 @@ class RegisterRequest(BaseModel):
     memory_total_bytes: int | None = Field(None, ge=0, description="内存总量（字节）")
     disk_total_bytes: int | None = Field(None, ge=0, description="磁盘总量（字节）")
     agent_version: str | None = Field(None, max_length=32, description="Agent 版本")
+    signing_public_key: str | None = Field(
+        None, max_length=128, description="Ed25519 公钥（base64），首次注册时上报，用于请求签名"
+    )
 
 
 class HeartbeatRequest(BaseModel):
