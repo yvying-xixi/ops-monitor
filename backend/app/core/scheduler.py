@@ -17,6 +17,21 @@ logger = logging.getLogger(__name__)
 _scheduler: BackgroundScheduler | None = None
 
 
+def _cleanup_old_task_executions() -> None:
+    """删除超过保留期的终态任务执行记录与日志。"""
+    if not settings.TASK_CLEANUP_ENABLED:
+        return
+    db = SessionLocal()
+    try:
+        deleted = TaskService(db).cleanup_executions(settings.TASK_RETENTION_DAYS)
+        if deleted:
+            logger.info("清理过期任务执行 %s 条（保留 %s 天）", deleted, settings.TASK_RETENTION_DAYS)
+    except Exception:
+        logger.exception("任务执行清理失败")
+    finally:
+        db.close()
+
+
 def _scan_task_timeouts() -> None:
     """将超时执行的任务置为 TIMEOUT。"""
     db = SessionLocal()
@@ -118,6 +133,15 @@ def setup_scheduler() -> None:
         "interval",
         hours=24,
         id="cleanup_old_metrics",
+        max_instances=1,
+        coalesce=True,
+        next_run_time=None,
+    )
+    _scheduler.add_job(
+        _cleanup_old_task_executions,
+        "interval",
+        hours=24,
+        id="cleanup_old_task_executions",
         max_instances=1,
         coalesce=True,
         next_run_time=None,

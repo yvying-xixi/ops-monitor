@@ -262,14 +262,19 @@ class TaskService:
     # ---------- 调度扫描 ----------
 
     def scan_timeouts(self) -> int:
-        """将超过任务超时时间的 RUNNING 执行置为 TIMEOUT。"""
-        tasks = {t.id: t for t in self.task_repo.list_all(status="RUNNING")}
+        """将超过**各自任务**超时时间的 RUNNING 执行置为 TIMEOUT。"""
         total = 0
-        for task in tasks.values():
-            updated = self.execution_repo.mark_expired(task.timeout_seconds)
-            if updated:
+        for task in self.task_repo.list_all(status="RUNNING"):
+            expired = [
+                execution
+                for execution in self.execution_repo.list_by_task(task.id)
+                if self.execution_repo.is_expired(execution, task.timeout_seconds)
+            ]
+            for execution in expired:
+                self.execution_repo.mark_timeout(execution, task.timeout_seconds)
+                total += 1
+            if expired:
                 self._aggregate_task_status(task)
-                total += updated
         self.db.commit()
         return total
 
@@ -328,6 +333,13 @@ class TaskService:
 
         self.db.commit()
         return created
+
+    def cleanup_executions(self, retention_days: int) -> int:
+        """清理超过保留期的终态执行记录及其日志。"""
+        cutoff = _utcnow() - timedelta(days=retention_days)
+        deleted = self.execution_repo.delete_terminal_before(cutoff)
+        self.db.commit()
+        return deleted
 
     @staticmethod
     def _can_retry(task: OpsTask, execution: OpsTaskExecution) -> bool:

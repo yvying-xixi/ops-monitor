@@ -227,6 +227,54 @@ def test_non_retryable_failure_is_terminal(db):
     assert TaskService(db).get_task_entity(task.id).status == "FAILED"
 
 
+def test_timeout_scan_uses_per_task_timeout(db):
+    server = _make_server(db)
+    creator = _creator_id(db)
+    short = TaskService(db).create_task(
+        TaskCreate(
+            task_name="short", task_type="SERVICE_CHECK", service_name="nginx",
+            server_ids=[server.id], timeout_seconds=60,
+        ),
+        creator_id=creator,
+    )
+    long = TaskService(db).create_task(
+        TaskCreate(
+            task_name="long", task_type="SERVICE_CHECK", service_name="nginx",
+            server_ids=[server.id], timeout_seconds=3600,
+        ),
+        creator_id=creator,
+    )
+    for task in (short, long):
+        task.status = "RUNNING"
+        db.flush()
+        for execution in TaskExecutionRepository(db).list_by_task(task.id):
+            execution.status = "RUNNING"
+            execution.started_at = _utcnow() - timedelta(minutes=10)
+    db.flush()
+
+    updated = TaskService(db).scan_timeouts()
+    assert updated == 1
+    db.expire_all()
+    assert TaskExecutionRepository(db).list_by_task(short.id)[0].status == "TIMEOUT"
+    assert TaskExecutionRepository(db).list_by_task(long.id)[0].status == "RUNNING"
+
+
+def test_cleanup_old_executions(db):
+    server = _make_server(db)
+    task = _make_task(db, _creator_id(db), [server.id])
+    execution = TaskExecutionRepository(db).list_by_task(task.id)[0]
+    execution.status = "SUCCESS"
+    execution.finished_at = _utcnow() - timedelta(days=60)
+    db.flush()
+    TaskLogRepository(db).record(execution.id, "done")
+
+    deleted = TaskService(db).cleanup_executions(30)
+    assert deleted == 1
+    db.expire_all()
+    assert TaskExecutionRepository(db).get(execution.id) is None
+    assert TaskLogRepository(db).list_by_execution(execution.id) == []
+
+
 def test_retry_exhausted_becomes_dead(db):
     server = _make_server(db)
     payload = TaskCreate(

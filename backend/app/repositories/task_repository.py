@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select
 
 from app.models import OpsTask, OpsTaskExecution, OpsTaskLog, OpsTaskTarget
 from app.repositories.base import BaseRepository
@@ -188,22 +188,40 @@ class TaskExecutionRepository(BaseRepository[OpsTaskExecution]):
     def list_by_task(self, task_id: int) -> list[OpsTaskExecution]:
         return self.list_all(task_id=task_id)
 
-    def mark_expired(self, timeout_seconds: int) -> int:
-        """将超时未完成的 RUNNING 执行置为 TIMEOUT。"""
-        cutoff = _utcnow() - timedelta(seconds=timeout_seconds)
-        stmt = (
-            update(OpsTaskExecution)
-            .where(
-                OpsTaskExecution.status == "RUNNING",
-                OpsTaskExecution.started_at < cutoff,
-            )
-            .values(
-                status="TIMEOUT",
-                finished_at=_utcnow(),
-                error_message=f"执行超时（{timeout_seconds}s）",
-            )
+    def delete_terminal_before(self, cutoff: datetime) -> int:
+        """删除过期终态执行记录及其日志，返回删除的执行数。
+
+        仅清理已结束的执行（SUCCESS/FAILED/TIMEOUT/CANCELLED/DEAD），
+        不影响进行中任务的状态聚合。
+        """
+        ids = list(
+            self.db.scalars(
+                select(OpsTaskExecution.id).where(
+                    OpsTaskExecution.status.in_(("SUCCESS", "FAILED", "TIMEOUT", "CANCELLED", "DEAD")),
+                    OpsTaskExecution.finished_at.isnot(None),
+                    OpsTaskExecution.finished_at < cutoff,
+                )
+            ).all()
         )
-        return self.db.execute(stmt).rowcount or 0
+        if not ids:
+            return 0
+        self.db.execute(delete(OpsTaskLog).where(OpsTaskLog.execution_id.in_(ids)))
+        result = self.db.execute(delete(OpsTaskExecution).where(OpsTaskExecution.id.in_(ids)))
+        return result.rowcount or 0
+
+    def is_expired(self, execution: OpsTaskExecution, timeout_seconds: int) -> bool:
+        """判断 RUNNING 执行是否已超过对应任务的超时时间。"""
+        if execution.status != "RUNNING" or execution.started_at is None:
+            return False
+        return execution.started_at < _utcnow() - timedelta(seconds=timeout_seconds)
+
+    def mark_timeout(self, execution: OpsTaskExecution, timeout_seconds: int) -> OpsTaskExecution:
+        """将单个超时执行置为 TIMEOUT。"""
+        execution.status = "TIMEOUT"
+        execution.finished_at = _utcnow()
+        execution.error_message = f"执行超时（{timeout_seconds}s）"
+        self.db.flush()
+        return execution
 
 
 class TaskLogRepository(BaseRepository[OpsTaskLog]):
