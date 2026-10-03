@@ -11,6 +11,7 @@
 - 部署容器资源上限（CPU/内存）与 json-file 日志轮转（`compose.yml`）。
 - Agent 请求签名（[ADR-010](docs/decisions/010-agent-request-signing.md)，Ed25519）：Agent 本地生成密钥对并注册公钥，请求带 `X-Agent-Id/X-Timestamp/X-Request-Id/X-Signature`；后端验签并配合时间戳与 Redis 防重放；由 `AGENT_REQUIRE_SIGNATURE` 灰度控制。
 - 新增 `AGENT_REQUIRE_SIGNATURE` / `AGENT_SIGNATURE_MAX_SKEW` 配置与相关错误码（40104-40107）。
+- Agent 签名公钥轮换：新增 `POST /api/v1/agent/signing-key`，并在注册时按差异轮换；公钥格式校验。
 - 分布式调度协调（[ADR-011](docs/decisions/011-distributed-scheduler.md)）：调度作业加 Redis 分布式锁，修复 `uvicorn --workers 2` 与多实例下的重复调度；nginx 支持 backend 多副本（运行时 DNS 解析）。
 - 备份自动化：`deploy/backup.sh`（MySQL + config.env，可选 redis/nginx，归档校验和与按天保留）、`deploy/restore.sh`（默认 MySQL；`--config` 强确认并快照当前配置）、`deploy/backup-timer.sh` 与 systemd timer 模板。
 

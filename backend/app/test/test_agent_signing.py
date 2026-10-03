@@ -166,7 +166,7 @@ def test_unsigned_allowed_when_not_required(client, db, agent_ctx):
     assert resp.status_code == 200
 
 
-def test_public_key_not_overwritten(client, db, agent_ctx):
+def test_register_rotates_public_key(client, db, agent_ctx):
     _, token = agent_ctx
     _, first_key = _keypair()
     _, second_key = _keypair()
@@ -175,4 +175,37 @@ def test_public_key_not_overwritten(client, db, agent_ctx):
     db.expire_all()
     record = AgentTokenRepository(db).authenticate(token)
     assert record is not None
-    assert record.signing_public_key == first_key
+    assert record.signing_public_key == second_key
+
+
+def _rotate(client, token: str, public_key: str):
+    return client.post(
+        "/api/v1/agent/signing-key",
+        json={"signing_public_key": public_key},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+
+def test_rotate_signing_key_endpoint(client, db, agent_ctx):
+    server, token = agent_ctx
+    private_a, public_a = _keypair()
+    _register(client, token, public_a)
+
+    private_b, public_b = _keypair()
+    assert _rotate(client, token, public_b).status_code == 200
+    db.expire_all()
+    record = AgentTokenRepository(db).authenticate(token)
+    assert record is not None and record.signing_public_key == public_b
+
+    # 新密钥签名通过
+    body = _heartbeat_body(server.id)
+    new_headers = _signed_headers(private_b, server.server_code, "POST", HEARTBEAT_PATH, body)
+    assert _post_heartbeat(client, token, new_headers, body).status_code == 200
+    # 旧密钥签名失败
+    old_headers = _signed_headers(private_a, server.server_code, "POST", HEARTBEAT_PATH, body)
+    assert _post_heartbeat(client, token, old_headers, body).status_code == 401
+
+
+def test_rotate_invalid_key_rejected(client, db, agent_ctx):
+    _, token = agent_ctx
+    assert _rotate(client, token, "not-base64!!").status_code == 400

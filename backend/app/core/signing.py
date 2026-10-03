@@ -24,6 +24,15 @@ def canonical_string(method: str, path: str, timestamp: str, request_id: str, bo
     return raw.encode("utf-8")
 
 
+def is_valid_public_key(public_key_b64: str) -> bool:
+    """校验 base64 字符串是否为合法 Ed25519 公钥（32 字节）。"""
+    try:
+        Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key_b64, validate=True))
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
 def verify_signature(public_key_b64: str, signature_b64: str, canonical: bytes) -> bool:
     """使用 base64 Ed25519 公钥验证 base64 签名。
 

@@ -144,7 +144,7 @@ canonical string：
 
 - 是否所有 Agent 接口都强制签名，还是仅写操作？**建议全部**（除注册首跳）。
 - query 参数是否纳入 canonical（若纳入需定义排序规则）。
-- 公钥轮换与 Token 撤销联动：撤销 Token 即失效对应公钥，是否需支持在线轮换？
+- 公钥轮换：已实现 `POST /api/v1/agent/signing-key`（Bearer 认证；启用签名时校验当前签名）与注册时按差异轮换；撤销 Token 即失效对应公钥。
 - Agent 私钥落盘位置与权限：建议 `/opt/ops-agent/etc/agent_ed25519.key`，`0600`。
 - 时钟偏差上限是否按环境可配。
 

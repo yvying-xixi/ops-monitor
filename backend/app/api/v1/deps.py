@@ -103,6 +103,51 @@ async def get_agent_server(
         AppException: Token 无效（40103）、服务器不存在或停用（40403）、
             签名缺失/无效/重放（40104-40107）。
     """
+    _, server = await _resolve_agent(
+        request,
+        token,
+        db,
+        x_agent_id=x_agent_id,
+        x_timestamp=x_timestamp,
+        x_request_id=x_request_id,
+        x_signature=x_signature,
+    )
+    return server
+
+
+async def get_agent_token(
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+    x_agent_id: str | None = Header(None, alias="X-Agent-Id"),
+    x_timestamp: str | None = Header(None, alias="X-Timestamp"),
+    x_request_id: str | None = Header(None, alias="X-Request-Id"),
+    x_signature: str | None = Header(None, alias="X-Signature"),
+    db: Session = Depends(get_db),
+) -> OpsAgentToken:
+    """与 `get_agent_server` 相同鉴权，但返回 Token 记录（用于公钥轮换等）。"""
+    token_record, _ = await _resolve_agent(
+        request,
+        token,
+        db,
+        x_agent_id=x_agent_id,
+        x_timestamp=x_timestamp,
+        x_request_id=x_request_id,
+        x_signature=x_signature,
+    )
+    return token_record
+
+
+async def _resolve_agent(
+    request: Request,
+    token: str,
+    db: Session,
+    *,
+    x_agent_id: str | None,
+    x_timestamp: str | None,
+    x_request_id: str | None,
+    x_signature: str | None,
+) -> tuple[OpsAgentToken, OpsServer]:
+    """校验 Agent Token 与请求签名，返回 (token 记录, 服务器)。"""
     token_record = AgentTokenRepository(db).authenticate(token)
     if token_record is None:
         raise AppException(ErrorCode.AGENT_UNAUTHORIZED, "Agent 凭证无效", http_status=401)
@@ -119,7 +164,7 @@ async def get_agent_server(
         x_request_id=x_request_id,
         x_signature=x_signature,
     )
-    return server
+    return token_record, server
 
 
 async def _verify_agent_signature(

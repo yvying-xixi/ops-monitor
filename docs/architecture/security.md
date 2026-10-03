@@ -32,6 +32,7 @@ Agent 请求签名（可选启用，见 [ADR-010](../decisions/010-agent-request
 - 用户密码：bcrypt 哈希（passlib），禁止明文。
 - Agent Token：仅存 SHA-256 哈希与前缀，明文只在生成时返回一次。
 - Agent 签名私钥：仅存于 Agent 主机（`agent_ed25519.key`，权限 0600）；平台仅存公钥。
+- 公钥轮换：Agent 可通过 `POST /api/v1/agent/signing-key` 在线提交新公钥（Bearer 认证，启用签名时校验当前签名）；注册携带不同合法公钥亦触发轮换。撤销 Token 即失效对应公钥。
 - 操作日志 `request_params` 禁止记录密码与 Token。
 
 ## 命令执行安全

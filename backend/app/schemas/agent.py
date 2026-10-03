@@ -27,6 +27,14 @@ class RegisterRequest(BaseModel):
     )
 
 
+class SigningKeyRequest(BaseModel):
+    """Agent 签名公钥轮换请求体。"""
+
+    signing_public_key: str = Field(
+        ..., min_length=1, max_length=128, description="新的 Ed25519 公钥（base64）"
+    )
+
+
 class HeartbeatRequest(BaseModel):
     """Agent 心跳请求体。"""
 

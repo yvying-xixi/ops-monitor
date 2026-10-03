@@ -6,16 +6,17 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
-from app.api.v1.deps import get_agent_server
+from app.api.v1.deps import get_agent_server, get_agent_token
 from app.core.database import get_db
 from app.exceptions import AppException, ErrorCode
-from app.models import OpsServer
+from app.models import OpsAgentToken, OpsServer
 from app.schemas.agent import (
     AssetsRequest,
     HeartbeatRequest,
     MetricsRequest,
     RegisterRequest,
     ServicesRequest,
+    SigningKeyRequest,
     TaskResultRequest,
 )
 from app.services.agent_package import (
@@ -76,6 +77,17 @@ def register(
     """Agent 注册接口。"""
     result = AgentService(db).register(data, ip=get_client_ip(request))
     return success(data=result, message="注册成功")
+
+
+@router.post("/signing-key", summary="轮换 Agent 请求签名公钥")
+def rotate_signing_key(
+    data: SigningKeyRequest,
+    token: OpsAgentToken = Depends(get_agent_token),
+    db: Session = Depends(get_db),
+):
+    """在线轮换签名公钥（需有效 Agent Token；启用签名时同时校验当前签名）。"""
+    AgentService(db).rotate_signing_key(token, data.signing_public_key)
+    return success(message="签名公钥已更新")
 
 
 @router.post("/heartbeat", summary="Agent 心跳")

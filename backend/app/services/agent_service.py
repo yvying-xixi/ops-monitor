@@ -6,8 +6,9 @@ from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
+from app.core import signing
 from app.exceptions import AppException, ErrorCode
-from app.models import MonitorServerMetric, OpsServer
+from app.models import MonitorServerMetric, OpsAgentToken, OpsServer
 from app.repositories import (
     AgentTokenRepository,
     HeartbeatRepository,
@@ -73,14 +74,37 @@ class AgentService:
         if ip:
             server.ip_address = ip
         self.heartbeat_repo.record(server_id=server.id, agent_version=data.agent_version, ip_address=ip)
-        # 首次注册（或原 Token 尚无公钥）时登记签名公钥，防止覆盖已有公钥
-        if data.signing_public_key and not token.signing_public_key:
-            token.signing_public_key = data.signing_public_key
-            token.signing_algorithm = "ed25519"
-            token.key_registered_at = _utcnow()
+        # 注册时登记签名公钥；若提供了不同的合法公钥则视为轮换（Agent 重装/换密钥）
+        if (
+            data.signing_public_key
+            and signing.is_valid_public_key(data.signing_public_key)
+            and data.signing_public_key != token.signing_public_key
+        ):
+            self.token_repo.update(
+                token,
+                signing_public_key=data.signing_public_key,
+                signing_algorithm="ed25519",
+                key_registered_at=_utcnow(),
+            )
         self.token_repo.update_last_used(token)
         self.db.commit()
         return {"server_id": server.id, "agent_status": "ONLINE"}
+
+    def rotate_signing_key(self, token: OpsAgentToken, public_key: str) -> None:
+        """在线轮换 Agent 签名公钥（由持有 Bearer Token 的 Agent 发起）。
+
+        Raises:
+            AppException: 公钥格式非法（40000）。
+        """
+        if not signing.is_valid_public_key(public_key):
+            raise AppException(ErrorCode.BAD_REQUEST, "签名公钥格式非法", http_status=400)
+        self.token_repo.update(
+            token,
+            signing_public_key=public_key,
+            signing_algorithm="ed25519",
+            key_registered_at=_utcnow(),
+        )
+        self.db.commit()
 
     def heartbeat(
         self,

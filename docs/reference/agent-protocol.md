@@ -23,6 +23,7 @@
 - 公钥：首次注册时在请求体 `signing_public_key`（base64）上报，平台按 Token 绑定存储（仅当尚无公钥时写入）。
 - 服务端校验顺序：Token → Agent-Id 归属 → 时间戳偏差（默认 300s）→ 签名 → `X-Request-Id` 防重放（Redis）。
 - 失败错误码：`40104` 签名无效、`40105` 重放、`40106` 缺失、`40107` 时间戳非法。
+- **公钥轮换**：`POST /api/v1/agent/signing-key`（Bearer 认证；启用签名时同时校验当前签名），提交新的 `signing_public_key` 即时生效；注册时若提供不同的合法公钥亦视为轮换。
 - 详见 [decisions/010-agent-request-signing.md](../decisions/010-agent-request-signing.md)。
 
 ## Interaction Overview
