@@ -1,6 +1,14 @@
 /** 自动化任务接口。 */
 import request from '../utils/request'
 
+/** 生成幂等键，避免网络重试造成重复创建任务。 */
+function newIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
 export function listTasksApi(params) {
   return request.get('/tasks', { params })
 }
@@ -10,7 +18,9 @@ export function getTaskApi(id) {
 }
 
 export function createTaskApi(data) {
-  return request.post('/tasks', data)
+  return request.post('/tasks', data, {
+    headers: { 'Idempotency-Key': newIdempotencyKey() },
+  })
 }
 
 export function confirmTaskApi(id) {
