@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import random
 import time
 from typing import Any
 
@@ -30,6 +31,8 @@ class AgentClient:
         *,
         timeout: float = 10.0,
         retry_max_seconds: int = 60,
+        retry_max_count: int = 2,
+        retry_jitter: bool = True,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._client = httpx.Client(
@@ -39,6 +42,8 @@ class AgentClient:
             headers={"Authorization": f"Bearer {token}"},
         )
         self._retry_max_seconds = retry_max_seconds
+        self._retry_max_count = retry_max_count
+        self._retry_jitter = retry_jitter
 
     def close(self) -> None:
         self._client.close()
@@ -74,15 +79,23 @@ class AgentClient:
 
     def _request(self, method: str, path: str, json: dict | None = None) -> dict:
         delay = 1.0
+        attempt = 0
         while True:
             try:
                 response = self._client.request(method, path, json=json)
                 payload = response.json()
             except (httpx.HTTPError, ValueError) as exc:
-                logger.warning("请求 %s 失败: %s，%ss 后重试", path, exc, delay)
+                attempt += 1
+                if attempt > self._retry_max_count:
+                    raise ReporterError(f"请求 {path} 超过最大重试次数") from exc
                 if delay >= self._retry_max_seconds:
                     raise ReporterError(f"请求 {path} 最终失败") from exc
-                time.sleep(delay)
+                sleep_for = delay
+                if self._retry_jitter:
+                    sleep_for = delay * (0.5 + random.random())
+                sleep_for = min(sleep_for, self._retry_max_seconds)
+                logger.warning("请求 %s 失败: %s，%.2fs 后重试（第 %s 次）", path, exc, sleep_for, attempt)
+                time.sleep(sleep_for)
                 delay = min(delay * 2, self._retry_max_seconds)
                 continue
 

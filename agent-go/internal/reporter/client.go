@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -32,6 +33,7 @@ type Client struct {
 	token           string
 	httpClient      *http.Client
 	retryMaxSeconds int
+	retryMaxCount   int
 	logger          *slog.Logger
 }
 
@@ -39,6 +41,7 @@ type Client struct {
 type Options struct {
 	Timeout         time.Duration
 	RetryMaxSeconds int
+	RetryMaxCount   int
 	HTTPClient      *http.Client
 	Logger          *slog.Logger
 }
@@ -50,6 +53,9 @@ func NewClient(baseURL, token string, opts Options) *Client {
 	}
 	if opts.RetryMaxSeconds <= 0 {
 		opts.RetryMaxSeconds = 60
+	}
+	if opts.RetryMaxCount <= 0 {
+		opts.RetryMaxCount = 2
 	}
 	if opts.Logger == nil {
 		opts.Logger = slog.Default()
@@ -68,6 +74,7 @@ func NewClient(baseURL, token string, opts Options) *Client {
 		token:           token,
 		httpClient:      httpClient,
 		retryMaxSeconds: opts.RetryMaxSeconds,
+		retryMaxCount:   opts.RetryMaxCount,
 		logger:          opts.Logger,
 	}
 }
@@ -95,6 +102,7 @@ func (c *Client) request(ctx context.Context, method, path string, body any) (js
 	if maxDelay > maxRetryDelay {
 		maxDelay = maxRetryDelay
 	}
+	attempt := 0
 	for {
 		raw, retryable, err := c.doOnce(ctx, method, path, payload)
 		if err == nil {
@@ -104,14 +112,23 @@ func (c *Client) request(ctx context.Context, method, path string, body any) (js
 		if !retryable {
 			return nil, err
 		}
-		c.logger.Warn("请求失败，准备重试", "path", path, "err", err, "delay", delay)
+		attempt++
+		if attempt > c.retryMaxCount {
+			return nil, &ReporterError{msg: fmt.Sprintf("请求 %s 超过最大重试次数: %v", path, err)}
+		}
 		if delay >= maxDelay {
 			return nil, &ReporterError{msg: fmt.Sprintf("请求 %s 最终失败: %v", path, err)}
 		}
+		// 加入 0~50% 随机抖动，降低集中重试冲击
+		sleep := delay + time.Duration(rand.Int63n(int64(delay/2)+1))
+		if sleep > maxDelay {
+			sleep = maxDelay
+		}
+		c.logger.Warn("请求失败，准备重试", "path", path, "err", err, "delay", sleep, "attempt", attempt)
 		select {
 		case <-ctx.Done():
 			return nil, &ReporterError{msg: fmt.Sprintf("请求 %s 被取消: %v", path, ctx.Err())}
-		case <-time.After(delay):
+		case <-time.After(sleep):
 		}
 		delay *= 2
 		if delay > maxDelay {

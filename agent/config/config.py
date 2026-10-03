@@ -24,6 +24,7 @@ class CollectConfig(BaseModel):
     assets_interval: int = Field(60, ge=10, description="资产/服务同步周期（秒）")
     task_poll_interval: int = Field(5, ge=2, description="任务轮询周期（秒）")
     retry_max_seconds: int = Field(60, ge=1, description="退避重试封顶（秒）")
+    retry_max_count: int = Field(2, ge=0, description="单次请求传输层最大重试次数")
     connect_timeout: float = Field(5.0, gt=0, description="连接超时（秒）")
     request_timeout: float = Field(10.0, gt=0, description="请求超时（秒）")
     services: list[str] = Field(

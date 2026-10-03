@@ -55,6 +55,7 @@ func main() {
 	client := reporter.NewClient(cfg.Server.URL, cfg.Server.Token, reporter.Options{
 		Timeout:         time.Duration(cfg.Collect.RequestTimeout * float64(time.Second)),
 		RetryMaxSeconds: cfg.Collect.RetryMaxSeconds,
+		RetryMaxCount:   cfg.Collect.RetryMaxCount,
 		Logger:          log,
 	})
 

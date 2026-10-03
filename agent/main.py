@@ -36,6 +36,7 @@ class Agent:
             token=config.server.token,
             timeout=config.collect.request_timeout,
             retry_max_seconds=config.collect.retry_max_seconds,
+            retry_max_count=config.collect.retry_max_count,
         )
 
     def run(self) -> None:

@@ -9,6 +9,7 @@ collect:
   assets_interval: 60
   task_poll_interval: 5
   retry_max_seconds: 60
+  retry_max_count: 2
   connect_timeout: 5
   request_timeout: 10
   services:

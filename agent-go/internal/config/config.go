@@ -27,6 +27,7 @@ type CollectConfig struct {
 	AssetsInterval    int      `yaml:"assets_interval"`
 	TaskPollInterval  int      `yaml:"task_poll_interval"`
 	RetryMaxSeconds   int      `yaml:"retry_max_seconds"`
+	RetryMaxCount     int      `yaml:"retry_max_count"`
 	ConnectTimeout    float64  `yaml:"connect_timeout"`
 	RequestTimeout    float64  `yaml:"request_timeout"`
 	Services          []string `yaml:"services"`
@@ -54,6 +55,7 @@ func defaults() AgentConfig {
 			AssetsInterval:    60,
 			TaskPollInterval:  5,
 			RetryMaxSeconds:   60,
+			RetryMaxCount:     2,
 			ConnectTimeout:    5,
 			RequestTimeout:    10,
 			Services:          []string{"nginx", "docker", "ssh"},
@@ -79,6 +81,9 @@ func applyDefaults(c *AgentConfig) {
 	}
 	if c.Collect.RetryMaxSeconds == 0 {
 		c.Collect.RetryMaxSeconds = d.Collect.RetryMaxSeconds
+	}
+	if c.Collect.RetryMaxCount == 0 {
+		c.Collect.RetryMaxCount = d.Collect.RetryMaxCount
 	}
 	if c.Collect.ConnectTimeout == 0 {
 		c.Collect.ConnectTimeout = d.Collect.ConnectTimeout
@@ -119,6 +124,9 @@ func validate(c *AgentConfig) error {
 	}
 	if c.Collect.RetryMaxSeconds < 1 {
 		return fmt.Errorf("collect.retry_max_seconds 需 >= 1")
+	}
+	if c.Collect.RetryMaxCount < 1 {
+		return fmt.Errorf("collect.retry_max_count 需 >= 1")
 	}
 	if c.Collect.ConnectTimeout <= 0 {
 		return fmt.Errorf("collect.connect_timeout 需 > 0")
