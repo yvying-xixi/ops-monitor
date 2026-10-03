@@ -16,6 +16,7 @@ flowchart LR
 - **单 Nginx 入口**：镜像多阶段（node 构建前端 → nginx:alpine 托管），承担静态与 `/api` 反代。
 - backend 独立镜像：`python:3.11-slim`、非 root、HEALTHCHECK。
 - mysql/redis 不暴露宿主端口，数据落在 `DATA_VOLUME_DIR`。
+- 各服务配置 CPU/内存上限（`deploy.resources.limits`）与 json-file 日志轮转（`10m × 3`）。
 - backend 容器启动时执行 `alembic upgrade head` 建表（见 `backend/entrypoint.sh`）；lifespan 幂等 seed 默认角色/规则/管理员。
 
 ### 部署文件位置

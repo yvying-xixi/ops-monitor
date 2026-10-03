@@ -7,6 +7,8 @@
 ### Added
 
 - 平台自有 Prometheus 指标端点 `GET /metrics`（`ops_agent_status`、`ops_server_total`、`ops_alert_active`、`ops_task_status`），支持 `METRICS_ENABLED` / `METRICS_TOKEN` 控制。
+- 后端 OpenTelemetry 链路追踪（`OTEL_ENABLED` / `OTEL_SERVICE_NAME` / `OTEL_EXPORTER_OTLP_ENDPOINT`）：FastAPI / SQLAlchemy / Redis 自动埋点，`trace_id` 注入结构化日志。
+- 部署容器资源上限（CPU/内存）与 json-file 日志轮转（`compose.yml`）。
 
 ## [0.3.0] - 2026-10-03
 

@@ -184,7 +184,7 @@ Phase 4（高级能力，后续）
 - **做法**：引入 `prometheus-client`；先暴露 `ops_agent_up`、`ops_alert_firing_total`、`ops_task_execution_total`、`ops_task_execution_duration_seconds` 等；`/metrics` 需访问控制；避免高基数标签（勿用 `task_id` / `execution_id` / `request_id` / `trace_id` / `user_id`）。
 - **验收**：Prometheus 可抓取；指标与业务一致。
 
-### P2-9：OpenTelemetry（拆分范围）
+### P2-9：OpenTelemetry（拆分范围）— 后端链路已完成
 
 - **目标**：建立 Trace 定位瓶颈。
 - **修正**：拆为两部分——**可交付**：前端 → Nginx → FastAPI → MySQL/Redis → Task 派发；**可选后置**：Agent 归因（通过请求头透传 `trace_id` 并在 Agent 日志记录，不强制 Agent 内置 OTel SDK）。
@@ -200,7 +200,7 @@ Phase 4（高级能力，后续）
 - **涉及**：`server_service.py::generate_agent_token`、`/install.sh`、`api/v1/agent.py`、`services/agent_service.py`、双 Agent 配置 schema。
 - **ADR**：`011-agent-request-signing`。
 
-### P2-11：容器资源限制
+### P2-11：容器资源限制 — 已完成
 
 - **目标**：防止单服务耗尽宿主资源。
 - **做法**：`compose.yml` 为各服务补充 `deploy.resources.limits`（或 `mem_limit` / `cpus`）与日志轮转配置。
