@@ -2,6 +2,12 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 风格。
 
+## [Unreleased]
+
+### Added
+
+- 平台自有 Prometheus 指标端点 `GET /metrics`（`ops_agent_status`、`ops_server_total`、`ops_alert_active`、`ops_task_status`），支持 `METRICS_ENABLED` / `METRICS_TOKEN` 控制。
+
 ## [0.3.0] - 2026-10-03
 
 ### Added

@@ -178,7 +178,7 @@ Phase 4（高级能力，后续）
 - **验收**：本地与 CI `npm run lint`、`npm run test` 通过。
 - **涉及**：`frontend/package.json`、`frontend/` 测试与 lint 配置、`.github/workflows/ci.yml`。
 
-### P2-8：Prometheus 指标
+### P2-8：Prometheus 指标 — 已完成
 
 - **目标**：Backend 暴露 `/metrics` 供抓取。
 - **做法**：引入 `prometheus-client`；先暴露 `ops_agent_up`、`ops_alert_firing_total`、`ops_task_execution_total`、`ops_task_execution_duration_seconds` 等；`/metrics` 需访问控制；避免高基数标签（勿用 `task_id` / `execution_id` / `request_id` / `trace_id` / `user_id`）。

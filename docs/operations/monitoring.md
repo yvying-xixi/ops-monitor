@@ -33,13 +33,40 @@
 - 通过 `ops_task_execution.status` 观察 PENDING/RUNNING 数量。
 - 超时扫描（30s）将长时间 RUNNING 置 TIMEOUT。
 
+## Prometheus 指标
+
+`GET /metrics`（backend 根路径，非 `/api`，默认仅内网可达）暴露平台自有指标：
+
+| 指标 | 类型 | 说明 |
+| --- | --- | --- |
+| `ops_agent_status{status}` | Gauge | 按 Agent 状态统计的服务器数（ONLINE/WARNING/OFFLINE/UNKNOWN） |
+| `ops_server_total` | Gauge | 启用中的服务器总数 |
+| `ops_alert_active{severity}` | Gauge | 按严重级别统计的活动告警数 |
+| `ops_task_status{status}` | Gauge | 按状态统计的任务数 |
+
+- 指标在抓取时从数据库汇总，多 worker 部署下保持一致；高基数标识（server_id/task_id 等）不作为标签。
+- 访问控制：`METRICS_ENABLED=false` 关闭（返回 404）；`METRICS_TOKEN` 非空时需 `Authorization: Bearer <token>`。
+- backend 端口不对外暴露，Prometheus 需与平台同网络抓取 `backend:8000/metrics`。
+
+Prometheus 抓取示例：
+
+```yaml
+scrape_configs:
+  - job_name: ops-monitor
+    metrics_path: /metrics
+    authorization:
+      credentials: "<METRICS_TOKEN>"
+    static_configs:
+      - targets: ["backend:8000"]
+```
+
 ## 系统资源
 
 > **TODO**: 补充平台容器自身的资源监控方式（cgroup/宿主监控）。
 
 ## API 延迟与错误率
 
-> **TODO**: 补充基于日志或指标中间件的延迟/错误率统计方案。
+> **TODO**: 补充基于中间件的 HTTP 延迟/错误率指标（可随 OpenTelemetry 一并接入）。
 
 ## TODO
 

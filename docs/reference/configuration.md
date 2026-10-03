@@ -23,7 +23,10 @@
 | `SEED_ADMIN_USERNAME` / `SEED_ADMIN_PASSWORD` | admin / 自动生成 | 初始管理员（仅首次 seed） |
 | `SEED_INIT_DATA` | true | 启动时是否初始化种子数据 |
 | `METRIC_RETENTION_DAYS` | 7 | 指标保留天数 |
+| `TASK_RETENTION_DAYS` | 30 | 任务执行记录保留天数 |
 | `OPERATION_LOG_ENABLED` | true | 操作审计开关 |
+| `METRICS_ENABLED` | true | Prometheus `/metrics` 开关 |
+| `METRICS_TOKEN` | 空 | `/metrics` 访问令牌（空则不鉴权，仅内网可达） |
 | `IMAGE_REGISTRY` | 空 | 镜像 registry（空则本地构建；Docker Hub 用 `docker.io/<namespace>`） |
 | `IMAGE_TAG` | latest | 镜像标签 |
 | `IMAGE_PULL_ONLY` | false | true 时纯拉取（加载 `compose.hub.yml`，不本地构建） |
@@ -55,6 +58,11 @@
 | `ALERT_EVALUATE_INTERVAL_SECONDS` | 10 | 告警评估周期 |
 | `METRIC_RETENTION_DAYS` | 7 | 指标保留天数 |
 | `METRIC_CLEANUP_ENABLED` | true | 指标清理开关 |
+| `TASK_RETENTION_DAYS` | 30 | 终态任务执行记录保留天数 |
+| `TASK_CLEANUP_ENABLED` | true | 任务执行清理开关 |
+| `LOG_LEVEL` | INFO | 日志级别（结构化 JSON） |
+| `METRICS_ENABLED` | true | Prometheus `/metrics` 开关 |
+| `METRICS_TOKEN` | 空 | `/metrics` 访问令牌（空则不鉴权） |
 | `AGENT_BUNDLE_DIR` | 空 | Agent 安装包来源目录（容器内挂载；空则自动定位仓库根） |
 
 ## Agent 配置（Python 与 Go 通用）
@@ -71,6 +79,7 @@ Python 与 Go 两个 Agent 使用**同一份配置 schema**，可复用平台向
 | `collect` | `assets_interval` | 60 | 资产/服务同步周期（秒） |
 | `collect` | `task_poll_interval` | 5 | 任务轮询周期（秒） |
 | `collect` | `retry_max_seconds` | 60 | 退避重试封顶（秒） |
+| `collect` | `retry_max_count` | 2 | 单次请求传输层最大重试次数 |
 | `collect` | `connect_timeout` | 5 | 连接超时（秒） |
 | `collect` | `request_timeout` | 10 | 请求超时（秒） |
 | `collect` | `services` | nginx,docker,ssh | 监控与受控服务白名单 |
