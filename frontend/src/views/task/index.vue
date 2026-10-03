@@ -151,6 +151,9 @@ onMounted(loadData)
           <el-button v-if="['CREATED', 'PENDING', 'RUNNING'].includes(row.status)" link type="danger" @click="handleCancel(row)">取消</el-button>
         </template>
       </el-table-column>
+      <template #empty>
+        <el-empty description="暂无任务" />
+      </template>
     </el-table>
 
     <el-pagination
@@ -273,5 +276,12 @@ onMounted(loadData)
   border-radius: 4px;
   max-height: 180px;
   overflow: auto;
+}
+@media (max-width: 640px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
 }
 </style>

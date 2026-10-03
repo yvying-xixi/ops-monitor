@@ -50,6 +50,8 @@
 | echarts | 5.6.0 | Direct | Apache-2.0 |
 | vite | 8.2.2 | Direct (dev) | MIT |
 | @vitejs/plugin-vue | 6.0.8 | Direct (dev) | MIT |
+| tailwindcss | 4.3.3 | Direct (dev) | MIT |
+| @tailwindcss/vite | 4.3.3 | Direct (dev) | MIT |
 
 ## 观察
 

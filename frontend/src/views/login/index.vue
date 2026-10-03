@@ -34,8 +34,8 @@ async function handleLogin() {
 
 <template>
   <div class="login-page">
-    <el-card class="login-card">
-      <div class="title">运维监控平台</div>
+    <div class="login-card">
+      <div class="brand">运维监控平台</div>
       <div class="subtitle">轻量级服务器运维监控</div>
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
         <el-form-item prop="username">
@@ -48,32 +48,38 @@ async function handleLogin() {
           <el-button type="primary" class="submit" :loading="loading" @click="handleLogin">登 录</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .login-page {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1f3b73 0%, #2b5a8c 100%);
+  padding: 24px;
+  background: linear-gradient(135deg, #122043 0%, #1f3b73 45%, #2b5a8c 100%);
 }
 .login-card {
   width: 380px;
-  padding: 10px 20px;
+  max-width: 100%;
+  padding: 28px 28px 8px;
+  border-radius: 12px;
+  background: var(--el-bg-color);
+  box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.45);
 }
-.title {
+.brand {
   font-size: 22px;
   font-weight: 700;
   text-align: center;
-  margin: 10px 0 4px;
+  margin: 4px 0 4px;
+  color: var(--el-text-color-primary);
 }
 .subtitle {
   text-align: center;
-  color: #909399;
-  margin-bottom: 20px;
+  color: var(--el-text-color-secondary);
+  margin-bottom: 22px;
 }
 .submit {
   width: 100%;

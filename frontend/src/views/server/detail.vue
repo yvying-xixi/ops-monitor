@@ -152,31 +152,31 @@ onUnmounted(() => clearInterval(timer))
     </el-card>
 
     <el-row :gutter="16" class="row">
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">CPU 使用率</div><div class="value">{{ latest?.metric?.cpu_usage ?? '-' }}%</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">CPU 使用率</div><div class="value">{{ latest?.metric?.cpu_usage ?? '-' }}%</div></div></el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">内存使用率</div><div class="value">{{ latest?.metric?.memory_usage ?? '-' }}%</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">内存使用率</div><div class="value">{{ latest?.metric?.memory_usage ?? '-' }}%</div></div></el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">磁盘使用率</div><div class="value">{{ latest?.metric?.disk_usage ?? '-' }}%</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">磁盘使用率</div><div class="value">{{ latest?.metric?.disk_usage ?? '-' }}%</div></div></el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">TCP 连接数</div><div class="value">{{ latest?.metric?.tcp_connections ?? '-' }}</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">TCP 连接数</div><div class="value">{{ latest?.metric?.tcp_connections ?? '-' }}</div></div></el-card>
       </el-col>
     </el-row>
     <el-row :gutter="16" class="row">
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">Load(1m)</div><div class="value">{{ latest?.metric?.load_1m ?? '-' }}</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">Load(1m)</div><div class="value">{{ latest?.metric?.load_1m ?? '-' }}</div></div></el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">运行时长</div><div class="value small">{{ formatUptime(latest?.metric?.uptime_seconds) }}</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">运行时长</div><div class="value small">{{ formatUptime(latest?.metric?.uptime_seconds) }}</div></div></el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">内存使用</div><div class="value small">{{ formatBytes(latest?.metric?.memory_used_bytes) }}</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">内存使用</div><div class="value small">{{ formatBytes(latest?.metric?.memory_used_bytes) }}</div></div></el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card shadow="hover"><div class="realtime"><div class="label">数据更新时间</div><div class="value small">{{ formatTime(latest?.metric?.collected_at) }}</div></div></el-card>
+      <el-col :xs="12" :sm="12" :md="6">
+        <el-card shadow="hover" class="mb-4 md:mb-0"><div class="realtime"><div class="label">数据更新时间</div><div class="value small">{{ formatTime(latest?.metric?.collected_at) }}</div></div></el-card>
       </el-col>
     </el-row>
 
@@ -190,15 +190,15 @@ onUnmounted(() => clearInterval(timer))
         </div>
       </template>
       <el-row :gutter="16">
-        <el-col :span="12"><MetricChart v-if="cpuChart" title="CPU 使用率" :x-axis="cpuChart.xAxis" :series="cpuChart.series" unit="%" y-name="%" /></el-col>
-        <el-col :span="12"><MetricChart v-if="memoryChart" title="内存使用率" :x-axis="memoryChart.xAxis" :series="memoryChart.series" unit="%" y-name="%" /></el-col>
+        <el-col :xs="24" :sm="24" :md="12"><MetricChart v-if="cpuChart" title="CPU 使用率" :x-axis="cpuChart.xAxis" :series="cpuChart.series" unit="%" y-name="%" /></el-col>
+        <el-col :xs="24" :sm="24" :md="12"><MetricChart v-if="memoryChart" title="内存使用率" :x-axis="memoryChart.xAxis" :series="memoryChart.series" unit="%" y-name="%" /></el-col>
       </el-row>
       <el-row :gutter="16" class="row">
-        <el-col :span="12"><MetricChart v-if="diskChart" title="磁盘使用率" :x-axis="diskChart.xAxis" :series="diskChart.series" unit="%" y-name="%" /></el-col>
-        <el-col :span="12"><MetricChart v-if="networkChart" title="网络流量" :x-axis="networkChart.xAxis" :series="networkChart.series" unit="MB/s" y-name="MB/s" /></el-col>
+        <el-col :xs="24" :sm="24" :md="12"><MetricChart v-if="diskChart" title="磁盘使用率" :x-axis="diskChart.xAxis" :series="diskChart.series" unit="%" y-name="%" /></el-col>
+        <el-col :xs="24" :sm="24" :md="12"><MetricChart v-if="networkChart" title="网络流量" :x-axis="networkChart.xAxis" :series="networkChart.series" unit="MB/s" y-name="MB/s" /></el-col>
       </el-row>
       <el-row :gutter="16" class="row">
-        <el-col :span="12"><MetricChart v-if="loadChart" title="Load Average" :x-axis="loadChart.xAxis" :series="loadChart.series" /></el-col>
+        <el-col :xs="24" :sm="24" :md="12"><MetricChart v-if="loadChart" title="Load Average" :x-axis="loadChart.xAxis" :series="loadChart.series" /></el-col>
       </el-row>
     </el-card>
 

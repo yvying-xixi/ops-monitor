@@ -5,9 +5,11 @@
 ## 技术栈
 
 - 后端：Python 3.11、FastAPI、SQLAlchemy 2、Pydantic 2
-- 前端：Vue 3、Vite、Element Plus、Pinia、ECharts
+- 前端：Vue 3、Vite、Element Plus、Tailwind CSS v4、Pinia、ECharts
 - Agent：Python 3.11、psutil、httpx
 - 存储：MySQL 8、Redis 7
+
+前端样式体系（Tailwind 与 Element Plus 的分工与层序）见 [ADR-006](../decisions/006-frontend-styling-tailwind.md)。
 
 ## 本地启动
 

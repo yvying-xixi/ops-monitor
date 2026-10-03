@@ -1,25 +1,25 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useUserStore } from '../../store/user'
 import {
   ackAlertApi,
-  createRuleApi,
-  deleteRuleApi,
-  getAlertApi,
-  listAlertsApi,
-  listRulesApi,
   resolveAlertApi,
+  listAlertsApi,
+  getAlertApi,
+  listRulesApi,
+  createRuleApi,
   updateRuleApi,
+  deleteRuleApi,
 } from '../../api/alert'
-import { ALERT_METRIC_TYPES, ALERT_OPERATORS, ALERT_SEVERITY_MAP, ALERT_STATUS_MAP } from '../../config'
 import { formatTime } from '../../utils/format'
+import { ALERT_SEVERITY_MAP, ALERT_STATUS_MAP, ALERT_METRIC_TYPES, ALERT_OPERATORS } from '../../config'
+import { useUserStore } from '../../store/user'
 
 const userStore = useUserStore()
-const canOperate = () => userStore.hasRole('SYSTEM_ADMIN', 'OPS_ENGINEER')
 
-// ---------- 事件列表 ----------
 const activeTab = ref('events')
+
+// ---------- 事件 ----------
 const loading = ref(false)
 const events = ref([])
 const total = ref(0)
@@ -34,6 +34,7 @@ function severityOf(sev) {
 function statusOf(status) {
   return ALERT_STATUS_MAP[status] || { type: 'info', label: status }
 }
+const canOperate = () => userStore.hasRole('SYSTEM_ADMIN', 'OPS_ENGINEER')
 
 async function loadEvents() {
   loading.value = true
@@ -63,7 +64,7 @@ async function handleResolve(row) {
   await loadEvents()
 }
 
-// ---------- 规则管理 ----------
+// ---------- 规则 ----------
 const rules = ref([])
 const ruleDialog = ref(false)
 const ruleMode = ref('create')
@@ -135,17 +136,17 @@ onMounted(loadEvents)
         <div class="toolbar">
           <el-form inline @submit.prevent>
             <el-form-item label="级别">
-              <el-select v-model="query.severity" clearable placeholder="全部" style="width: 110px">
+              <el-select v-model="query.severity" clearable placeholder="全部" style="width: 110px" @change="loadEvents">
                 <el-option v-for="(v, k) in ALERT_SEVERITY_MAP" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
             <el-form-item label="状态">
-              <el-select v-model="query.status" clearable placeholder="全部" style="width: 110px">
+              <el-select v-model="query.status" clearable placeholder="全部" style="width: 110px" @change="loadEvents">
                 <el-option v-for="(v, k) in ALERT_STATUS_MAP" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
-            <el-form-item label="类型">
-              <el-select v-model="query.active" clearable placeholder="全部" style="width: 110px">
+            <el-form-item label="范围">
+              <el-select v-model="query.active" clearable placeholder="全部" style="width: 110px" @change="loadEvents">
                 <el-option label="仅活动" :value="true" />
                 <el-option label="仅历史" :value="false" />
               </el-select>
@@ -186,6 +187,9 @@ onMounted(loadEvents)
               </template>
             </template>
           </el-table-column>
+          <template #empty>
+            <el-empty description="暂无告警事件" />
+          </template>
         </el-table>
 
         <el-pagination
@@ -227,6 +231,9 @@ onMounted(loadEvents)
               <el-button link type="danger" @click="handleRuleDelete(row)">删除</el-button>
             </template>
           </el-table-column>
+          <template #empty>
+            <el-empty description="暂无告警规则" />
+          </template>
         </el-table>
       </el-tab-pane>
     </el-tabs>
@@ -322,7 +329,7 @@ onMounted(loadEvents)
 }
 .tip {
   margin-left: 8px;
-  color: #909399;
+  color: var(--el-text-color-secondary);
   font-size: 12px;
 }
 </style>

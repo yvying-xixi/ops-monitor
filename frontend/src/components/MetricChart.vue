@@ -13,6 +13,7 @@ const props = defineProps({
 
 const chartRef = ref()
 let chart = null
+let observer = null
 
 function render() {
   if (!chart) return
@@ -50,12 +51,19 @@ onMounted(() => {
   chart = echarts.init(chartRef.value)
   render()
   window.addEventListener('resize', resize)
+  // 容器尺寸变化（侧栏折叠、栅格重排）时自适应
+  if (typeof ResizeObserver !== 'undefined') {
+    observer = new ResizeObserver(() => resize())
+    observer.observe(chartRef.value)
+  }
 })
 
 watch([() => props.xAxis, () => props.series], render)
 
 function dispose() {
   window.removeEventListener('resize', resize)
+  observer && observer.disconnect()
+  observer = null
   chart && chart.dispose()
   chart = null
 }

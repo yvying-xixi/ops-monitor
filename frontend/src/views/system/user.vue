@@ -138,6 +138,9 @@ onMounted(() => {
           <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
+      <template #empty>
+        <el-empty description="暂无用户" />
+      </template>
     </el-table>
 
     <el-pagination

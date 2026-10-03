@@ -221,6 +221,9 @@ onMounted(loadData)
           <el-button link type="warning" @click="openToken(row)">接入</el-button>
         </template>
       </el-table-column>
+      <template #empty>
+        <el-empty description="暂无服务器，点击右上角新增" />
+      </template>
     </el-table>
 
     <el-pagination
@@ -389,7 +392,7 @@ onMounted(loadData)
 }
 .field-label {
   display: block;
-  color: #606266;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
   margin-bottom: 4px;
 }
@@ -406,5 +409,12 @@ onMounted(loadData)
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-all;
+}
+@media (max-width: 640px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
 }
 </style>

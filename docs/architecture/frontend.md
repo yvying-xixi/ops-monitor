@@ -2,7 +2,15 @@
 
 ## 技术栈
 
-Vue 3 + Vite + Element Plus + Pinia + Vue Router + Axios + ECharts。
+Vue 3 + Vite + Element Plus + Tailwind CSS + Pinia + Vue Router + Axios + ECharts。
+
+## 样式体系
+
+- `src/style.css` 为唯一样式入口，引入 Tailwind v4 与 Element Plus，并声明层序
+  `theme < base < element-plus < components < utilities`（详见 [ADR-006](../decisions/006-frontend-styling-tailwind.md)）。
+- Tailwind 负责布局/间距/响应式/主题；Element Plus 负责表单/表格/弹窗/消息等组件。
+- 品牌色由 `@theme` 定义色阶；语义色复用 `var(--el-color-*)`，保证与组件库一致。
+- 暗色主题基于 Element Plus dark css-vars + `html.dark`，由 `store/theme.js` 持久化，支持浅色/深色/跟随系统。
 
 ## 目录结构
 
@@ -13,11 +21,13 @@ frontend/src/
 │   ├── clipboard.js    # 复制工具（Clipboard API，失败降级 execCommand）
 │   └── format.js       # 字节/时长/时间格式化
 ├── api/                # auth server monitor user role alert task 接口封装
-├── store/user.js       # Pinia：Token 持久化、登录/登出、角色判断
+├── store/
+│   ├── user.js         # Pinia：Token 持久化、登录/登出、角色判断
+│   └── theme.js        # Pinia：主题模式（light/dark/system）与持久化
 ├── router/index.js     # 路由表 + 全局守卫（未登录/角色限制/会话恢复）
-├── layout/index.vue    # 侧边菜单 + 顶栏（按角色渲染）
+├── layout/index.vue    # 可折叠侧栏 + 小屏抽屉 + 顶栏（按角色渲染）
 ├── config/index.js     # 常量（状态映射、时间范围、角色）
-├── components/MetricChart.vue  # ECharts 通用折线组件
+├── components/MetricChart.vue  # ECharts 通用折线组件（ResizeObserver 自适应）
 └── views/
     ├── login/index.vue
     ├── dashboard/index.vue
@@ -48,6 +58,7 @@ flowchart LR
 ## 状态与鉴权
 
 - `store/user.js`：`token` 持久化于 `localStorage`，`fetchMe()` 拉取用户与角色，提供 `hasRole`/`isAdmin`。
+- `store/theme.js`：主题模式持久化于 `localStorage`，启动时应用到 `<html>`，`system` 模式响应系统主题变化。
 - 路由守卫：未登录跳 `/login`；已登录访问 `/login` 跳 `/dashboard`；`meta.roles` 限制；**启动/刷新时异步恢复用户信息**（仅尝试一次）。
 
 ## 页面与权限
@@ -61,11 +72,11 @@ flowchart LR
 | 任务中心 | `/tasks` | admin/ops |
 | 用户管理 | `/system/users` | SYSTEM_ADMIN |
 
-菜单按角色渲染（`layout/index.vue`）。
+菜单按角色渲染（`layout/index.vue`）。布局桌面端支持折叠，小屏（<1024px）切换为抽屉；栅格按 `xs/sm/md` 响应式。
 
 ## 图表
 
-`components/MetricChart.vue` 基于 ECharts 渲染历史趋势（avg/max/min、网络速率 MB/s），服务器详情页按时间范围（1h/6h/24h/7d）切换。
+`components/MetricChart.vue` 基于 ECharts 渲染历史趋势（avg/max/min、网络速率 MB/s），通过 `ResizeObserver` 随容器尺寸自适应（侧栏折叠/栅格重排）。服务器详情页按时间范围（1h/6h/24h/7d）切换。
 
 ## 相关文档
 

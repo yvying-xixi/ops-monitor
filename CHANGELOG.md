@@ -6,9 +6,19 @@
 
 ### Added
 
+- 前端引入 Tailwind CSS v4（`@tailwindcss/vite`）并建立样式层序与主题 token（[ADR-006](docs/decisions/006-frontend-styling-tailwind.md)）。
+- 前端新增暗色主题切换（浅色/深色/跟随系统），持久化于 `localStorage`（`store/theme.js`）。
+- 前端布局新增桌面折叠侧栏与小屏抽屉；顶栏新增主题切换入口。
+
 ### Changed
 
+- 前端样式体系：Tailwind 负责布局/间距/响应式/主题，Element Plus 负责组件；语义色改用 `var(--el-color-*)`。
+- 前端仪表盘与服务器详情栅格改为响应式；`MetricChart` 改用 `ResizeObserver` 随容器自适应；各列表页补充空状态。
+- `main.js` 移除重复的 Element Plus CSS 引入与图标全量注册。
+
 ### Fixed
+
+- 移除脚手架残留全局样式（`#app` 1126px 限制、`prefers-color-scheme` 媒体查询等）导致的后台布局污染。
 
 ### Removed
 
