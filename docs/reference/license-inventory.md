@@ -1,7 +1,11 @@
 # 依赖许可证清单（License Inventory）
 
-> 本文档为**只读分析**结果，用于后续确定项目许可证。本轮不创建 `LICENSE` 文件。
 > 数据来源：已安装依赖的包元数据（`importlib.metadata` / `node_modules/*/package.json`）。
+
+## 项目许可证
+
+- 项目许可证：**Apache License 2.0**（见根目录 `LICENSE`）。
+- 依据：直接依赖均为宽松许可（MIT / BSD / Apache-2.0），与 Apache-2.0 兼容（见下文“观察”）。
 
 ## 直接依赖
 
@@ -77,4 +81,4 @@
 
 > **TODO**: 补充**传递依赖**的许可证清单。
 > **TODO**: 确认仓库中是否包含第三方源码及其许可证。
-> **TODO**: 依据依赖与来源分析结果，确定项目许可证类型并新增 `LICENSE`。
+> 已确定项目许可证类型并新增 `LICENSE`（Apache-2.0）。

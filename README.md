@@ -48,6 +48,7 @@ cp deploy/config.dockerhub.env.tmpl deploy/config.env   # 编辑 HOSTNAME 与 IM
 - [Reference](docs/reference/)
 - [Operations](docs/operations/)
 - [Architecture Decisions](docs/decisions/)
+- [Optimization Plan](docs/optimization-plan.md)
 
 ## Development
 
@@ -62,4 +63,4 @@ cp deploy/config.dockerhub.env.tmpl deploy/config.env   # 编辑 HOSTNAME 与 IM
 
 ## License
 
-许可证待定，见 [依赖许可证清单](docs/reference/license-inventory.md)。
+本项目基于 [Apache License 2.0](LICENSE) 许可发布；依赖许可证清单见 [依赖许可证清单](docs/reference/license-inventory.md)。
