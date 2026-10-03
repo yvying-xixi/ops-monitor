@@ -17,6 +17,7 @@ from agent.reporter.report import (
     send_metrics,
     send_services,
 )
+from agent.signer import load_or_create_signer
 from agent.utils.logger import setup_logger
 from agent.worker import TaskWorker
 
@@ -31,12 +32,17 @@ class Agent:
         self.logger = setup_logger(config.log.level, config.log.file)
         self._stop = threading.Event()
         self.server_id: int | None = None
+        signer = load_or_create_signer(
+            config.server.signing_key_file, server_code=config.server.server_code
+        )
+        self.logger.info("请求签名密钥: %s", signer.key_path)
         self._client = AgentClient(
             base_url=config.server.url,
             token=config.server.token,
             timeout=config.collect.request_timeout,
             retry_max_seconds=config.collect.retry_max_seconds,
             retry_max_count=config.collect.retry_max_count,
+            signer=signer,
         )
 
     def run(self) -> None:

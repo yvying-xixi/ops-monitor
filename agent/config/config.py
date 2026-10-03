@@ -14,6 +14,9 @@ class ServerConfig(BaseModel):
     url: str = Field(..., description="服务端地址")
     token: str = Field(..., min_length=1, description="Agent 注册凭证（明文）")
     server_code: str = Field(..., min_length=1, description="服务器唯一编码")
+    signing_key_file: str = Field(
+        "agent_ed25519.key", description="Ed25519 私钥文件路径（相对 config.yaml 目录或绝对路径）"
+    )
 
 
 class CollectConfig(BaseModel):
@@ -61,4 +64,10 @@ def load_config(path: str | None = None) -> AgentConfig:
         path = str(Path(__file__).resolve().parent / "config.yaml")
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
-    return AgentConfig(**data)
+    config = AgentConfig(**data)
+    # 私钥路径相对配置文件目录解析，避免受运行目录影响
+    key_file = Path(config.server.signing_key_file)
+    if not key_file.is_absolute():
+        key_file = Path(path).resolve().parent / key_file
+    config.server.signing_key_file = str(key_file)
+    return config

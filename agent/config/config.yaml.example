@@ -2,6 +2,8 @@ server:
   url: "http://127.0.0.1:8000"
   token: "REPLACE_WITH_GENERATED_AGENT_TOKEN"
   server_code: "web-01"
+  # Ed25519 私钥路径（相对 config.yaml 或绝对路径；不存在时自动生成）
+  signing_key_file: "agent_ed25519.key"
 
 collect:
   heartbeat_interval: 30

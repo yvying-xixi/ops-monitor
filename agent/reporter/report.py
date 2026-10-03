@@ -30,6 +30,8 @@ def register(client: AgentClient, *, server_code: str, token: str, system_info: 
         "agent_version": agent_version,
         **system_info,
     }
+    if client.signing_public_key:
+        payload["signing_public_key"] = client.signing_public_key
     return client.post("/api/v1/agent/register", json=payload)
 
 
