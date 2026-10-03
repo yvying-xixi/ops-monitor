@@ -11,6 +11,7 @@
 - 部署容器资源上限（CPU/内存）与 json-file 日志轮转（`compose.yml`）。
 - Agent 请求签名（[ADR-010](docs/decisions/010-agent-request-signing.md)，Ed25519）：Agent 本地生成密钥对并注册公钥，请求带 `X-Agent-Id/X-Timestamp/X-Request-Id/X-Signature`；后端验签并配合时间戳与 Redis 防重放；由 `AGENT_REQUIRE_SIGNATURE` 灰度控制。
 - 新增 `AGENT_REQUIRE_SIGNATURE` / `AGENT_SIGNATURE_MAX_SKEW` 配置与相关错误码（40104-40107）。
+- 性能压测基线：新增 `benchmarks/`（Locust 脚本 `locustfile.py` + 零依赖 `smoke.py` + 运行器）与 [operations/performance.md](docs/operations/performance.md)，并记录本地基线（RPS/P50/P95/P99）。
 - 指标归档：新增 `monitor_server_metric_daily` 日聚合表（迁移 0004）与归档任务，超期原始指标先聚合再删除；聚合保留 `METRIC_AGG_RETENTION_DAYS`（默认 180 天）。
 - Agent 签名公钥轮换：新增 `POST /api/v1/agent/signing-key`，并在注册时按差异轮换；公钥格式校验。
 - 分布式调度协调（[ADR-011](docs/decisions/011-distributed-scheduler.md)）：调度作业加 Redis 分布式锁，修复 `uvicorn --workers 2` 与多实例下的重复调度；nginx 支持 backend 多副本（运行时 DNS 解析）。
