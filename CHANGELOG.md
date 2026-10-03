@@ -2,26 +2,11 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 风格。
 
-## [Unreleased]
-
-### Added
-
-- 任务执行保留策略：`TASK_RETENTION_DAYS`（默认 30 天）与每日清理终态执行记录及日志。
-
-### Changed
-
-- Agent（Python / Go）在执行失败时上报标准化 `error_type`，服务端按分类决策重试。
-- 前端创建任务时携带 `Idempotency-Key` 请求头，端到端防重复创建。
-- 补充 [ADR-009](docs/decisions/009-task-retry-and-idempotency.md) 的状态语义（`TIMEOUT` / `DEAD` / `DEADLINE_EXCEEDED` / CRON × 重试）。
-
-### Fixed
-
-- 修复 `scan_timeouts` 使用单一任务超时批量更新所有 RUNNING 执行的问题，改为按**各自任务**的 `timeout_seconds` 判定。
-
 ## [0.3.0] - 2026-10-03
 
 ### Added
 
+- 任务执行保留策略：`TASK_RETENTION_DAYS`（默认 30 天）与每日清理终态执行记录及日志。
 - 任务重试与幂等（[ADR-009](docs/decisions/009-task-retry-and-idempotency.md)）：每次尝试新建执行记录、错误分类与退避、任务 deadline、`Idempotency-Key`、Agent 结果幂等重放。
 - Agent 传输层重试增加次数上限（`retry_max_count`）与随机抖动（Python / Go 双运行时）。
 - 前端引入 Vitest 单元测试与 ESLint；CI 前端作业增加 lint 与 test。
@@ -41,6 +26,9 @@
 
 ### Changed
 
+- Agent（Python / Go）在执行失败时上报标准化 `error_type`，服务端按分类决策重试。
+- 前端创建任务时携带 `Idempotency-Key` 请求头，端到端防重复创建。
+- 补充 [ADR-009](docs/decisions/009-task-retry-and-idempotency.md) 的状态语义（`TIMEOUT` / `DEAD` / `DEADLINE_EXCEEDED` / CRON × 重试）。
 - ORM 模型对齐真实 Schema：补齐 `DATETIME(3)`、`TINYINT`、显式索引/唯一约束/外键名及生成列 `alert_event.is_active`，使 Alembic autogenerate 差异为 0。
 - 后端接入结构化 JSON 日志（`app/core/logging.py`），自动注入 `request_id` / `user_id`。
 - CI 后端作业改用 `alembic upgrade head` 建表（移除正则剥离 SQL 脚本的 bootstrap），并新增 `quality`（ruff + mypy）作业与覆盖率报告。
@@ -56,6 +44,7 @@
 
 ### Fixed
 
+- 修复 `scan_timeouts` 使用单一任务超时批量更新所有 RUNNING 执行的问题，改为按**各自任务**的 `timeout_seconds` 判定。
 - 移除脚手架残留全局样式（`#app` 1126px 限制、`prefers-color-scheme` 媒体查询等）导致的后台布局污染。
 
 ### Removed
