@@ -1,10 +1,10 @@
 # ADR-010: Agent 请求签名与防重放
 
-## Status
+## 状态
 
 Accepted（已实现）
 
-## Context
+## 背景
 
 平台与 Agent 之间有两类凭证：用户 JWT 与 Agent Bearer Token（[ADR-003](003-authentication.md)）。Agent Token 仅存 SHA-256 哈希 + 前缀，明文仅返回一次。
 
@@ -16,11 +16,11 @@ Agent 是高权限组件（读取系统信息、受控启停服务、执行任�
 
 关键约束：**HMAC 对称签名要求服务端持有原始密钥用于验签**，而现有 Token 只存哈希，无法验签；且平台默认可能运行在内网 HTTP 之上。
 
-## Problem
+## 问题
 
 在只存 Token 哈希的前提下，为 Agent 请求增加完整性校验与防重放，并兼容存量 Agent 平滑上线。
 
-## Options
+## 选项
 
 ### A. 对称 HMAC + 服务端可逆存储签名密钥
 
@@ -41,7 +41,7 @@ Agent 本地生成 Ed25519 密钥对：私钥落盘（权限 600），注册时�
 - 优点：零改动。
 - 缺点：不满足完整性与防重放要求，内网 HTTP 下风险高。
 
-## Decision
+## 决策
 
 采用 **B. Ed25519 请求签名**，并配合 **时间戳 + Request-Id + Redis 防重放**：
 
@@ -127,20 +127,20 @@ canonical string：
 - `AGENT_REQUIRE_SIGNATURE=true` 且 Redis 不可用：**拒绝**请求，不降级放行。
 - 键 TTL = `2 × skew`，覆盖时钟窗口。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - 请求完整性、防重放，降低 Token 泄露后的滥用面。
 - 服务端无需可逆存储密钥。
 
-### Negative
+### 负面
 
 - 旧 Agent 需升级；每次请求增加验签开销（Ed25519 较快）。
 - 依赖 Redis 做重放缓存；需节点时钟同步。
 - PATH/query 规范化需谨慎。
 
-## Open Questions
+## 待决问题
 
 - 是否所有 Agent 接口都强制签名，还是仅写操作？**建议全部**（除注册首跳）。
 - query 参数是否纳入 canonical（若纳入需定义排序规则）。
@@ -148,7 +148,7 @@ canonical string：
 - Agent 私钥落盘位置与权限：建议 `/opt/ops-agent/etc/agent_ed25519.key`，`0600`。
 - 时钟偏差上限是否按环境可配。
 
-## References
+## 参考
 
 - [ADR-003 认证方案](003-authentication.md)
 - [docs/architecture/security.md](../architecture/security.md)

@@ -1,10 +1,10 @@
 # ADR-009: 任务重试与幂等
 
-## Status
+## 状态
 
 Accepted
 
-## Context
+## 背景
 
 任务执行存在两类失败：Agent 与 Server 之间的瞬时网络失败，以及业务任务执行失败后需要重新调度。原实现只有执行超时（`scan_timeouts`），没有任务级重试与幂等保护：
 
@@ -12,7 +12,7 @@ Accepted
 - `POST /tasks` 无幂等键，网络重试可能创建重复任务。
 - Agent 回传结果对已结束执行返回 400，无法应对“Server 超时但 Agent 后续成功”。
 
-## Decision
+## 决策
 
 - **分层重试，不共享计数器**：Agent 传输层负责单次请求的瞬时重试；Server 负责任务级重新调度。详见 [`../architecture/task-retry-strategy.md`](../architecture/task-retry-strategy.md)。
 - **每次尝试新建执行记录**：`ops_task_execution` 唯一键改为 `(task_id, target_id, attempt)`；新增 `attempt`、`next_retry_at`、`error_type`。失败尝试进入 `RETRYING`，由调度器新建下一次尝试（`PENDING`）。
@@ -23,7 +23,7 @@ Accepted
   - Agent 回传对已结束执行改为返回既有结果（幂等重放），不再报 400。
 - **状态聚合**：`_aggregate_task_status` 改为按每个 target 的**最新 attempt** 汇总，历史失败不覆盖最新结果。
 
-## Alternatives
+## 备选方案
 
 ### 直接复用一个执行记录并在其上递增 attempt
 
@@ -35,15 +35,15 @@ Accepted
 - 优点：实现简单。
 - 缺点：权限不足、参数错误等会反复执行，放大风险。故采用错误分类。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - 可控重试与退避，避免重试风暴；任务总预算受约束。
 - 幂等键与结果重放消除重复执行风险。
 - 每次尝试可独立审计。
 
-### Negative
+### 负面
 
 - 执行记录数量随重试增长；已通过 `TASK_RETENTION_DAYS`（默认 30 天，每日清理终态执行与日志）控制。
 - 条件重试错误仍按保守策略不重试。

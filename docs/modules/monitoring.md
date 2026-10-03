@@ -20,7 +20,7 @@ flowchart LR
     C --> F[告警引擎评估]
 ```
 
-## 监控 API
+## 监控接口
 
 | Method | Endpoint | 说明 | 权限 |
 | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ flowchart LR
 - 数值指标：SQL 按 `FLOOR(UNIX_TIMESTAMP/N)*N` 分桶 + `AVG/MAX/MIN`。
 - 网络：桶内取 MAX 采样，服务层对相邻桶差分得速率。
 
-## Dashboard
+## 仪表盘
 
 - 统计卡片：服务器总数/在线/警告/离线、CPU/内存/磁盘平均使用率、实时告警。
 - 服务器列表含最新指标摘要，10s 自动刷新。

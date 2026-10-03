@@ -1,14 +1,14 @@
 # ADR-005: 任务轮询分发模型
 
-## Status
+## 状态
 
 Accepted
 
-## Context
+## 背景
 
 运维任务（服务检查/操作/日志）需下发到被监控服务器执行。Agent 位于 NAT/防火墙后，Backend 无法主动连接；需选择任务分发与结果回传方式。
 
-## Decision
+## 决策
 
 采用 **Agent 轮询分发**：
 
@@ -17,7 +17,7 @@ Accepted
 - 任务状态机：CREATED → PENDING → RUNNING → SUCCESS/FAILED/TIMEOUT/CANCELLED；超时由调度器扫描置 TIMEOUT。
 - 幂等：重复回传被拒绝；资产/服务同步为幂等 upsert。
 
-## Alternatives
+## 备选方案
 
 ### WebSocket 推送
 
@@ -34,14 +34,14 @@ Accepted
 - 优点：降低空轮询。
 - 缺点：连接占用与超时处理更复杂。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - 契合 Agent 主动出站模型，无需 Backend 直连。
 - 实现简单，易于扩展多服务器与批量任务。
 
-### Negative
+### 负面
 
 - 任务下发存在轮询延迟（≤ 轮询周期）。
 - 需处理超时与重复回传。

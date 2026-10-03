@@ -2,7 +2,7 @@
 
 轻量级服务器运维监控与自动化管理平台：通过 Agent（Python / Go 双运行时）采集 Linux 服务器状态，由 FastAPI 后端统一处理，经 Vue 管理端提供监控、告警与服务管理能力。
 
-## Features
+## 功能
 
 - 服务器资产管理与 Agent 在线状态
 - 指标采集与可视化（CPU / 内存 / 磁盘 / 网络 / Load / TCP / 进程）
@@ -12,7 +12,7 @@
 - 用户认证与 RBAC 权限、操作审计
 - Docker Compose 配置化部署
 
-## Architecture
+## 架构
 
 ```mermaid
 flowchart LR
@@ -26,7 +26,7 @@ flowchart LR
 
 详见 [docs/architecture/overview.md](docs/architecture/overview.md)。
 
-## Quick Start
+## 快速开始
 
 ```bash
 # 平台（配置化部署）
@@ -40,7 +40,7 @@ cp deploy/config.dockerhub.env.tmpl deploy/config.env   # 编辑 HOSTNAME 与 IM
 
 详见 [docs/operations/deployment.md](docs/operations/deployment.md)。
 
-## Documentation
+## 文档
 
 - [Getting Started](docs/getting-started/)
 - [Architecture](docs/architecture/)
@@ -50,17 +50,17 @@ cp deploy/config.dockerhub.env.tmpl deploy/config.env   # 编辑 HOSTNAME 与 IM
 - [Architecture Decisions](docs/decisions/)
 - [Optimization Plan](docs/optimization-plan.md)
 
-## Development
+## 开发
 
 - [开发指南](docs/getting-started/development.md)
 - [本地环境](docs/getting-started/local-environment.md)
 - [贡献指南](CONTRIBUTING.md)
 
-## Deployment
+## 部署
 
 - [平台部署](docs/operations/deployment.md)
 - [Agent 部署](docs/operations/agent-deployment.md)
 
-## License
+## 许可证
 
 本项目基于 [Apache License 2.0](LICENSE) 许可发布；依赖许可证清单见 [依赖许可证清单](docs/reference/license-inventory.md)。

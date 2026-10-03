@@ -58,7 +58,7 @@ sudo ./agent/install.sh --config /opt/ops-agent/config/config.yaml
 ## 兼容性
 
 - **API**：新增字段保持向后兼容；破坏性变更需在 `CHANGELOG.md` 标注并提升平台版本。
-- **Agent 协议**：字段级兼容按「新增一律可选、删除/改语义为破坏性」处理，详见 [reference/agent-protocol.md](../reference/agent-protocol.md#compatibility)。
+- **Agent 协议**：字段级兼容按「新增一律可选、删除/改语义为破坏性」处理，详见 [reference/agent-protocol.md](../reference/agent-protocol.md#兼容性)。
 - 平台与 Agent 可独立升级；启用强制签名（`AGENT_REQUIRE_SIGNATURE=true`）前需先升级 Agent。
 
 ## 回滚

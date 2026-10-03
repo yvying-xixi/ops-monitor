@@ -1,4 +1,4 @@
-# 端口 Reference
+# 端口参考
 
 ## 平台服务端口
 
@@ -24,3 +24,7 @@
 ## Agent
 
 Agent 不监听端口，仅主动出站访问平台地址（`server.url`）。
+
+## 服务器发现（只读）
+
+发现功能由后端**主动出站**连接目标端口（默认 SSH 22，`DISCOVERY_SSH_PORT`），仅在 `DISCOVERY_ALLOWED_CIDRS` 白名单内；平台**不开放额外入站端口**。

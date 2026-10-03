@@ -59,7 +59,7 @@ stateDiagram-v2
 | LOAD | WARNING/CRITICAL | 1.0 / 2.0（核数倍数） | 300s / 120s |
 | AGENT | WARNING/CRITICAL | 90 / 180 | 0 |
 
-## 告警 API
+## 告警接口
 
 | Method | Endpoint | 说明 | 权限 |
 | --- | --- | --- | --- |

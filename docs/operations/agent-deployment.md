@@ -2,11 +2,11 @@
 
 > 本文描述在被监控 Linux 服务器上安装、配置、验证与卸载 Agent。
 
-## Scope
+## 范围
 
 覆盖平台一键安装、本地 systemd 脚本与前台运行；宿主指标采集与受控服务管理。
 
-## Prerequisites
+## 前置条件
 
 - 目标机为 Linux（Debian/Ubuntu 等），具备 systemd（systemd 方式）。
 - 目标机能访问平台地址。
@@ -15,7 +15,7 @@
   - Python 版：Python 3.11+（systemd / 前台方式）。
   - Go 版：无外部运行时（静态单二进制）。
 
-## Installation
+## 安装
 
 ### 方式零：平台一键安装（推荐）
 
@@ -83,17 +83,17 @@ sudo /opt/ops-agent/bin/ops-agent --config /opt/ops-agent/config/config.yaml
 ./agent-go/dist/ops-agent-linux-amd64 --config /path/to/config.yaml
 ```
 
-## Configuration
+## 配置
 
 Python 与 Go 版使用同一份 `config.yaml`：见 [reference/configuration.md](../reference/configuration.md#agent-配置python-与-go-通用)。
 
 > `server_code` 必须与平台「编码」一致，否则注册报 `401 服务器编码与凭证不匹配`。
 
-## Registration
+## 注册
 
 Agent 启动后自动注册（`POST /agent/register`），随后周期上报心跳/指标/资产/服务并轮询任务。
 
-## Verification
+## 验证
 
 ```bash
 systemctl status server-agent --no-pager
@@ -117,11 +117,11 @@ DISCOVERY_ALLOWED_CIDRS=["10.0.0.0/24"]
 
 限制：仅扫描白名单子网；只做 TCP/banner 探测，**不认证、不远程安装**。
 
-## Upgrade
+## 升级
 
 见 [upgrade.md](upgrade.md#agent-升级)：保留 `config.yaml` 与签名私钥，替换程序后重启 `server-agent`。
 
-## Uninstallation
+## 卸载
 
 ```bash
 sudo systemctl disable --now server-agent
@@ -136,10 +136,10 @@ sudo systemctl daemon-reload
 - 注册时上报公钥；平台在 `AGENT_REQUIRE_SIGNATURE=true` 后强制验签。
 - 重新部署时**保留**该私钥文件；删除后会生成新密钥并重新注册（旧公钥失效）。
 
-## Troubleshooting
+## 故障排查
 
-见 [troubleshooting.md](troubleshooting.md#agent-issues)。
+见 [troubleshooting.md](troubleshooting.md#agent-问题)。
 
-## TODO
+## 待办
 
-- [x] Agent 版本与协议兼容矩阵：见 [agent-protocol.md](../reference/agent-protocol.md#compatibility)。
+- [x] Agent 版本与协议兼容矩阵：见 [agent-protocol.md](../reference/agent-protocol.md#兼容性)。

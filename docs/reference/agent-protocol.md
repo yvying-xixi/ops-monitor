@@ -1,20 +1,20 @@
-# Agent Protocol
+# Agent 协议
 
 > 本文描述 Agent 与 Backend 之间的通信协议。实现见 `agent/`（Python）与 `agent-go/`（Go），两者功能对等、可互换。后端接口见 `backend/app/api/v1/agent.py`。
 
-## Overview
+## 概述
 
 通信方向恒为 **Agent → Backend**（主动上报/轮询），后端不主动连接 Agent。所有 Agent 接口位于 `/api/v1/agent/*`，使用独立 Token 鉴权。
 
 协议与具体实现无关：Python 与 Go 两个 Agent 使用同一份接口契约与 `config.yaml` schema，后端无需区分。安装包按 `runtime` 参数区分（`/api/v1/agent/package?runtime=python|go`，默认 `python`）。
 
-## Authentication
+## 认证
 
 - 请求头：`Authorization: Bearer <Agent Token>`。
 - Token 由平台生成，数据库仅存 SHA-256 哈希；`register` 时 Token 在请求体与请求头中同时携带。
 - 校验失败返回 `401`（错误码 `40103`）。
 
-## Request Signing
+## 请求签名
 
 启用后（`AGENT_REQUIRE_SIGNATURE=true` 强制）Agent 请求携带 Ed25519 签名：
 
@@ -26,7 +26,7 @@
 - **公钥轮换**：`POST /api/v1/agent/signing-key`（Bearer 认证；启用签名时同时校验当前签名），提交新的 `signing_public_key` 即时生效；注册时若提供不同的合法公钥亦视为轮换。
 - 详见 [decisions/010-agent-request-signing.md](../decisions/010-agent-request-signing.md)。
 
-## Interaction Overview
+## 交互总览
 
 ```mermaid
 sequenceDiagram
@@ -46,7 +46,7 @@ sequenceDiagram
     end
 ```
 
-## Registration
+## 注册
 
 `POST /api/v1/agent/register`
 
@@ -69,7 +69,7 @@ sequenceDiagram
 
 服务端校验 Token 与 `server_code` 匹配后回写系统信息并置 `ONLINE`，返回 `{server_id, agent_status}`。
 
-## Heartbeat
+## 心跳
 
 `POST /api/v1/agent/heartbeat`
 
@@ -79,7 +79,7 @@ sequenceDiagram
 
 服务端更新 `last_heartbeat_at` 并记录 `ops_agent_heartbeat`。
 
-## Metrics
+## 指标
 
 `POST /api/v1/agent/metrics`
 
@@ -101,15 +101,15 @@ sequenceDiagram
 
 时间合法性校验：与服务器时间偏差超过 300s 拒绝（错误码 `40001`）。
 
-## Assets
+## 资产
 
 `POST /api/v1/agent/assets`：同步磁盘与网卡资产（幂等 upsert，缺失项删除）。
 
-## Services
+## 服务
 
 `POST /api/v1/agent/services`：上报服务状态 `[{service_name, current_status}]`。
 
-## Task Polling
+## 任务轮询
 
 `GET /api/v1/agent/tasks/pending`：领取本服务器待执行任务，服务端将执行置 RUNNING，返回：
 
@@ -117,7 +117,7 @@ sequenceDiagram
 [{ "execution_id": 1, "task_id": 10, "action": "STATUS", "service_name": "nginx", "timeout_seconds": 60 }]
 ```
 
-## Task Result
+## 任务结果
 
 `POST /api/v1/agent/task/result`
 
@@ -129,7 +129,7 @@ sequenceDiagram
 - 服务端更新执行状态、写 `ops_task_log`，并聚合任务状态；可重试失败进入 `RETRYING`。
 - 幂等：对已结束的 `execution_id` 重复回传返回既有结果（HTTP 200），不重复执行。
 
-## Package and Installer
+## 安装包与安装器
 
 - `GET /api/v1/agent/package?runtime=python|go`：下载 Agent 安装包（tar.gz，公开）。
   - `python`（默认）：源码 + `install.sh` + systemd 模板。
@@ -137,25 +137,25 @@ sequenceDiagram
 - `GET /api/v1/agent/install.sh?runtime=python|go`：获取一键安装脚本（公开）。
 - 非法 `runtime` 回退为 `python`。
 
-## Retry Policy
+## 重试策略
 
 网络失败采用指数退避重试（1s/2s/4s…，封顶 `retry_max_seconds`）。详见 `agent/reporter/client.py`。
 
-## Timeout Policy
+## 超时策略
 
 - HTTP 请求超时：`request_timeout`（默认 10s）。
 - 任务执行超时：由任务 `timeout_seconds` 决定；Agent executor 亦设置超时。
 
-## Idempotency
+## 幂等性
 
 - 资产/服务同步为幂等 upsert。
 - 任务结果重复回传被拒绝（执行已结束返回 `400`）。
 
-## Error Handling
+## 错误处理
 
 统一响应 `{code, message, data}`；错误码见 [error-codes.md](error-codes.md)。
 
-## Compatibility
+## 兼容性
 
 - **协议版本**：当前为 `1.0`（无显式版本字段，按字段级兼容管理）。
 - **原则**：新增字段一律**可选**（缺少时服务端使用默认）；删除字段或改变语义视为**破坏性变更**，需平台与 Agent 同步升级并在 `CHANGELOG.md` 标注。

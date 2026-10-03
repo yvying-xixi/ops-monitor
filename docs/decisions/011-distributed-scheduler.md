@@ -1,10 +1,10 @@
 # ADR-011: 分布式调度协调
 
-## Status
+## 状态
 
 Accepted（已实现）
 
-## Context
+## 背景
 
 后台调度器（APScheduler `BackgroundScheduler`）在应用 lifespan 中启动。当前 backend 以
 `uvicorn --workers 2` 运行，**每个 worker 进程都会执行 lifespan 并启动一个调度器**，
@@ -15,11 +15,11 @@ Accepted（已实现）
 
 同时，nginx 以 `proxy_pass http://backend:8000` 在启动时解析单一容器 IP，无法支持 backend 多副本。
 
-## Problem
+## 问题
 
 在单容器多 worker 与多实例部署下，保证每个调度作业每轮只被执行一次；并让入口支持 backend 水平扩展。
 
-## Options
+## 选项
 
 ### A. 每作业 Redis 锁（选择）
 
@@ -41,7 +41,7 @@ Accepted（已实现）
 - 优点：不依赖 Redis。
 - 缺点：MySQL 咨询锁跨连接语义复杂；持久化 JobStore 仍需选主，改造大。
 
-## Decision
+## 决策
 
 采用 **A. 每作业 Redis 锁**：
 
@@ -56,24 +56,24 @@ Accepted（已实现）
 - nginx 增加 `resolver 127.0.0.11 valid=10s` + 变量式 `proxy_pass`，运行时解析 `backend`，配合
   Docker DNS 支持 `docker compose up --scale backend=N`。
 
-## Alternatives
+## 备选方案
 
 见 Options。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - 修复「2 worker 重复调度」，并支持 backend 水平扩展。
 - 实现轻量，无新增常驻进程。
 
-### Negative
+### 负面
 
 - 强依赖 Redis（异常时调度暂停，但 Web 接口不受影响）。
 - 作业执行时间不得超过 TTL，否则锁提前过期可能并发执行（当前作业均为秒级）。
 - **Redis / MySQL 仍是单点**：真 HA 需外部托管/集群，超出本 ADR 范围。
 
-## Open Questions
+## 待决问题
 
 - 长任务是否需要锁续租（当前不需要）。
 - 是否需要「选主 + 集中调度」替代「每作业锁」以降低 Redis 调用量。

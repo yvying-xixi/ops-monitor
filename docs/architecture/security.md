@@ -61,8 +61,8 @@ flowchart LR
 
 登录、服务器操作、服务操作、任务执行、告警确认、权限修改均落库审计。详见 [modules/audit.md](../modules/audit.md)。
 
-## TODO
+## 待办
 
 - [x] 密钥轮换（Agent 公钥在线轮换，见 [ADR-010](../decisions/010-agent-request-signing.md)）。
 
-> **TODO**: 补充 Token 撤销流程与最小权限落地清单。
+> **待办**: 补充 Token 撤销流程与最小权限落地清单。

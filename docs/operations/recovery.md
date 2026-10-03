@@ -64,7 +64,7 @@ docker compose -f deploy/docker/compose.yml --env-file deploy/.env up -d
 - [ ] 验证 `config.env` 快照可用、密钥可正常启动。
 - [ ] 验证 Agent 重连后心跳/指标恢复上报。
 
-## TODO
+## 待办
 
-> **TODO**: 补充灾难恢复（整机重建）步骤与演练记录模板。
-> **TODO**: 补充恢复后 Agent 重连与数据一致性校验。
+> **待办**: 补充灾难恢复（整机重建）步骤与演练记录模板。
+> **待办**: 补充恢复后 Agent 重连与数据一致性校验。

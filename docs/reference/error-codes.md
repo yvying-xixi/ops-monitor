@@ -1,4 +1,4 @@
-# 错误码 Reference
+# 错误码参考
 
 > 来源：`backend/app/exceptions/error_codes.py`。响应统一为 `{code, message, data}`。
 

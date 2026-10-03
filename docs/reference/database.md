@@ -1,4 +1,4 @@
-# 数据库 Reference
+# 数据库参考
 
 > 建表与演进由 Alembic 迁移管理：`backend/migrations/`（MySQL 8.0，utf8mb4），基线为 `0001_initial`。
 > 设计原则：监控数据与业务数据分离；密码与 Agent Token 仅存哈希；时间字段使用 `DATETIME(3)`，应用层统一 UTC。
@@ -85,11 +85,11 @@ erDiagram
 
 系统用户。
 
-### Purpose
+### 用途
 
 存储平台用户账号，供登录与权限分配。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -101,7 +101,7 @@ erDiagram
 | last_login_at / last_login_ip | datetime(3) / varchar | Yes | 最后登录 |
 | created_at / updated_at / deleted_at | datetime(3) | No/Yes | 时间与软删除 |
 
-### Indexes
+### 索引
 
 | Name | Columns | Purpose |
 | --- | --- | --- |
@@ -110,16 +110,16 @@ erDiagram
 | idx_sys_user_status | status | 状态过滤 |
 | idx_sys_user_deleted_at | deleted_at | 软删除过滤 |
 
-### Relations
+### 关联
 
 - 与 `sys_role` 经 `sys_user_role` 多对多。
 
-### Lifecycle
+### 生命周期
 
 - 创建：管理员创建或种子初始化。
 - 删除：软删除（置 `deleted_at`）。
 
-### Related APIs
+### 相关接口
 
 - `GET/POST /api/v1/users`、`GET/PUT/DELETE /api/v1/users/{id}`
 
@@ -127,11 +127,11 @@ erDiagram
 
 服务器资产。
 
-### Purpose
+### 用途
 
 登记被监控服务器及其 Agent 状态。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -146,22 +146,22 @@ erDiagram
 | last_heartbeat_at / registered_at | datetime(3) | Yes | 心跳/注册 |
 | status / remark / created_by / deleted_at | — | — | 资产状态/备注/创建人/软删除 |
 
-### Indexes
+### 索引
 
 `uk_ops_server_code(server_code)`、`uk_ops_server_ip_port(ip_address, ssh_port)`、`idx_ops_server_agent_status`、`idx_ops_server_last_heartbeat`、`idx_ops_server_status`、`idx_ops_server_hostname`
 
-### Relations
+### 关联
 
 - 1:N：磁盘、网卡、服务、容器、Token、心跳、指标。
 - N:1：`created_by` → `sys_user`。
 
-### Lifecycle
+### 生命周期
 
 - 创建：管理员预创建；Agent 注册回写系统信息并置 ONLINE。
 - 状态：由心跳驱动刷新。
 - 删除：软删除。
 
-### Related APIs
+### 相关接口
 
 - `GET/POST /api/v1/servers`、`GET /api/v1/servers/{id}`、`POST /api/v1/servers/{id}/agent-token`
 
@@ -169,11 +169,11 @@ erDiagram
 
 Agent 鉴权凭证。
 
-### Purpose
+### 用途
 
 为服务器签发 Agent 注册/上报凭证，仅存哈希。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -184,20 +184,20 @@ Agent 鉴权凭证。
 | status | tinyint | No | 0 撤销 / 1 有效 |
 | expires_at / last_used_at / revoked_at | datetime(3) | Yes | 生命周期 |
 
-### Indexes
+### 索引
 
 `uk_ops_agent_token_hash(token_hash)`、`idx_ops_agent_token_server_status(server_id, status)`
 
-### Relations
+### 关联
 
 - N:1：`server_id` → `ops_server`。
 
-### Lifecycle
+### 生命周期
 
 - 创建：管理员为服务器生成，明文仅返回一次。
 - 撤销：置 `status=0` 与 `revoked_at`。
 
-### Related APIs
+### 相关接口
 
 - `POST /api/v1/servers/{id}/agent-token`
 
@@ -205,11 +205,11 @@ Agent 鉴权凭证。
 
 服务器监控指标（核心，高频追加）。
 
-### Purpose
+### 用途
 
 存储 Agent 上报的服务器指标，支撑实时展示与历史趋势。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -221,19 +221,19 @@ Agent 鉴权凭证。
 | load_1m / load_5m / load_15m | decimal(10,2) | Yes | Load |
 | tcp_connections | int unsigned | Yes | TCP 连接数 |
 
-### Indexes
+### 索引
 
 `idx_monitor_server_metric_server_time(server_id, collected_at)`、`idx_monitor_server_metric_collected_at(collected_at)`
 
-### Relations
+### 关联
 
 - N:1：`server_id` → `ops_server`。
 
-### Lifecycle
+### 生命周期
 
 - 追加写入；按 `METRIC_RETENTION_DAYS` 定期清理。
 
-### Related APIs
+### 相关接口
 
 - `GET /api/v1/servers/{id}/metrics/latest|history|summary`
 
@@ -241,11 +241,11 @@ Agent 鉴权凭证。
 
 告警事件。
 
-### Purpose
+### 用途
 
 记录告警活动状态与历史，供确认/恢复与展示。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -259,20 +259,20 @@ Agent 鉴权凭证。
 | current_value / threshold_value | decimal(12,4) | Yes | 值/阈值 |
 | message | varchar(500) | No | 消息 |
 
-### Indexes
+### 索引
 
 `uk_alert_event_active_key(alert_key, is_active)`（活动去重）、`idx_alert_event_server_status`、`idx_alert_event_status_time`
 
-### Relations
+### 关联
 
 - N:1：`rule_id` → `alert_rule`；`server_id` → `ops_server`；`acknowledged_by` → `sys_user`。
 - 1:N：`alert_event_log`。
 
-### Lifecycle
+### 生命周期
 
 - 由告警引擎按状态机创建/更新；恢复后 `is_active=NULL`。
 
-### Related APIs
+### 相关接口
 
 - `GET /api/v1/alerts`、`GET /api/v1/alerts/{id}`、`POST /api/v1/alerts/{id}/ack|resolve`
 
@@ -280,11 +280,11 @@ Agent 鉴权凭证。
 
 运维任务。
 
-### Purpose
+### 用途
 
 记录任务定义与聚合状态。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -296,20 +296,20 @@ Agent 鉴权凭证。
 | created_by | bigint unsigned | No | 创建人 |
 | timeout_seconds / confirmation_required / confirmed_by / confirmed_at | — | — | 超时/确认 |
 
-### Indexes
+### 索引
 
 `idx_ops_task_creator_time`、`idx_ops_task_status`、`idx_ops_task_schedule`
 
-### Relations
+### 关联
 
 - 1:N：`ops_task_target` → `ops_task_execution` → `ops_task_log`。
 - N:1：`created_by`/`confirmed_by` → `sys_user`。
 
-### Lifecycle
+### 生命周期
 
 - 创建 → 确认 → 领取 → 执行 → 聚合；超时扫描置 TIMEOUT。
 
-### Related APIs
+### 相关接口
 
 - `GET/POST /api/v1/tasks`、`GET /api/v1/tasks/{id}`、`POST /api/v1/tasks/{id}/confirm|cancel`
 
@@ -317,11 +317,11 @@ Agent 鉴权凭证。
 
 操作审计日志。
 
-### Purpose
+### 用途
 
 记录用户操作，支持审计追溯。
 
-### Columns
+### 字段
 
 | Column | Type | Nullable | Description |
 | --- | --- | ---: | --- |
@@ -334,21 +334,21 @@ Agent 鉴权凭证。
 | request_params | json | Yes | 参数（禁止密码/Token） |
 | result_status / error_message / duration_ms | — | — | 结果/耗时 |
 
-### Indexes
+### 索引
 
 `idx_sys_operation_log_user_time`、`idx_sys_operation_log_server_time`、`idx_sys_operation_log_module_time`、`idx_sys_operation_log_status_time`、`idx_sys_operation_log_created_at`
 
-### Relations
+### 关联
 
 - N:1：`user_id` → `sys_user`；`server_id` → `ops_server`。
 
-### Lifecycle
+### 生命周期
 
 - 追加写入（中间件异步）。
 
-### Related APIs
+### 相关接口
 
-> **TODO**: 当前无对外查询接口，后续补充审计查询 API。
+> **待办**: 当前无对外查询接口，后续补充审计查询 API。
 
 ## 其余表（简列）
 
@@ -384,8 +384,8 @@ ORDER BY collected_at ASC;
 SELECT * FROM alert_event WHERE is_active = 1 ORDER BY created_at DESC;
 ```
 
-## TODO
+## 待办
 
-> **TODO**: 补充索引与典型查询的执行计划验证结论。
+> **待办**: 补充索引与典型查询的执行计划验证结论。
 
 - [x] 监控数据生命周期：原始保留 7 天 → 日聚合归档 180 天；因含外键不做 MySQL 分区，见 [monitoring.md](../operations/monitoring.md#指标生命周期与归档)。

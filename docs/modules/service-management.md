@@ -36,7 +36,7 @@ flowchart LR
 4. **二次确认**：START/STOP/RESTART 默认 `confirmation_required=1`。
 5. **角色权限**：操作限 admin/ops；Agent 回传接口用 Agent Token 鉴权并绑定服务器。
 
-## 服务管理 API
+## 服务管理接口
 
 | Method | Endpoint | 说明 | 权限 |
 | --- | --- | --- | --- |

@@ -1,4 +1,4 @@
-# 配置 Reference
+# 配置参考
 
 > 本文档描述后端、部署与 Agent 的配置项。可复制模板：`backend/app/core/.env.example`（后端本地开发）、`deploy/config.env.tmpl`（平台部署）、`agent/config/config.yaml.example`（Agent）。
 

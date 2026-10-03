@@ -1,4 +1,4 @@
-# 依赖许可证清单（License Inventory）
+# 依赖许可证清单
 
 > 数据来源：已安装依赖的包元数据（`importlib.metadata` / `node_modules/*/package.json`）。
 
@@ -9,7 +9,7 @@
 
 ## 直接依赖
 
-### Backend（Python）
+### 后端（Python）
 
 | Dependency | Version | Type | License |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@
 | github.com/lufia/plan9stats | 0.0.0-2021… | Indirect | BSD-3-Clause |
 | github.com/ebitengine/purego | 0.8.1 | Indirect | Apache-2.0 |
 
-### Frontend（Node）
+### 前端（Node）
 
 | Dependency | Version | Type | License |
 | --- | --- | --- | --- |
@@ -77,8 +77,8 @@
 - 直接依赖以 MIT / BSD / Apache-2.0 为主，均属宽松许可。
 - 含 Apache-2.0 依赖（bcrypt、python-multipart、echarts），与 MIT 兼容。
 
-## TODO
+## 待办
 
-> **TODO**: 补充**传递依赖**的许可证清单。
-> **TODO**: 确认仓库中是否包含第三方源码及其许可证。
+> **待办**: 补充**传递依赖**的许可证清单。
+> **待办**: 确认仓库中是否包含第三方源码及其许可证。
 > 已确定项目许可证类型并新增 `LICENSE`（Apache-2.0）。

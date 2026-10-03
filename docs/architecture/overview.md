@@ -18,13 +18,13 @@ flowchart LR
 
 ## 核心组件
 
-### Frontend
+### 前端
 
 Vue 3 + Vite + Element Plus 单页应用，提供登录、Dashboard、服务器管理、监控图表（ECharts）、告警中心、任务中心与用户管理。经 Nginx 同源访问 `/api`。
 
 详见 [frontend.md](frontend.md)。
 
-### Backend
+### 后端
 
 FastAPI 应用，采用 `Router → Service → Repository → Model` 分层，统一响应 `{code, message, data}`，提供认证鉴权、服务器资产、监控查询、告警引擎、任务引擎与审计能力。
 
@@ -36,13 +36,13 @@ FastAPI 应用，采用 `Router → Service → Repository → Model` 分层，�
 
 详见 [agent.md](agent.md)、[reference/agent-protocol.md](../reference/agent-protocol.md) 与 [decisions/007-go-agent-dual-runtime.md](../decisions/007-go-agent-dual-runtime.md)。
 
-### Database
+### 数据库
 
 MySQL 8.0 存储，业务数据与监控数据逻辑分离。核心域：用户权限、服务器资产与 Agent、监控指标、告警、自动化任务、登录与审计。共 26 张表。
 
 详见 [reference/database.md](../reference/database.md)。
 
-### Deployment
+### 部署
 
 Docker Compose 编排 `nginx`、`backend`、`mysql`、`redis`；平台采用配置化部署（`deploy/config.env` + `install.sh`）。Agent 单独以 systemd 部署。
 
@@ -94,6 +94,6 @@ erDiagram
 
 详见 [modules/automation.md](../modules/automation.md) 与 [decisions/005-task-polling-dispatch.md](../decisions/005-task-polling-dispatch.md)。
 
-## TODO
+## 待办
 
-> **TODO**: 补充生产环境网络拓扑（HTTPS、反向代理与多主机部署）的说明。
+> **待办**: 补充生产环境网络拓扑（HTTPS、反向代理与多主机部署）的说明。

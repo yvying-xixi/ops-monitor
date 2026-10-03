@@ -1,14 +1,14 @@
 # ADR-004: 配置驱动的平台部署
 
-## Status
+## 状态
 
 Accepted
 
-## Context
+## 背景
 
 平台需要便捷、可重复、可维护的部署方式。直接依赖 `docker-compose.yml` + 手工 `.env` 容易出错、难以复核，也不利于备份与重建。
 
-## Decision
+## 决策
 
 采用 **配置驱动部署**（参考 Harbor 模式）：
 
@@ -17,7 +17,7 @@ Accepted
 - 脚本职责：`install.sh`（首装）、`migrate-config.sh`（旧 YAML → `config.env` 迁移）、`reconfigure.sh`（改配置后重建）、`check.sh`（体检）。
 - 空密钥由脚本生成并回写 `config.env`；数据目录由 `DATA_VOLUME_DIR` 指定。
 
-## Alternatives
+## 备选方案
 
 ### 直接编辑 docker-compose 与环境变量
 
@@ -29,15 +29,15 @@ Accepted
 - 优点：功能强大、可管理多环境。
 - 缺点：对当前轻量项目过重。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - 部署可重复、可复核，配置集中。
 - 改配置一键重建，数据保留。
 - 为离线/预构建镜像部署打基础。
 
-### Negative
+### 负面
 
 - 需维护脚本与配置模板。
 - 依赖基础命令（`sed`/`od`/`tr`）；**无需宿主机 Python**。

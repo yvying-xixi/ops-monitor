@@ -29,7 +29,7 @@ stateDiagram-v2
     OFFLINE --> ONLINE: 心跳恢复
 ```
 
-## 服务器管理 API
+## 服务器管理接口
 
 | Method | Endpoint | 说明 | 权限 |
 | --- | --- | --- | --- |

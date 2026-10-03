@@ -1,6 +1,6 @@
 # 数据流
 
-> 本文档描述系统主要数据流。部分内容需结合实现继续补充，未确认处使用 `TODO`。
+> 本文档描述系统主要数据流。部分内容需结合实现继续补充，未确认处使用 `待办`。
 
 ## 概览
 
@@ -12,7 +12,7 @@ flowchart LR
     BE -->|告警引擎| AE[alert_event]
 ```
 
-## Agent → Backend
+## Agent → 后端
 
 Agent 主动发起以下请求（详见 [reference/agent-protocol.md](../reference/agent-protocol.md)）：
 
@@ -46,7 +46,7 @@ sequenceDiagram
     BE->>DB: ops_task_execution + ops_task_log
 ```
 
-## Backend → Frontend
+## 后端 → 前端
 
 前端经 Nginx `/api` 调用后端接口获取数据，主要读取：
 
@@ -55,7 +55,7 @@ sequenceDiagram
 - `GET /dashboard/overview`
 - `GET /alerts`、`GET /tasks`
 
-> **TODO**: 结合前端实际调用补充各页面的数据依赖与刷新周期。
+> **待办**: 结合前端实际调用补充各页面的数据依赖与刷新周期。
 
 ## 监控数据流
 
@@ -98,7 +98,7 @@ stateDiagram-v2
     RESOLVED --> [*]
 ```
 
-## TODO
+## 待办
 
-> **TODO**: 补充 Agent 重连后的数据一致性策略（离线期间指标是否补传）。
-> **TODO**: 补充告警通知渠道（当前按需求边界不包含）的扩展数据流。
+> **待办**: 补充 Agent 重连后的数据一致性策略（离线期间指标是否补传）。
+> **待办**: 补充告警通知渠道（当前按需求边界不包含）的扩展数据流。

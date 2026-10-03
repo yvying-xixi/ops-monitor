@@ -1,10 +1,10 @@
 # ADR-006: 前端样式体系引入 Tailwind CSS
 
-## Status
+## 状态
 
 Accepted
 
-## Context
+## 背景
 
 前端此前仅有各页面 `<style scoped>` 与 Element Plus 自带样式，存在以下问题：
 
@@ -14,7 +14,7 @@ Accepted
 
 需要引入一套样式方案，在不替换 Element Plus 组件库的前提下，统一布局、间距、响应式与主题能力。
 
-## Decision
+## 决策
 
 引入 **Tailwind CSS v4**，通过 `@tailwindcss/vite` 插件接入，采用 CSS-first 配置：
 
@@ -25,7 +25,7 @@ Accepted
 - 品牌色以 `@theme` 定义色阶（`brand-50`…`brand-900`），语义色直接复用 Element Plus CSS 变量（`var(--el-color-*)`），保证与组件库一致。
 - 暗色主题使用 Element Plus dark css-vars + `html.dark`，由 `store/theme.js` 持久化到 localStorage，支持浅色/深色/跟随系统。
 
-## Alternatives
+## 备选方案
 
 ### 纯 scoped CSS + CSS 变量
 
@@ -42,15 +42,15 @@ Accepted
 - 优点：视觉统一。
 - 缺点：改动面极大，风险与成本远超本次优化目标。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - 布局与响应式以工具类表达，样板代码显著减少。
 - 主题 token 集中，色值与 Element Plus 变量对齐，暗色主题低成本接入。
 - 与 Vite 8 兼容（`@tailwindcss/vite@4.3` peer 支持 Vite 8），无需 PostCSS 额外配置。
 
-### Negative
+### 负面
 
 - 新增构建依赖，`package-lock.json` 变动，`npm ci` 与 Docker 构建需同步。
 - 依赖层序的隐式约定：Element Plus 升级若改变 CSS 分层策略，需重新核对。

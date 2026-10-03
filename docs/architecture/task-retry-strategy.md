@@ -101,7 +101,7 @@ Agent 网络重试 ≤ max_retries
 └────────────────────────────────────┘
 ```
 
-### 第一层：Server Task Retry
+### 第一层：服务端任务重试
 
 - 新建下一次任务尝试（新 execution 行）。
 - 控制任务级 `max_attempts`。
@@ -121,7 +121,7 @@ task:
     max: 60s
 ```
 
-### 第二层：Agent Request Retry
+### 第二层：Agent 请求重试
 
 - 处理单次 HTTP 请求的瞬时失败。
 - 使用短退避 + 随机抖动。
@@ -141,7 +141,7 @@ agent_request:
     jitter: true
 ```
 
-### 第三层：Actual Task Execution
+### 第三层：实际任务执行
 
 - 执行受控动作，例如 `STATUS`、`START`、`STOP`、`RESTART`、`LOGS`。
 - 返回明确结果、退出码与错误分类。
@@ -314,7 +314,7 @@ ops_agent_request_duration_seconds
 
 ## 13. 状态模型
 
-### Task 状态（聚合，由 `_aggregate_task_status` 派生）
+### 任务状态（聚合，由 `_aggregate_task_status` 派生）
 
 ```text
 CREATED（待二次确认）
@@ -333,7 +333,7 @@ RUNNING
 
 最终不可恢复状态：`SUCCESS`、`FAILED`、`TIMEOUT`、`CANCELLED`、`DEAD`。
 
-### Execution（attempt）状态
+### 执行（attempt）状态
 
 ```text
 PENDING

@@ -1,14 +1,14 @@
 # ADR-002: Agent 采用主动上报模型
 
-## Status
+## 状态
 
 Accepted
 
-## Context
+## 背景
 
 被监控服务器可能位于 NAT 或防火墙环境中，Backend 无法稳定地主动访问 Agent。需要选择 Agent 与 Backend 的通信模型，并处理离线与重试。
 
-## Decision
+## 决策
 
 Agent **主动**向 Backend 上报与轮询：
 
@@ -18,9 +18,9 @@ Agent **主动**向 Backend 上报与轮询：
 
 网络失败采用指数退避重试；进程异常由 systemd `Restart=always` 拉起。
 
-## Alternatives
+## 备选方案
 
-### Backend 主动轮询
+### 后端主动轮询
 
 - 优点：Backend 统一控制采集周期；Agent 实现简单。
 - 缺点：对 NAT/防火墙不友好；Backend 需维护大量连接与超时。
@@ -30,15 +30,15 @@ Agent **主动**向 Backend 上报与轮询：
 - 优点：双向、实时性好。
 - 缺点：连接维护与重连复杂；网络环境要求高。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - Agent 对网络环境要求低，仅需出站访问。
 - Backend 无需维护到每台服务器的连接。
 - 易于扩展到多服务器。
 
-### Negative
+### 负面
 
 - Agent 需实现重试与离线处理。
 - Backend 需处理重复上报与时间归一化。

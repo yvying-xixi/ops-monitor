@@ -12,7 +12,7 @@
 
 1. **以当前代码为事实来源**：每项结论均给出文件/行号证据，不按“计划中的设计”臆测。
 2. **区分已完成与未完成**：避免把已实现能力列为待办，浪费排期。
-3. **信息不足标注 `TODO`**：无法从代码确认的内容不进行推测性补全。
+3. **信息不足标注 `待办`**：无法从代码确认的内容不进行推测性补全。
 4. **中文正文、英文文件名**：遵循 `docs/README.md` 的文档规则。
 5. **小步提交，单一职责**：每个 Commit 只解决一个问题。
 
@@ -69,7 +69,7 @@
 | P2-9 | 无 OpenTelemetry | 全仓无 otel 依赖 |
 | P2-10 | Agent 请求无签名 / 防重放 / 限流 | 仅 Bearer Token（ADR-003）；无 `timestamp` / `request_id` / HMAC 签名。且后端只存 token 哈希，无法用 token 验签（见 §5 P2-10） |
 | P2-11 | 容器无资源限制 | `deploy/docker/compose.yml` 有 healthcheck / restart，无 `deploy.resources` / `mem_limit` / `cpus` |
-| P2-12 | 备份与恢复未确认自动化 | 已有文档 `operations/backup.md`、`operations/recovery.md`；是否脚本化并演练需核对（TODO） |
+| P2-12 | 备份与恢复未确认自动化 | 已有文档 `operations/backup.md`、`operations/recovery.md`；是否脚本化并演练需核对（待办） |
 | P2-13 | 无 Server Discovery | 无网络扫描 / 批量注册实现 |
 | P2-14 | 无高可用 / 多实例 | 当前为单实例部署；任务领取未做跨实例互斥；Scheduler 每实例各自运行 |
 | P2-15 | 无性能压测 | 无 Locust / k6 / pytest-benchmark 基线 |
@@ -212,7 +212,7 @@ Phase 4（高级能力，后续）
 - **做法**：确认是否已脚本化；补充定时备份与恢复演练清单。
 - **验收**：定期备份产出并在独立环境成功恢复；数据完整性验证通过。
 
-### P2-13：Server Discovery — 只读发现已完成（远程安装不采用）
+### P2-13：服务器发现 — 只读发现已完成（远程安装不采用）
 
 - **目标**：CIDR 扫描 → 探测 → 安装 Agent → 注册上线。
 - **备注**：涉及网络扫描与凭据管理，高风险，需单独安全设计，排在 Phase 4。

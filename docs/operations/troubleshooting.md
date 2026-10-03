@@ -1,10 +1,10 @@
 # 故障排查
 
-## Scope
+## 范围
 
 覆盖平台（Backend/数据库/前端/部署）与 Agent 的常见故障排查。
 
-## Quick Diagnosis
+## 快速诊断
 
 | 检查 | 命令 |
 | --- | --- |
@@ -14,7 +14,7 @@
 | Agent 状态 | `systemctl status server-agent --no-pager` |
 | Agent 日志 | `journalctl -u server-agent -f` |
 
-## Backend Issues
+## 后端问题
 
 | 现象 | 排查/处理 |
 | --- | --- |
@@ -23,7 +23,7 @@
 | 接口 502/503（冷启动） | 后端尚未就绪时 Nginx 返回 `50300`（服务暂未就绪）；等待 backend healthy，或 `docker compose logs backend` 确认是否崩溃重启（种子初始化已带 DB 退避重试） |
 | 接口 500 | 查看后端日志与 `sys_operation_log` 的 `error_message` |
 
-## Database Issues
+## 数据库问题
 
 | 现象 | 排查/处理 |
 | --- | --- |
@@ -31,7 +31,7 @@
 | 连接被拒 | 确认 mysql healthy 且 `DB_PASSWORD` 与 config 一致 |
 | 数据丢失 | 确认 `DATA_VOLUME_DIR` 未被清空（见 [backup.md](backup.md)） |
 
-## Frontend Issues
+## 前端问题
 
 | 现象 | 排查/处理 |
 | --- | --- |
@@ -41,7 +41,7 @@
 | 接入向导“复制”无反应 | 非 HTTPS/`localhost` 访问时浏览器禁用 Clipboard API，现已自动降级 `execCommand`；仍失败可手动选择文本复制 |
 | 用户管理报 `query.status ... integer` | 清空过滤不应发送空 `status`；确认前端为最新构建（请求层会剔除空查询参数） |
 
-## Agent Issues
+## Agent 问题
 
 | 现象 | 排查/处理 |
 | --- | --- |
@@ -54,7 +54,7 @@
 | 服务状态 UNKNOWN / 控制失败 | 目标机无 systemd/服务或权限不足（`systemctl is-active <svc>` 自查） |
 | 状态一直 OFFLINE | 检查服务端地址可达、心跳周期、`/api/v1/health` |
 
-## Deployment Issues
+## 部署问题
 
 | 现象 | 排查/处理 |
 | --- | --- |
@@ -63,22 +63,22 @@
 | 健康检查超时 | 查看 backend 日志；确认 mysql/redis 就绪 |
 | 外网无法访问 | 检查防火墙/安全组与 `HOSTNAME` 配置；公网建议 HTTPS |
 
-## Logs and Diagnostics
+## 日志与诊断
 
 - 应用日志：backend stdout（`docker compose logs`）。
 - 审计日志：`sys_operation_log`、`sys_login_log`。
 - 任务日志：`ops_task_log`。
 - Agent 日志：`journalctl -u server-agent` 或 `log.file`。
 
-## Common Errors
+## 常见错误
 
 见 [reference/error-codes.md](../reference/error-codes.md)。
 
-## Recovery Guidance
+## 恢复指引
 
 - 数据恢复见 [recovery.md](recovery.md)。
 - 服务不可用时的重建见 [deployment.md](deployment.md)。
 
-## TODO
+## 待办
 
-> **TODO**: 补充故障现象—根因—处置的完整矩阵（随实际运行积累）。
+> **待办**: 补充故障现象—根因—处置的完整矩阵（随实际运行积累）。

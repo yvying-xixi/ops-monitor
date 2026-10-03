@@ -1,10 +1,10 @@
 # ADR-007: 新增 Go 版 Agent（与 Python 双运行时并存）
 
-## Status
+## 状态
 
 Accepted
 
-## Context
+## 背景
 
 Agent 部署在被监控 Linux 服务器上，此前为 Python 实现，需要目标机安装 Python 3.11+ 并创建 venv。这带来若干限制：
 
@@ -14,7 +14,7 @@ Agent 部署在被监控 Linux 服务器上，此前为 Python 实现，需要�
 
 为降低部署门槛并提升分发效率，决定引入 Go 版 Agent。Go 可编译为无外部依赖的静态单二进制，交叉编译方便、启动快、资源占用低。
 
-## Decision
+## 决策
 
 新增 `agent-go/`，与现有 `agent/`（Python）**双运行时并存**：
 
@@ -25,7 +25,7 @@ Agent 部署在被监控 Linux 服务器上，此前为 Python 实现，需要�
 - Go 二进制由 `deploy/build-agent-go.sh` 预构建到 `agent-go/dist/`（宿主无 Go 时用 `golang` 容器），随镜像/部署分发；发布流程亦产出 GitHub Release 二进制。
 - 前端接入向导默认 Python，可选 Go。
 
-## Alternatives
+## 备选方案
 
 ### 完全用 Go 替换 Python
 
@@ -42,15 +42,15 @@ Agent 部署在被监控 Linux 服务器上，此前为 Python 实现，需要�
 - 优点：平台零改动。
 - 缺点：无法通过平台向导一键安装，用户体验割裂。
 
-## Consequences
+## 影响
 
-### Positive
+### 正面
 
 - Go 单二进制免运行时，目标机无需 Python 与 pip，离线可部署。
 - 交叉编译与静态链接便于多架构分发（amd64/arm64）。
 - 协议与配置 schema 复用，平台与前端无需为两者分别适配。
 
-### Negative
+### 负面
 
 - 需长期维护两套实现，协议变更须同步两处（以协议文档为契约）。
 - 两实现的采集细节可能存在细微差异（如服务状态映射、磁盘分区语义），需以测试与文档约束。

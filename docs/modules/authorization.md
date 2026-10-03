@@ -33,7 +33,7 @@ erDiagram
   - 告警确认/恢复、任务操作：`SYSTEM_ADMIN`/`OPS_ENGINEER`
   - 监控查询：登录用户
 
-## 用户与角色管理 API
+## 用户与角色管理接口
 
 | Method | Endpoint | 说明 | 权限 |
 | --- | --- | --- | --- |
@@ -56,6 +56,6 @@ erDiagram
 | 40300 | 403 | 无权限 |
 | 40301 | 403 | 服务不允许受控操作 |
 
-## TODO
+## 待办
 
-> **TODO**: 补充权限码（`sys_permission`）与接口的完整映射清单。
+> **待办**: 补充权限码（`sys_permission`）与接口的完整映射清单。

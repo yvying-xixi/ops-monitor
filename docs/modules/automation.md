@@ -75,7 +75,7 @@ stateDiagram-v2
 - 创建即 CREATED，确认后 PENDING；调度器每 30s 用 croniter 计算到期，触发时生成执行批次。
 - **当前为单次触发**：执行完成后任务结束；周期性多轮执行需后续任务行级 schema 迭代（`ops_task_execution` 唯一约束为 `(task_id, target_id, attempt)`）。
 
-## 任务 API
+## 任务接口
 
 | Method | Endpoint | 说明 | 权限 |
 | --- | --- | --- | --- |

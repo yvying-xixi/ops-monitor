@@ -24,8 +24,8 @@ flowchart LR
 - [ ] 提交信息规范
 - [ ] 测试通过（backend/agent/frontend）
 - [ ] 相关文档已更新
-- [ ] 无 `TODO` 遗漏（如涉及未确认内容）
+- [ ] 无 `待办` 遗漏（如涉及未确认内容）
 
-## TODO
+## 待办
 
 - [x] PR 模板与 Reviewer 检查清单：见 [PR 模板](../../.github/pull_request_template.md) 与 [CONTRIBUTING](../../CONTRIBUTING.md#pull-request)。
