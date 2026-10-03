@@ -147,7 +147,6 @@ Phase 4（高级能力，后续）
 - **做法**：引入 JSON formatter + 基于 `contextvars` 的 filter，自动注入 `request_id`、`user_id`（`trace_id` 预留）；统一字段 `timestamp/level/service/request_id/trace_id/user_id/agent_id/action/message/error`。
 - **验收**：单条日志为 JSON；同一请求的日志带相同 `request_id`；新增单测。
 - **涉及**：`backend/app/core/logging.py`（新增）、`middleware/request_context.py`、`main.py`。
-- **ADR**：`010-structured-logging`（可选）。
 
 ### P1-5：任务重试、退避与幂等 — 已完成
 
@@ -198,7 +197,7 @@ Phase 4（高级能力，后续）
 - **做法**：注册 / 安装时下发签名密钥；请求头增加 `X-Agent-ID`、`X-Timestamp`、`X-Request-ID`、`X-Signature`；签名 `HMAC-SHA256(secret, method+path+timestamp+request_id+body)`；后端校验顺序 Token → Timestamp → Request ID → Signature，并配合限流。
 - **验收**：篡改或重放请求被拒绝；重复 `request_id` 被拒。
 - **涉及**：`server_service.py::generate_agent_token`、`/install.sh`、`api/v1/agent.py`、`services/agent_service.py`、双 Agent 配置 schema。
-- **ADR**：`011-agent-request-signing`。
+- **ADR**：`010-agent-request-signing`（设计已产出，待实现）。
 
 ### P2-11：容器资源限制 — 已完成
 

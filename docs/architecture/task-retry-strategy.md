@@ -417,7 +417,7 @@ RUNNING
 docs/decisions/
 ├── 008-database-migration-strategy.md
 ├── 009-task-retry-and-idempotency.md
-└── 010-structured-logging.md
+└── 010-agent-request-signing.md
 ```
 
 优先记录决策：

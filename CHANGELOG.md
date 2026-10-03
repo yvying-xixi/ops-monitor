@@ -9,6 +9,7 @@
 - 平台自有 Prometheus 指标端点 `GET /metrics`（`ops_agent_status`、`ops_server_total`、`ops_alert_active`、`ops_task_status`），支持 `METRICS_ENABLED` / `METRICS_TOKEN` 控制。
 - 后端 OpenTelemetry 链路追踪（`OTEL_ENABLED` / `OTEL_SERVICE_NAME` / `OTEL_EXPORTER_OTLP_ENDPOINT`）：FastAPI / SQLAlchemy / Redis 自动埋点，`trace_id` 注入结构化日志。
 - 部署容器资源上限（CPU/内存）与 json-file 日志轮转（`compose.yml`）。
+- 新增 [ADR-010](docs/decisions/010-agent-request-signing.md)：Agent 请求签名（Ed25519）与防重放设计（待实现）。
 
 ### Changed
 
