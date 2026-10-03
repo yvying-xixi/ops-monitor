@@ -178,7 +178,7 @@ task:
 
 预算不足则不再新建 attempt，进入终态。
 
-> **TODO**：`DEADLINE_EXCEEDED` 与 `TIMEOUT` 是否拆分为独立状态，在 ADR-009 中统一定义。
+> 已定：不拆分独立状态。`TIMEOUT` 为超时终态且当前不重试；整体 deadline 耗尽时不再创建新尝试，执行进入 `DEAD`（见 [ADR-009](../decisions/009-task-retry-and-idempotency.md)）。
 
 ## 8. 数据模型
 
@@ -246,7 +246,7 @@ RESOURCE_EXHAUSTED
 
 例如 `restart_service` 超时后不应立刻重复执行，应先查询服务实际状态再决定。
 
-> **TODO**：`error_type` 的完整枚举与到 `ErrorCode` 的映射表在实现阶段补充，并由 `TaskResultRequest`（`schemas/agent.py:94`）扩展可选 `error_type`，双 Agent 上报，服务端按 `error_message` 兜底分类。
+> 已实现：`TaskResultRequest` 扩展可选 `error_type`，Python（`agent/errors.py`）与 Go（`agent-go/internal/worker/errors.go`）executor 侧分类上报；服务端 `app/core/retry.py` 在缺失时按 `error_message` 兜底分类。
 
 ## 10. 幂等性
 
@@ -348,7 +348,7 @@ RUNNING
         PENDING（新 attempt）
 ```
 
-> **TODO**：`FAILED`、`TIMEOUT`、`DEAD`、`DEADLINE_EXCEEDED` 的最终语义与流转关系在 ADR-009 中明确。
+> 已明确：见 [ADR-009](../decisions/009-task-retry-and-idempotency.md) 的「状态语义与开放项」。
 
 ## 14. 实施顺序
 

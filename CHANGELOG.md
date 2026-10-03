@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- 任务执行保留策略：`TASK_RETENTION_DAYS`（默认 30 天）与每日清理终态执行记录及日志。
+
+### Changed
+
+- Agent（Python / Go）在执行失败时上报标准化 `error_type`，服务端按分类决策重试。
+- 前端创建任务时携带 `Idempotency-Key` 请求头，端到端防重复创建。
+- 补充 [ADR-009](docs/decisions/009-task-retry-and-idempotency.md) 的状态语义（`TIMEOUT` / `DEAD` / `DEADLINE_EXCEEDED` / CRON × 重试）。
+
+### Fixed
+
+- 修复 `scan_timeouts` 使用单一任务超时批量更新所有 RUNNING 执行的问题，改为按**各自任务**的 `timeout_seconds` 判定。
+
 ## [0.3.0] - 2026-10-03
 
 ### Added
