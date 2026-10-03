@@ -30,6 +30,19 @@ def _scan_task_timeouts() -> None:
         db.close()
 
 
+def _dispatch_task_retries() -> None:
+    """将到期的 RETRYING 执行派发为下一次尝试。"""
+    db = SessionLocal()
+    try:
+        created = TaskService(db).dispatch_retries()
+        if created:
+            logger.info("任务重试派发：新增 %s 个尝试", created)
+    except Exception:
+        logger.exception("任务重试派发失败")
+    finally:
+        db.close()
+
+
 def _fire_due_cron_tasks() -> None:
     """触发到期的 CRON 任务。"""
     db = SessionLocal()
@@ -122,6 +135,14 @@ def setup_scheduler() -> None:
         "interval",
         seconds=30,
         id="scan_task_timeouts",
+        max_instances=1,
+        coalesce=True,
+    )
+    _scheduler.add_job(
+        _dispatch_task_retries,
+        "interval",
+        seconds=5,
+        id="dispatch_task_retries",
         max_instances=1,
         coalesce=True,
     )

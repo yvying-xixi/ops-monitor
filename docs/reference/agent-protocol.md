@@ -110,10 +110,12 @@ sequenceDiagram
 `POST /api/v1/agent/task/result`
 
 ```json
-{ "execution_id": 1, "status": "SUCCESS", "exit_code": 0, "result_text": "active", "error_message": null, "logs": "..." }
+{ "execution_id": 1, "status": "SUCCESS", "exit_code": 0, "result_text": "active", "error_message": null, "error_type": null, "logs": "..." }
 ```
 
-服务端更新执行状态、写 `ops_task_log`，并聚合任务状态。
+- `error_type` 可选，用于服务端重试决策（如 `NETWORK_ERROR`、`AGENT_TIMEOUT`）；缺省时服务端按 `error_message` 兜底分类。
+- 服务端更新执行状态、写 `ops_task_log`，并聚合任务状态；可重试失败进入 `RETRYING`。
+- 幂等：对已结束的 `execution_id` 重复回传返回既有结果（HTTP 200），不重复执行。
 
 ## Package and Installer
 

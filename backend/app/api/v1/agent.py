@@ -147,6 +147,7 @@ def report_task_result(
         exit_code=data.exit_code,
         result_text=data.result_text,
         error_message=data.error_message,
+        error_type=data.error_type,
         logs=data.logs,
     )
     return success(message="已记录")

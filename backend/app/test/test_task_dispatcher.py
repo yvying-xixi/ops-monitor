@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from conftest import create_user_with_password
 
@@ -29,7 +29,7 @@ def _creator_id(db):
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _make_server(db, code="web-01", service="nginx"):
@@ -104,7 +104,7 @@ def test_batch_partial_failure_aggregates_failed(client, db, admin_headers):
     assert detail["task"].status == "FAILED"
 
 
-def test_report_duplicate_rejected(client, db, admin_headers):
+def test_report_duplicate_idempotent(client, db, admin_headers):
     server = _make_server(db)
     _make_task(db, _creator_id(db), [server.id])
     token = ServerService(db).generate_agent_token(server.id).token
@@ -112,12 +112,14 @@ def test_report_duplicate_rejected(client, db, admin_headers):
     exec_id = client.get("/api/v1/agent/tasks/pending", headers=ah).json()["data"][0]["execution_id"]
     payload = {"execution_id": exec_id, "status": "SUCCESS"}
     assert client.post("/api/v1/agent/task/result", headers=ah, json=payload).status_code == 200
-    assert client.post("/api/v1/agent/task/result", headers=ah, json=payload).status_code == 400
+    # 幂等：重复回传返回 200，状态不重复变更
+    assert client.post("/api/v1/agent/task/result", headers=ah, json=payload).status_code == 200
+    db.expire_all()
+    assert TaskExecutionRepository(db).get(exec_id).status == "SUCCESS"
 
 
 def test_timeout_scan(db):
     server = _make_server(db)
-    creator_id = 1
     task = _make_task(db, _creator_id(db), [server.id])
     # 手动领取并回拨开始时间
     task.status = "RUNNING"
@@ -158,3 +160,94 @@ def test_cron_task_fire(db):
     assert len(detail["executions"]) == 1
     assert detail["executions"][0]["status"] == "PENDING"
     assert detail["task"].status == "RUNNING"
+
+
+def test_create_task_idempotency_key(db):
+    server = _make_server(db)
+    creator = _creator_id(db)
+    payload = TaskCreate(
+        task_name="idem-task",
+        task_type="SERVICE_CHECK",
+        service_name="nginx",
+        server_ids=[server.id],
+    )
+    service = TaskService(db)
+    first = service.create_task(payload, creator_id=creator, idempotency_key="key-1")
+    second = service.create_task(payload, creator_id=creator, idempotency_key="key-1")
+    assert first.id == second.id
+    assert len(TaskExecutionRepository(db).list_by_task(first.id)) == 1
+
+
+def test_retryable_failure_schedules_next_attempt(db):
+    server = _make_server(db)
+    task = _make_task(db, _creator_id(db), [server.id])
+    execution = TaskExecutionRepository(db).list_by_task(task.id)[0]
+    execution.status = "RUNNING"
+    db.flush()
+
+    TaskService(db).report_result(
+        server,
+        execution_id=execution.id,
+        status="FAILED",
+        error_message="connection refused",
+        error_type="NETWORK_ERROR",
+    )
+    db.expire_all()
+    refreshed = TaskExecutionRepository(db).get(execution.id)
+    assert refreshed.status == "RETRYING"
+    assert refreshed.next_retry_at is not None
+    assert TaskService(db).get_task_entity(task.id).status == "RETRYING"
+
+    # 到期后派发下一次尝试（新 execution，attempt=2）
+    refreshed.next_retry_at = _utcnow() - timedelta(seconds=1)
+    db.flush()
+    assert TaskService(db).dispatch_retries() == 1
+    db.expire_all()
+    attempts = sorted(e.attempt for e in TaskExecutionRepository(db).list_by_task(task.id))
+    assert attempts == [1, 2]
+    assert TaskService(db).get_task_entity(task.id).status == "RUNNING"
+
+
+def test_non_retryable_failure_is_terminal(db):
+    server = _make_server(db)
+    task = _make_task(db, _creator_id(db), [server.id])
+    execution = TaskExecutionRepository(db).list_by_task(task.id)[0]
+    execution.status = "RUNNING"
+    db.flush()
+
+    TaskService(db).report_result(
+        server,
+        execution_id=execution.id,
+        status="FAILED",
+        error_message="permission denied",
+        error_type="PERMISSION_DENIED",
+    )
+    db.expire_all()
+    assert TaskExecutionRepository(db).get(execution.id).status == "FAILED"
+    assert TaskService(db).get_task_entity(task.id).status == "FAILED"
+
+
+def test_retry_exhausted_becomes_dead(db):
+    server = _make_server(db)
+    payload = TaskCreate(
+        task_name="dead-task",
+        task_type="SERVICE_CHECK",
+        service_name="nginx",
+        server_ids=[server.id],
+        max_attempts=1,
+    )
+    task = TaskService(db).create_task(payload, creator_id=_creator_id(db))
+    execution = TaskExecutionRepository(db).list_by_task(task.id)[0]
+    execution.status = "RUNNING"
+    db.flush()
+
+    TaskService(db).report_result(
+        server,
+        execution_id=execution.id,
+        status="FAILED",
+        error_message="connection reset",
+        error_type="NETWORK_ERROR",
+    )
+    db.expire_all()
+    assert TaskExecutionRepository(db).get(execution.id).status == "DEAD"
+    assert TaskService(db).get_task_entity(task.id).status == "DEAD"

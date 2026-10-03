@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 class OpsTask(Base):
     __tablename__ = "ops_task"
     __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uk_ops_task_idempotency"),
         Index("fk_ops_task_confirmed_by", "confirmed_by"),
         Index("idx_ops_task_creator_time", "created_by", "created_at"),
         Index("idx_ops_task_schedule", "schedule_type", "status"),
@@ -49,6 +50,14 @@ class OpsTask(Base):
     timeout_seconds: Mapped[int] = mapped_column(
         INTEGER(unsigned=True), default=300, server_default=text("300"), comment="超时时间，单位：秒"
     )
+    max_attempts: Mapped[int] = mapped_column(
+        INTEGER(unsigned=True), default=3, server_default=text("3"), comment="最大尝试次数"
+    )
+    attempt: Mapped[int] = mapped_column(
+        INTEGER(unsigned=True), default=0, server_default=text("0"), comment="当前/最近尝试编号"
+    )
+    deadline_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=3), comment="任务整体截止时间")
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), comment="幂等键，防止重复创建")
     confirmation_required: Mapped[int] = mapped_column(
         TINYINT, default=0, server_default=text("0"), comment="是否需要二次确认"
     )
@@ -110,10 +119,11 @@ class OpsTaskTarget(Base):
 class OpsTaskExecution(Base):
     __tablename__ = "ops_task_execution"
     __table_args__ = (
-        UniqueConstraint("task_id", "target_id", name="uk_ops_task_execution_target"),
+        UniqueConstraint("task_id", "target_id", "attempt", name="uk_ops_task_execution_target"),
         Index("fk_ops_task_execution_target", "target_id"),
         Index("idx_ops_task_execution_server_time", "server_id", "created_at"),
         Index("idx_ops_task_execution_task_status", "task_id", "status"),
+        Index("idx_ops_task_execution_retry", "status", "next_retry_at"),
         {"comment": "任务执行记录表"},
     )
 
@@ -137,8 +147,13 @@ class OpsTaskExecution(Base):
         String(24),
         default="PENDING",
         server_default=text("'PENDING'"),
-        comment="PENDING/RUNNING/SUCCESS/FAILED/TIMEOUT/CANCELLED",
+        comment="PENDING/RUNNING/SUCCESS/FAILED/TIMEOUT/CANCELLED/RETRYING/DEAD",
     )
+    attempt: Mapped[int] = mapped_column(
+        INTEGER(unsigned=True), default=1, server_default=text("1"), comment="尝试编号"
+    )
+    next_retry_at: Mapped[datetime | None] = mapped_column(DATETIME(fsp=3), comment="下次重试时间")
+    error_type: Mapped[str | None] = mapped_column(String(32), comment="标准化错误类型")
     exit_code: Mapped[int | None] = mapped_column(INTEGER, comment="进程退出码")
     result_text: Mapped[str | None] = mapped_column(MEDIUMTEXT, comment="执行结果")
     error_message: Mapped[str | None] = mapped_column(Text, comment="错误信息")

@@ -23,6 +23,7 @@ class TaskCreate(BaseModel):
     schedule_type: str = Field("ONCE", description="ONCE/CRON")
     cron_expression: str | None = Field(None, max_length=128, description="Cron 表达式")
     timeout_seconds: int = Field(60, ge=10, le=3600, description="执行超时（秒）")
+    max_attempts: int = Field(3, ge=1, le=10, description="最大尝试次数")
     confirmation_required: bool | None = Field(None, description="是否需二次确认，默认高风险操作需要")
 
 
@@ -40,6 +41,8 @@ class TaskOut(BaseModel):
     cron_expression: str | None
     status: str
     timeout_seconds: int
+    max_attempts: int
+    attempt: int
     confirmation_required: int
     confirmed: bool
     created_at: datetime
@@ -48,7 +51,7 @@ class TaskOut(BaseModel):
     finished_at: datetime | None
 
     @classmethod
-    def from_task(cls, task) -> "TaskOut":
+    def from_task(cls, task) -> TaskOut:
         return cls(
             id=task.id,
             task_name=task.task_name,
@@ -59,6 +62,8 @@ class TaskOut(BaseModel):
             cron_expression=task.cron_expression,
             status=task.status,
             timeout_seconds=task.timeout_seconds,
+            max_attempts=task.max_attempts,
+            attempt=task.attempt,
             confirmation_required=task.confirmation_required,
             confirmed=task.confirmed_by is not None,
             created_at=task.created_at,

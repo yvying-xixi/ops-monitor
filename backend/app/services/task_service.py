@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timedelta
 
 from croniter import croniter
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.retry import UNKNOWN_ERROR_TYPE, backoff_seconds, classify_error, is_retryable
 from app.exceptions import AppException, ErrorCode
 from app.models import OpsServer, OpsTask, OpsTaskExecution
 from app.repositories import ServerRepository
@@ -31,7 +32,7 @@ TASK_TYPE_ACTION = {
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class TaskService:
@@ -48,8 +49,18 @@ class TaskService:
 
     # ---------- 创建 / 确认 / 列表 ----------
 
-    def create_task(self, data: TaskCreate, *, creator_id: int) -> OpsTask:
-        """创建任务：校验服务白名单与操作类型，创建 targets 与 executions。"""
+    def create_task(
+        self, data: TaskCreate, *, creator_id: int, idempotency_key: str | None = None
+    ) -> OpsTask:
+        """创建任务：校验服务白名单与操作类型，创建 targets 与 executions。
+
+        携带 `idempotency_key` 时，若已存在同键任务则直接返回该任务，避免网络重试造成重复创建。
+        """
+        if idempotency_key:
+            existing = self.task_repo.get_by_idempotency_key(idempotency_key)
+            if existing is not None:
+                return existing
+
         action = self._normalize_action(data)
         servers = self._validate_servers(data.server_ids)
         self._validate_service_whitelist(servers, data.service_name, action)
@@ -73,6 +84,10 @@ class TaskService:
             status=status,
             created_by=creator_id,
             timeout_seconds=data.timeout_seconds,
+            max_attempts=data.max_attempts,
+            attempt=0,
+            deadline_at=_utcnow() + timedelta(seconds=data.timeout_seconds * data.max_attempts),
+            idempotency_key=idempotency_key,
             confirmation_required=1 if confirm_required else 0,
         )
         self.task_repo.create(task)
@@ -146,7 +161,7 @@ class TaskService:
     def cancel_task(self, task_id: int) -> OpsTask:
         """取消任务：未完成的执行置 CANCELLED。"""
         task = self.get_task_entity(task_id)
-        if task.status in ("SUCCESS", "FAILED", "CANCELLED", "TIMEOUT"):
+        if task.status in ("SUCCESS", "FAILED", "CANCELLED", "TIMEOUT", "DEAD"):
             raise AppException(ErrorCode.BAD_REQUEST, "任务已结束，无法取消", http_status=400)
         for execution in self.execution_repo.list_by_task(task.id):
             if execution.status == "PENDING":
@@ -187,33 +202,59 @@ class TaskService:
         exit_code: int | None = None,
         result_text: str | None = None,
         error_message: str | None = None,
+        error_type: str | None = None,
         logs: str | None = None,
     ) -> OpsTaskExecution:
-        """Agent 回传执行结果，更新执行与任务状态，记录日志。"""
+        """Agent 回传执行结果，更新执行与任务状态，记录日志。
+
+        - 已结束的执行重复回传时返回既有结果（幂等），不再报 400。
+        - 失败时按错误分类决定是否进入 RETRYING，或终态 DEAD / FAILED。
+        """
         execution = self.execution_repo.get(execution_id)
         if execution is None or execution.server_id != server.id:
             raise AppException(ErrorCode.TASK_EXECUTION_NOT_FOUND, "执行记录不存在", http_status=404)
-        if execution.status not in ("PENDING", "RUNNING"):
-            raise AppException(ErrorCode.BAD_REQUEST, "执行已结束，不可重复回传", http_status=400)
+        if execution.status in ("SUCCESS", "FAILED", "TIMEOUT", "CANCELLED", "DEAD"):
+            return execution
+
+        task = self.get_task_entity(execution.task_id)
 
         if status == "SUCCESS":
             self.execution_repo.finish(
                 execution, status="SUCCESS", exit_code=exit_code, result_text=result_text
             )
-            self.log_repo.record(
-                execution.id,
-                logs or result_text or "执行成功",
-                "INFO",
-            )
+            self.log_repo.record(execution.id, logs or result_text or "执行成功", "INFO")
         else:
-            self.execution_repo.finish(
-                execution, status="FAILED", exit_code=exit_code, error_message=error_message
-            )
-            self.log_repo.record(
-                execution.id, error_message or "执行失败", "ERROR"
-            )
+            failed_type = classify_error(error_type, error_message)
+            if is_retryable(error_type, error_message) and self._can_retry(task, execution):
+                next_retry_at = _utcnow() + timedelta(seconds=backoff_seconds(execution.attempt))
+                self.execution_repo.mark_retrying(
+                    execution,
+                    error_type=failed_type,
+                    error_message=error_message,
+                    next_retry_at=next_retry_at,
+                )
+                self.log_repo.record(
+                    execution.id,
+                    f"第 {execution.attempt} 次执行失败（{failed_type}），计划 {next_retry_at.isoformat()} 重试",
+                    "ERROR",
+                )
+            elif is_retryable(error_type, error_message):
+                self.execution_repo.mark_dead(
+                    execution,
+                    error_type=failed_type,
+                    error_message=error_message or "重试预算耗尽",
+                )
+                self.log_repo.record(execution.id, f"执行失败且不可再重试（{failed_type}）", "ERROR")
+            else:
+                self.execution_repo.finish(
+                    execution,
+                    status="FAILED",
+                    exit_code=exit_code,
+                    error_message=error_message,
+                    error_type=failed_type,
+                )
+                self.log_repo.record(execution.id, error_message or "执行失败", "ERROR")
 
-        task = self.get_task_entity(execution.task_id)
         self._aggregate_task_status(task)
         self.db.commit()
         return execution
@@ -231,6 +272,71 @@ class TaskService:
                 total += updated
         self.db.commit()
         return total
+
+    def dispatch_retries(self, limit: int = 50) -> int:
+        """将到期的 RETRYING 执行转为下一次 attempt（新执行记录）。
+
+        Returns:
+            本轮创建的新尝试数量。
+        """
+        now = _utcnow()
+        due = self.execution_repo.list_due_retries(now, limit)
+        created = 0
+        for execution in due:
+            task = self.get_task_entity(execution.task_id)
+            # 任务已终止（取消/已完成）时，当前等待中的执行直接归档为 FAILED。
+            if task.status in ("SUCCESS", "FAILED", "CANCELLED", "TIMEOUT", "DEAD"):
+                self.execution_repo.finish(
+                    execution,
+                    status="FAILED",
+                    error_message=execution.error_message,
+                    error_type=execution.error_type,
+                )
+                continue
+
+            if not self._can_retry(task, execution):
+                self.execution_repo.mark_dead(
+                    execution,
+                    error_type=execution.error_type or UNKNOWN_ERROR_TYPE,
+                    error_message=execution.error_message or "重试预算耗尽",
+                )
+                self.log_repo.record(execution.id, "重试预算耗尽，任务终止", "ERROR")
+                self._aggregate_task_status(task)
+                continue
+
+            next_attempt = execution.attempt + 1
+            # 归档当前失败的尝试
+            self.execution_repo.finish(
+                execution,
+                status="FAILED",
+                error_message=execution.error_message,
+                error_type=execution.error_type,
+            )
+            self.execution_repo.create_execution(
+                task_id=task.id,
+                target_id=execution.target_id,
+                server_id=execution.server_id,
+                attempt=next_attempt,
+            )
+            task.attempt = next_attempt
+            target = self.target_repo.get(execution.target_id)
+            if target is not None:
+                target.target_status = "PENDING"
+            self.log_repo.record(execution.id, f"已创建第 {next_attempt} 次尝试", "INFO")
+            self._aggregate_task_status(task)
+            created += 1
+
+        self.db.commit()
+        return created
+
+    @staticmethod
+    def _can_retry(task: OpsTask, execution: OpsTaskExecution) -> bool:
+        """是否仍有重试预算：尝试次数与整体 deadline 均未耗尽。"""
+        if execution.attempt >= task.max_attempts:
+            return False
+        if task.deadline_at is not None and _utcnow() >= task.deadline_at:
+            return False
+        return True
 
     def fire_due_cron(self) -> int:
         """触发到期的 CRON 任务（单次执行批次），返回触发数量。"""
@@ -294,18 +400,37 @@ class TaskService:
                 )
 
     def _aggregate_task_status(self, task: OpsTask) -> None:
+        """按每个 target 的最新 attempt 汇总任务状态。
+
+        重试会产生多条同 target 的执行记录，历史 FAILED 不得覆盖最新结果。
+        """
         executions = self.execution_repo.list_by_task(task.id)
-        statuses = {e.status for e in executions}
-        if any(s in ("PENDING", "RUNNING") for s in statuses):
+        if not executions:
+            task.status = "PENDING"
+            return
+
+        latest: dict[int, OpsTaskExecution] = {}
+        for execution in executions:
+            current = latest.get(execution.target_id)
+            if current is None or execution.attempt > current.attempt:
+                latest[execution.target_id] = execution
+        statuses = {e.status for e in latest.values()}
+
+        if "RETRYING" in statuses:
+            task.status = "RETRYING"
+        elif any(s in ("PENDING", "RUNNING") for s in statuses):
             task.status = "RUNNING"
+        elif "DEAD" in statuses:
+            task.status = "DEAD"
         elif any(s in ("FAILED", "TIMEOUT") for s in statuses):
             task.status = "FAILED"
-        elif statuses and all(s == "SUCCESS" for s in statuses):
+        elif all(s == "SUCCESS" for s in statuses):
             task.status = "SUCCESS"
-        elif statuses and all(s == "CANCELLED" for s in statuses):
+        elif all(s == "CANCELLED" for s in statuses):
             task.status = "CANCELLED"
         else:
             task.status = "SUCCESS" if "SUCCESS" in statuses else "FAILED"
-        if task.status in ("SUCCESS", "FAILED", "TIMEOUT", "CANCELLED"):
+
+        if task.status in ("SUCCESS", "FAILED", "TIMEOUT", "CANCELLED", "DEAD"):
             task.finished_at = _utcnow()
         self.db.flush()

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 
 from app.models import OpsTask, OpsTaskExecution, OpsTaskLog, OpsTaskTarget
 from app.repositories.base import BaseRepository
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class TaskRepository(BaseRepository[OpsTask]):
@@ -42,6 +42,12 @@ class TaskRepository(BaseRepository[OpsTask]):
         )
         return list(self.db.scalars(stmt).all())
 
+    def get_by_idempotency_key(self, key: str) -> OpsTask | None:
+        """按幂等键查询任务。"""
+        if not key:
+            return None
+        return self.get_by(idempotency_key=key)
+
 
 class TaskTargetRepository(BaseRepository[OpsTaskTarget]):
     """任务目标仓储。"""
@@ -66,11 +72,38 @@ class TaskExecutionRepository(BaseRepository[OpsTaskExecution]):
         self, task_id: int, targets: list[OpsTaskTarget]
     ) -> list[OpsTaskExecution]:
         executions = [
-            OpsTaskExecution(task_id=task_id, target_id=t.id, server_id=t.server_id)
+            OpsTaskExecution(task_id=task_id, target_id=t.id, server_id=t.server_id, attempt=1)
             for t in targets
         ]
         self.create_many(executions)
         return executions
+
+    def create_execution(
+        self, *, task_id: int, target_id: int, server_id: int, attempt: int
+    ) -> OpsTaskExecution:
+        """为一次新的尝试创建执行记录。"""
+        execution = OpsTaskExecution(
+            task_id=task_id,
+            target_id=target_id,
+            server_id=server_id,
+            attempt=attempt,
+        )
+        self.create(execution)
+        return execution
+
+    def list_due_retries(self, now: datetime, limit: int = 50) -> list[OpsTaskExecution]:
+        """查询到达重试时间、状态为 RETRYING 的执行。"""
+        stmt = (
+            select(OpsTaskExecution)
+            .where(
+                OpsTaskExecution.status == "RETRYING",
+                OpsTaskExecution.next_retry_at.isnot(None),
+                OpsTaskExecution.next_retry_at <= now,
+            )
+            .order_by(OpsTaskExecution.next_retry_at.asc())
+            .limit(limit)
+        )
+        return list(self.db.scalars(stmt).all())
 
     def fetch_pending_by_server(self, server_id: int, limit: int = 10) -> list[OpsTaskExecution]:
         """领取服务器待执行的批次（限定任务已确认且未开始）。"""
@@ -101,11 +134,49 @@ class TaskExecutionRepository(BaseRepository[OpsTaskExecution]):
         exit_code: int | None = None,
         result_text: str | None = None,
         error_message: str | None = None,
+        error_type: str | None = None,
     ) -> OpsTaskExecution:
         execution.status = status
         execution.exit_code = exit_code
         execution.result_text = result_text
         execution.error_message = error_message
+        if error_type is not None:
+            execution.error_type = error_type
+        execution.finished_at = _utcnow()
+        if execution.started_at is not None:
+            execution.duration_ms = int(
+                (execution.finished_at - execution.started_at).total_seconds() * 1000
+            )
+        self.db.flush()
+        return execution
+
+    def mark_retrying(
+        self,
+        execution: OpsTaskExecution,
+        *,
+        error_type: str,
+        error_message: str | None,
+        next_retry_at: datetime,
+    ) -> OpsTaskExecution:
+        """将失败的执行标记为等待重试。"""
+        execution.status = "RETRYING"
+        execution.error_type = error_type
+        execution.error_message = error_message
+        execution.next_retry_at = next_retry_at
+        execution.finished_at = _utcnow()
+        if execution.started_at is not None:
+            execution.duration_ms = int(
+                (execution.finished_at - execution.started_at).total_seconds() * 1000
+            )
+        self.db.flush()
+        return execution
+
+    def mark_dead(self, execution: OpsTaskExecution, *, error_type: str, error_message: str | None) -> OpsTaskExecution:
+        """将重试耗尽 / 不可再重试的执行标记为 DEAD。"""
+        execution.status = "DEAD"
+        execution.error_type = error_type
+        execution.error_message = error_message
+        execution.next_retry_at = None
         execution.finished_at = _utcnow()
         if execution.started_at is not None:
             execution.duration_ms = int(

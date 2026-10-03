@@ -41,14 +41,25 @@ stateDiagram-v2
     [*] --> PENDING: 免确认
     PENDING --> RUNNING: Agent 领取
     RUNNING --> SUCCESS
-    RUNNING --> FAILED
+    RUNNING --> RETRYING: 可重试失败
+    RETRYING --> RUNNING: 调度器派发下一次尝试
+    RETRYING --> DEAD: 重试耗尽 / 超过 deadline
+    RUNNING --> FAILED: 不可重试失败
     RUNNING --> TIMEOUT: 超时扫描 30s
     CREATED --> CANCELLED: 取消
     PENDING --> CANCELLED: 取消
 ```
 
-- `task.status` 由 executions 聚合：任一活跃→RUNNING；任一 FAILED/TIMEOUT→FAILED；全 SUCCESS→SUCCESS。
+- `task.status` 由 executions 聚合：按每个 target 的**最新 attempt** —— 任一 RETRYING→RETRYING；任一活跃→RUNNING；任一 DEAD→DEAD；任一 FAILED/TIMEOUT→FAILED；全 SUCCESS→SUCCESS。
 - 批量任务：每台服务器独立 execution，前端展示独立结果。
+
+### 重试与幂等
+
+- 每次尝试独立成行（`(task_id, target_id, attempt)`），失败尝试进入 `RETRYING`，调度器每 5s 派发到期的下一次尝试。
+- 错误分类见 `app/core/retry.py`：仅网络/Agent 离线/Agent 超时/5xx 等可重试；参数/权限/白名单类错误不重试；未知错误默认不重试。
+- 任务预算：`max_attempts` 与 `deadline_at = created_at + timeout_seconds × max_attempts`。
+- 幂等：创建任务可带 `Idempotency-Key` 请求头；Agent 重复回传同一 `execution_id` 时返回既有结果。
+- 详见 [architecture/task-retry-strategy.md](../architecture/task-retry-strategy.md) 与 [decisions/009-task-retry-and-idempotency.md](../decisions/009-task-retry-and-idempotency.md)。
 
 ### 任务类型
 
@@ -62,7 +73,7 @@ stateDiagram-v2
 
 - `schedule_type=CRON` + `cron_expression`（5 字段）。
 - 创建即 CREATED，确认后 PENDING；调度器每 30s 用 croniter 计算到期，触发时生成执行批次。
-- **当前为单次触发**：执行完成后任务结束；周期性多轮执行需后续任务行级 schema 迭代（`ops_task_target/execution` 存在 `(task_id, target_id)` 唯一约束）。
+- **当前为单次触发**：执行完成后任务结束；周期性多轮执行需后续任务行级 schema 迭代（`ops_task_execution` 唯一约束为 `(task_id, target_id, attempt)`）。
 
 ## 任务 API
 

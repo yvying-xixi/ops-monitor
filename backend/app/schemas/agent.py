@@ -99,4 +99,5 @@ class TaskResultRequest(BaseModel):
     exit_code: int | None = Field(None, description="进程退出码")
     result_text: str | None = Field(None, description="执行结果")
     error_message: str | None = Field(None, description="错误信息")
+    error_type: str | None = Field(None, description="标准化错误类型，用于重试决策")
     logs: str | None = Field(None, description="执行日志")

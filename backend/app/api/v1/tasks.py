@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 from sqlalchemy.orm import Session
 
 from app.api.v1.deps import require_roles
 from app.core.database import get_db
 from app.models import SysUser
-from app.schemas.task import TaskCreate, TaskExecutionOut, TaskOut
+from app.schemas.task import TaskCreate, TaskOut
 from app.services.task_service import TaskService
 from app.utils.response import page, success
 
@@ -35,10 +35,16 @@ def list_tasks(
 def create_task(
     data: TaskCreate,
     current_user: SysUser = Depends(require_roles("SYSTEM_ADMIN", "OPS_ENGINEER")),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key", max_length=128),
     db: Session = Depends(get_db),
 ):
-    """创建运维任务（服务操作/检查/日志）。"""
-    task = TaskService(db).create_task(data, creator_id=current_user.id)
+    """创建运维任务（服务操作/检查/日志）。
+
+    携带 `Idempotency-Key` 请求头时，同键重复请求返回既有任务。
+    """
+    task = TaskService(db).create_task(
+        data, creator_id=current_user.id, idempotency_key=idempotency_key
+    )
     return success(data=TaskOut.from_task(task).model_dump(), message="任务已创建")
 
 
