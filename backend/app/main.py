@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import agent, alerts, auth, dashboard, health, monitor, roles, servers, tasks, users
+from app.api.v1 import agent, alerts, auth, dashboard, health, metrics, monitor, roles, servers, tasks, users
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.scheduler import setup_scheduler, shutdown_scheduler
@@ -59,3 +59,5 @@ app.include_router(monitor.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(agent.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
+# Prometheus 指标暴露在根路径（约定），不参与 /api 网关与统一响应封装
+app.include_router(metrics.router)

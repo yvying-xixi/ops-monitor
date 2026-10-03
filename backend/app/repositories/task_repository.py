@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 
 from app.models import OpsTask, OpsTaskExecution, OpsTaskLog, OpsTaskTarget
 from app.repositories.base import BaseRepository
@@ -47,6 +47,25 @@ class TaskRepository(BaseRepository[OpsTask]):
         if not key:
             return None
         return self.get_by(idempotency_key=key)
+
+    def count_by_status(self) -> dict:
+        """按状态统计任务数量（指标用）。"""
+        statuses = (
+            "CREATED",
+            "PENDING",
+            "RUNNING",
+            "SUCCESS",
+            "FAILED",
+            "TIMEOUT",
+            "CANCELLED",
+            "RETRYING",
+            "DEAD",
+        )
+        stmt = select(OpsTask.status, func.count()).group_by(OpsTask.status)
+        counts = {status: 0 for status in statuses}
+        for status, count in self.db.execute(stmt):
+            counts[status] = count
+        return counts
 
 
 class TaskTargetRepository(BaseRepository[OpsTaskTarget]):

@@ -87,6 +87,18 @@ class AlertEventRepository(BaseRepository[AlertEvent]):
         stmt = select(func.count()).select_from(AlertEvent).where(AlertEvent.is_active.isnot(None))
         return self.db.scalar(stmt) or 0
 
+    def count_active_by_severity(self) -> dict:
+        """按严重级别统计当前活动告警数（指标用）。"""
+        stmt = (
+            select(AlertEvent.severity, func.count())
+            .where(AlertEvent.is_active.isnot(None))
+            .group_by(AlertEvent.severity)
+        )
+        counts = {"WARNING": 0, "CRITICAL": 0}
+        for severity, count in self.db.execute(stmt):
+            counts[severity] = count
+        return counts
+
 
 class AlertEventLogRepository(BaseRepository[AlertEventLog]):
     """告警状态日志仓储。"""
