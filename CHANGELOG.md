@@ -6,7 +6,11 @@
 
 ### Added
 
+- 新增从 Docker Hub 拉取预构建镜像的部署方式：`deploy/config.dockerhub.env.tmpl` 预设 + `deploy/docker/compose.hub.yml` 纯拉取覆盖（`IMAGE_PULL_ONLY`）。
+
 ### Changed
+
+- `install.sh` / `reconfigure.sh` 支持纯拉取模式：`IMAGE_PULL_ONLY=true` 时只 `pull` 不本地构建。
 
 ### Fixed
 

@@ -24,8 +24,9 @@
 | `SEED_INIT_DATA` | true | 启动时是否初始化种子数据 |
 | `METRIC_RETENTION_DAYS` | 7 | 指标保留天数 |
 | `OPERATION_LOG_ENABLED` | true | 操作审计开关 |
-| `IMAGE_REGISTRY` | 空 | 镜像 registry（空则本地构建） |
+| `IMAGE_REGISTRY` | 空 | 镜像 registry（空则本地构建；Docker Hub 用 `docker.io/<namespace>`） |
 | `IMAGE_TAG` | latest | 镜像标签 |
+| `IMAGE_PULL_ONLY` | false | true 时纯拉取（加载 `compose.hub.yml`，不本地构建） |
 | `DATA_VOLUME_DIR` | ./data | 数据持久化目录（宿主，相对 `deploy/`） |
 
 > 以下键由 `prepare.sh` 派生写入 `deploy/.env`，不在 `config.env` 中：`CORS_ORIGINS`、`BACKEND_IMAGE`、`NGINX_IMAGE`。

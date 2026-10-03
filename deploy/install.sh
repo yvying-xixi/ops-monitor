@@ -48,6 +48,9 @@ set -a
 set +a
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/deploy/docker/compose.yml")
+if [ "${IMAGE_PULL_ONLY:-false}" = "true" ]; then
+  COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.hub.yml")
+fi
 if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
   COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.https.yml")
 fi

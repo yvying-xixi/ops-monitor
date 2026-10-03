@@ -32,6 +32,10 @@ flowchart LR
 # 平台（配置化部署）
 cp deploy/config.env.tmpl deploy/config.env   # 编辑 HOSTNAME/HTTP_PORT/密码
 ./deploy/install.sh
+
+# 或：从 Docker Hub 拉取预构建镜像（免本地构建/登录）
+cp deploy/config.dockerhub.env.tmpl deploy/config.env   # 编辑 HOSTNAME 与 IMAGE_REGISTRY 的 <namespace>
+./deploy/install.sh
 ```
 
 详见 [docs/operations/deployment.md](docs/operations/deployment.md)。

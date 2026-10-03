@@ -49,6 +49,10 @@ validate() {
   [ -n "${DB_NAME:-}" ] || { echo "[error] DB_NAME 不能为空" >&2; failed=1; }
   [ -n "${DATA_VOLUME_DIR:-}" ] || { echo "[error] DATA_VOLUME_DIR 不能为空" >&2; failed=1; }
 
+  if [ "${IMAGE_PULL_ONLY:-false}" = "true" ] && [ -z "${IMAGE_REGISTRY:-}" ]; then
+    echo "[error] IMAGE_PULL_ONLY=true 但 IMAGE_REGISTRY 为空（纯拉取部署需指定镜像 registry）" >&2; failed=1
+  fi
+
   if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
     [ -n "${HTTPS_CERTIFICATE:-}" ] || { echo "[error] HTTPS_ENABLED=true 但未配置 HTTPS_CERTIFICATE" >&2; failed=1; }
     [ -n "${HTTPS_PRIVATE_KEY:-}" ] || { echo "[error] HTTPS_ENABLED=true 但未配置 HTTPS_PRIVATE_KEY" >&2; failed=1; }
@@ -137,6 +141,7 @@ umask 077
   echo "DATA_VOLUME_DIR=${DATA_VOLUME_DIR}"
   echo "IMAGE_REGISTRY=${registry}"
   echo "IMAGE_TAG=${tag}"
+  echo "IMAGE_PULL_ONLY=$([ "${IMAGE_PULL_ONLY:-false}" = "true" ] && echo true || echo false)"
   echo "BACKEND_IMAGE=${backend_image}"
   echo "NGINX_IMAGE=${nginx_image}"
 } > "$ENV_FILE"

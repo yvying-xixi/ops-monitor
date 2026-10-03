@@ -95,6 +95,16 @@ IMAGE_REGISTRY=192.168.10.24/ops-monitor IMAGE_TAG=v0.2.0 ./deploy/install.sh
 
 `deploy/prepare.sh` 会据此派生 `BACKEND_IMAGE` / `NGINX_IMAGE` 写入 `deploy/.env`，`install.sh` 检测到 `IMAGE_REGISTRY` 非空时改为 `docker compose pull`。
 
+## 从 Docker Hub 部署
+
+```bash
+cp deploy/config.dockerhub.env.tmpl deploy/config.env
+# 编辑 HOSTNAME 与 IMAGE_REGISTRY 的 <namespace>
+./deploy/install.sh
+```
+
+公开镜像免登录；`IMAGE_PULL_ONLY=true` 会加载 `compose.hub.yml` 纯拉取。详见 [deployment.md](deployment.md)。
+
 ## 故障排查
 
 | 现象 | 处理 |

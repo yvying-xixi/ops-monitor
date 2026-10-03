@@ -46,6 +46,24 @@ cp deploy/config.env.tmpl deploy/config.env   # 编辑 HOSTNAME/HTTP_PORT/密码
 
 访问 `http://<HOSTNAME>:<HTTP_PORT>`；初始管理员见 `config.env`（留空由脚本生成并回写）。
 
+## 从 Docker Hub 部署（预构建镜像）
+
+无需本地构建，直接拉取已发布镜像（公开仓库，免登录）：
+
+```bash
+cp deploy/config.dockerhub.env.tmpl deploy/config.env
+# 编辑 config.env：
+#   HOSTNAME=...
+#   IMAGE_REGISTRY="docker.io/<namespace>"   # <namespace> 替换为 Docker Hub 用户名/组织
+#   IMAGE_TAG="v0.2.0"                        # 默认；可改为 latest 跟随最新
+./deploy/install.sh
+```
+
+- `IMAGE_PULL_ONLY=true` 会追加加载 `deploy/docker/compose.hub.yml`，只拉取不构建；`reconfigure.sh` 同样以 `pull` 应用变更。
+- 默认 `v0.2.0` 保证可复现；`latest` 为可选项。
+- 仍需本仓库检出：compose、`deploy/mysql/init`（首启建表）、`deploy/nginx/conf.d`、`agent/`、`deploy/systemd/`。
+- 公共仓库匿名拉取受 Docker Hub 速率限制（约 100 次/6 小时/IP）。
+
 ## 脚本职责
 
 | 脚本 | 作用 |
