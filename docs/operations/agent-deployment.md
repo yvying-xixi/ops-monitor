@@ -102,6 +102,21 @@ journalctl -u server-agent -f          # 应出现"注册成功 server_id=..."
 
 平台侧：服务器状态变 `ONLINE`，详情页出现指标与服务状态。
 
+## 服务器发现（只读）
+
+批量接入前可先在**授权网段**内做只读探测（[ADR-012](../decisions/012-read-only-server-discovery.md)）。
+
+在 `config.env` 配置白名单并开启：
+
+```text
+DISCOVERY_ENABLED=true
+DISCOVERY_ALLOWED_CIDRS=["10.0.0.0/24"]
+```
+
+然后在管理端「服务器发现」页输入网段扫描（或调用 `POST /api/v1/discovery/scan`，仅 `SYSTEM_ADMIN`）；对探测到的主机，人工通过「添加服务器 + Agent 向导」接入。
+
+限制：仅扫描白名单子网；只做 TCP/banner 探测，**不认证、不远程安装**。
+
 ## Upgrade
 
 见 [upgrade.md](upgrade.md#agent-升级)：保留 `config.yaml` 与签名私钥，替换程序后重启 `server-agent`。

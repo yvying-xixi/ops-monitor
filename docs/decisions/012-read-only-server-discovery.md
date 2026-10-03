@@ -1,0 +1,54 @@
+# ADR-012: 只读服务器发现
+
+## Status
+
+Accepted（已实现）
+
+## Context
+
+P2-13 的完整设想是「CIDR 扫描 → 主机/SSH 探测 → 一键安装 Agent → 注册上线」。其中
+“SSH 探测 + 远程安装”要求平台持有目标机 SSH 凭据并推送代码，属于高权限能力：
+
+- 与既有安全姿态冲突（Agent Token 仅存哈希、用户密码 bcrypt，平台不保存可逆凭据；任务系统仅做白名单受控动作）。
+- 引入可逆凭据存储、横向 RCE 跳板、越权扫描（SSRF）与合规风险。
+
+## Decision
+
+仅实现**只读发现**，不持有凭据、不远程安装，接入仍由人工通过既有「添加服务器 + Agent 向导」完成：
+
+- **开关**：`DISCOVERY_ENABLED`（默认 `false`）。
+- **白名单**：目标 CIDR 必须是 `DISCOVERY_ALLOWED_CIDRS`（服务端配置）的子网，拒绝任意网段（防 SSRF）。
+- **探测**：仅 TCP 连接 + 读取端口 banner（如 SSH 版本），**不认证、不交互**。
+- **限额**：`DISCOVERY_MAX_HOSTS` / `DISCOVERY_TIMEOUT_SECONDS` / `DISCOVERY_CONCURRENCY`。
+- **权限**：仅 `SYSTEM_ADMIN`；`POST /api/v1/discovery/scan`、`GET /api/v1/discovery/config`。
+- 结果**不落库**，仅返回列表，由操作者决定是否接入。
+
+## Alternatives
+
+### 完整发现（SSH 探测 + 自动安装）
+
+- 优点：一键接入。
+- 缺点：可逆凭据、RCE 跳板、SSRF、合规与回滚风险，需独立凭据加密/审计/威胁模型。故不采用。
+
+### 不做发现
+
+- 优点：零风险。
+- 缺点：批量接入体验差。只读发现以低风险改善该体验。
+
+## Consequences
+
+### Positive
+
+- 不新增凭据存储与远程执行面；扫描范围受服务端白名单约束。
+- 复用既有接入流程，人工确认，爆炸半径小。
+
+### Negative
+
+- 无法自动安装 Agent；需人工按提示操作。
+- 仍属主动网络探测：**仅可扫描已授权白名单网段**，否则仍有合规风险。
+
+## Open Questions
+
+- 是否需要把扫描结果持久化（历史记录）——当前不落库。
+- 是否需要异步任务化以支持更大网段（当前同步 + 主机数上限）。
+- IPv6 支持程度（当前按 `ipaddress` 通用处理，banner 探测兼容）。

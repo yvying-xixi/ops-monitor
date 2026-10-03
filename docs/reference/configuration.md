@@ -32,6 +32,8 @@
 | `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
 | `SCHEDULER_LOCK_ENABLED` | true | 调度作业 Redis 分布式锁开关 |
 | `SCHEDULER_LOCK_TTL_SECONDS` | 600 | 调度锁 TTL（秒） |
+| `DISCOVERY_ENABLED` | false | 只读服务器发现开关 |
+| `DISCOVERY_ALLOWED_CIDRS` | `[]` | 允许扫描的 CIDR 白名单（JSON 列表） |
 | `BACKUP_DIR` | ./backups | 备份归档目录（相对 `deploy/` 或绝对路径） |
 | `BACKUP_RETENTION_DAYS` | 14 | 备份保留天数 |
 | `BACKUP_INCLUDE_CONFIG` | true | 备份是否包含 `config.env` |
@@ -82,6 +84,12 @@
 | `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
 | `SCHEDULER_LOCK_ENABLED` | true | 调度作业 Redis 分布式锁（多 worker/多实例每轮只执行一次） |
 | `SCHEDULER_LOCK_TTL_SECONDS` | 600 | 调度锁 TTL（进程崩溃兜底，应大于最长作业耗时） |
+| `DISCOVERY_ENABLED` | false | 只读服务器发现开关 |
+| `DISCOVERY_ALLOWED_CIDRS` | `[]` | 允许扫描的 CIDR 白名单（JSON 列表，防止越权扫描） |
+| `DISCOVERY_MAX_HOSTS` | 256 | 单次扫描主机数上限 |
+| `DISCOVERY_SSH_PORT` | 22 | 默认探测端口 |
+| `DISCOVERY_TIMEOUT_SECONDS` | 0.5 | 单主机探测超时（秒） |
+| `DISCOVERY_CONCURRENCY` | 32 | 探测并发数 |
 | `AGENT_BUNDLE_DIR` | 空 | Agent 安装包来源目录（容器内挂载；空则自动定位仓库根） |
 
 ## Agent 配置（Python 与 Go 通用）
