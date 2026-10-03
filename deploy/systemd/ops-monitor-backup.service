@@ -1,0 +1,10 @@
+[Unit]
+Description=ops-monitor backup
+Documentation=https://github.com/yvying-xixi/ops-monitor
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=__REPO_DIR__
+ExecStart=__REPO_DIR__/deploy/backup.sh
