@@ -1,6 +1,6 @@
 # 数据库 Reference
 
-> 建表脚本：`deploy/mysql/init/ops_monitor_schema.sql`（MySQL 8.0，utf8mb4）。
+> 建表与演进由 Alembic 迁移管理：`backend/migrations/`（MySQL 8.0，utf8mb4），基线为 `0001_initial`。
 > 设计原则：监控数据与业务数据分离；密码与 Agent Token 仅存哈希；时间字段使用 `DATETIME(3)`，应用层统一 UTC。
 
 ## 表总览（26 张）

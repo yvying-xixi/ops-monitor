@@ -16,7 +16,27 @@ git pull                       # 获取新代码
 
 ## 数据库变更
 
-> **TODO**: 补充数据库 Schema 变更流程（当前由 `deploy/mysql/init/ops_monitor_schema.sql` 首启建表，无迁移工具）。
+Schema 由 Alembic 迁移管理，位于 `backend/migrations/`。
+
+- **常规升级**：`reconfigure.sh` 重建 backend 容器时，`entrypoint.sh` 会自动执行 `alembic upgrade head`。
+- **手动执行**（本地或排障）：
+
+```bash
+cd backend
+alembic upgrade head          # 应用全部迁移
+alembic current               # 查看当前版本
+alembic downgrade -1          # 回滚一步
+```
+
+- **存量库首次接入 Alembic**：旧库已由 `ops_monitor_schema.sql` 建表，需对齐基线而**不重复建表**：
+
+```bash
+cd backend
+alembic stamp 0001_initial    # 标记为已应用基线
+alembic upgrade head          # 应用后续迁移
+```
+
+- 回滚前请按 [backup.md](backup.md) 备份数据库。
 
 ## Agent 升级
 

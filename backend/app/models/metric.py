@@ -1,23 +1,33 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, text
-from sqlalchemy.dialects.mysql import BIGINT, INTEGER
+from sqlalchemy import ForeignKey, Index, Numeric, String, Text, text
+from sqlalchemy.dialects.mysql import BIGINT, DATETIME, INTEGER
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
+if TYPE_CHECKING:
+    from app.models.server import OpsServer, OpsServerContainer, OpsServerDisk, OpsServerNetwork
+
 
 class MonitorServerMetric(Base):
     __tablename__ = "monitor_server_metric"
-    __table_args__ = {"comment": "服务器监控指标表"}
+    __table_args__ = (
+        Index("idx_monitor_server_metric_collected_at", "collected_at"),
+        Index("idx_monitor_server_metric_server_time", "server_id", "collected_at"),
+        {"comment": "服务器监控指标表"},
+    )
 
     id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True, comment="指标记录ID")
     server_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server.id"), comment="服务器ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server.id", name="fk_monitor_server_metric_server"),
+        comment="服务器ID",
     )
-    collected_at: Mapped[datetime] = mapped_column(DateTime, comment="采集时间")
+    collected_at: Mapped[datetime] = mapped_column(DATETIME(fsp=3), comment="采集时间")
     cpu_usage: Mapped[float | None] = mapped_column(Numeric(5, 2), comment="CPU使用率，百分比")
     memory_usage: Mapped[float | None] = mapped_column(Numeric(5, 2), comment="内存使用率，百分比")
     memory_used_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="已使用内存，单位：字节")
@@ -30,7 +40,7 @@ class MonitorServerMetric(Base):
     tcp_connections: Mapped[int | None] = mapped_column(INTEGER(unsigned=True), comment="TCP连接数")
     uptime_seconds: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="系统运行时长，单位：秒")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP(3)"), comment="创建时间"
+        DATETIME(fsp=3), server_default=text("CURRENT_TIMESTAMP(3)")
     )
 
     server: Mapped[OpsServer] = relationship("OpsServer", back_populates="metrics")
@@ -38,23 +48,31 @@ class MonitorServerMetric(Base):
 
 class MonitorDiskMetric(Base):
     __tablename__ = "monitor_disk_metric"
-    __table_args__ = {"comment": "磁盘监控指标表"}
+    __table_args__ = (
+        Index("idx_monitor_disk_metric_disk_time", "disk_id", "collected_at"),
+        Index("idx_monitor_disk_metric_server_time", "server_id", "collected_at"),
+        {"comment": "磁盘监控指标表"},
+    )
 
     id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True, comment="磁盘指标记录ID")
     disk_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server_disk.id"), comment="磁盘资产ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server_disk.id", name="fk_monitor_disk_metric_disk"),
+        comment="磁盘资产ID",
     )
     server_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server.id"), comment="服务器ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server.id", name="fk_monitor_disk_metric_server"),
+        comment="服务器ID",
     )
-    collected_at: Mapped[datetime] = mapped_column(DateTime, comment="采集时间")
+    collected_at: Mapped[datetime] = mapped_column(DATETIME(fsp=3), comment="采集时间")
     used_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="已使用容量，单位：字节")
     total_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="总容量，单位：字节")
     usage_percent: Mapped[float | None] = mapped_column(Numeric(5, 2), comment="使用率，百分比")
     read_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计读取字节数")
     write_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计写入字节数")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP(3)"), comment="创建时间"
+        DATETIME(fsp=3), server_default=text("CURRENT_TIMESTAMP(3)")
     )
 
     disk: Mapped[OpsServerDisk] = relationship("OpsServerDisk")
@@ -63,16 +81,24 @@ class MonitorDiskMetric(Base):
 
 class MonitorNetworkMetric(Base):
     __tablename__ = "monitor_network_metric"
-    __table_args__ = {"comment": "网卡监控指标表"}
+    __table_args__ = (
+        Index("idx_monitor_network_metric_network_time", "network_id", "collected_at"),
+        Index("idx_monitor_network_metric_server_time", "server_id", "collected_at"),
+        {"comment": "网卡监控指标表"},
+    )
 
     id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True, comment="网卡指标记录ID")
     network_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server_network.id"), comment="网卡资产ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server_network.id", name="fk_monitor_network_metric_network"),
+        comment="网卡资产ID",
     )
     server_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server.id"), comment="服务器ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server.id", name="fk_monitor_network_metric_server"),
+        comment="服务器ID",
     )
-    collected_at: Mapped[datetime] = mapped_column(DateTime, comment="采集时间")
+    collected_at: Mapped[datetime] = mapped_column(DATETIME(fsp=3), comment="采集时间")
     bytes_received: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计接收字节数")
     bytes_sent: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计发送字节数")
     packets_received: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计接收数据包数")
@@ -80,7 +106,7 @@ class MonitorNetworkMetric(Base):
     errors_received: Mapped[int | None] = mapped_column(INTEGER(unsigned=True), comment="接收错误数")
     errors_sent: Mapped[int | None] = mapped_column(INTEGER(unsigned=True), comment="发送错误数")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP(3)"), comment="创建时间"
+        DATETIME(fsp=3), server_default=text("CURRENT_TIMESTAMP(3)")
     )
 
     network: Mapped[OpsServerNetwork] = relationship("OpsServerNetwork")
@@ -89,14 +115,22 @@ class MonitorNetworkMetric(Base):
 
 class MonitorContainerMetric(Base):
     __tablename__ = "monitor_container_metric"
-    __table_args__ = {"comment": "Docker容器监控指标表"}
+    __table_args__ = (
+        Index("idx_monitor_container_metric_asset_time", "container_asset_id", "collected_at"),
+        Index("idx_monitor_container_metric_server_time", "server_id", "collected_at"),
+        {"comment": "Docker容器监控指标表"},
+    )
 
     id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True, comment="容器指标记录ID")
     container_asset_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server_container.id"), comment="容器资产ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server_container.id", name="fk_monitor_container_metric_asset"),
+        comment="容器资产ID",
     )
     server_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server.id"), comment="服务器ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server.id", name="fk_monitor_container_metric_server"),
+        comment="服务器ID",
     )
     container_id: Mapped[str] = mapped_column(String(128), comment="容器ID快照")
     container_status: Mapped[str | None] = mapped_column(String(32), comment="RUNNING/STOPPED/PAUSED/EXITED")
@@ -106,9 +140,9 @@ class MonitorContainerMetric(Base):
     network_in_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计入站字节数")
     network_out_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="累计出站字节数")
     restart_count: Mapped[int | None] = mapped_column(INTEGER(unsigned=True), comment="重启次数")
-    collected_at: Mapped[datetime] = mapped_column(DateTime, comment="采集时间")
+    collected_at: Mapped[datetime] = mapped_column(DATETIME(fsp=3), comment="采集时间")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP(3)"), comment="创建时间"
+        DATETIME(fsp=3), server_default=text("CURRENT_TIMESTAMP(3)")
     )
 
     container_asset: Mapped[OpsServerContainer] = relationship("OpsServerContainer")
@@ -117,11 +151,17 @@ class MonitorContainerMetric(Base):
 
 class MonitorProcessSnapshot(Base):
     __tablename__ = "monitor_process_snapshot"
-    __table_args__ = {"comment": "服务器进程快照表"}
+    __table_args__ = (
+        Index("idx_monitor_process_snapshot_server_time", "server_id", "collected_at"),
+        Index("idx_monitor_process_snapshot_server_pid_time", "server_id", "process_pid", "collected_at"),
+        {"comment": "服务器进程快照表"},
+    )
 
     id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True, comment="进程快照记录ID")
     server_id: Mapped[int] = mapped_column(
-        BIGINT(unsigned=True), ForeignKey("ops_server.id"), comment="服务器ID"
+        BIGINT(unsigned=True),
+        ForeignKey("ops_server.id", name="fk_monitor_process_snapshot_server"),
+        comment="服务器ID",
     )
     process_pid: Mapped[int] = mapped_column(INTEGER(unsigned=True), comment="进程PID")
     process_name: Mapped[str | None] = mapped_column(String(255), comment="进程名称")
@@ -131,9 +171,9 @@ class MonitorProcessSnapshot(Base):
     memory_bytes: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), comment="进程内存占用")
     process_status: Mapped[str | None] = mapped_column(String(32), comment="进程状态")
     command_line: Mapped[str | None] = mapped_column(Text, comment="命令行，注意脱敏")
-    collected_at: Mapped[datetime] = mapped_column(DateTime, comment="采集时间")
+    collected_at: Mapped[datetime] = mapped_column(DATETIME(fsp=3), comment="采集时间")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=text("CURRENT_TIMESTAMP(3)"), comment="创建时间"
+        DATETIME(fsp=3), server_default=text("CURRENT_TIMESTAMP(3)")
     )
 
     server: Mapped[OpsServer] = relationship("OpsServer")

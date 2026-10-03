@@ -34,9 +34,14 @@ npm install
 
 ## 数据库准备
 
+创建空库后执行迁移建表（无需手工 SQL）：
+
 ```bash
-mysql -u root -p < deploy/mysql/init/ops_monitor_schema.sql
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS ops_monitor DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+cd backend && alembic upgrade head
 ```
+
+新增 Schema 变更时：`alembic revision --autogenerate -m "描述"` 生成迁移，再 `alembic upgrade head`。
 
 ## 配置
 

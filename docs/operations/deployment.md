@@ -16,7 +16,7 @@ flowchart LR
 - **单 Nginx 入口**：镜像多阶段（node 构建前端 → nginx:alpine 托管），承担静态与 `/api` 反代。
 - backend 独立镜像：`python:3.11-slim`、非 root、HEALTHCHECK。
 - mysql/redis 不暴露宿主端口，数据落在 `DATA_VOLUME_DIR`。
-- `deploy/mysql/init/` 首启挂载自动建表；lifespan 幂等 seed 默认角色/规则/管理员。
+- backend 容器启动时执行 `alembic upgrade head` 建表（见 `backend/entrypoint.sh`）；lifespan 幂等 seed 默认角色/规则/管理员。
 
 ### 部署文件位置
 
@@ -26,7 +26,7 @@ flowchart LR
 | backend 镜像 | `deploy/docker/Dockerfile.backend` |
 | nginx + 前端镜像 | `deploy/nginx/Dockerfile` |
 | Nginx 配置 | `deploy/nginx/conf.d/default.conf` |
-| 建表脚本 | `deploy/mysql/init/ops_monitor_schema.sql` |
+| 数据库迁移 | `backend/migrations/`（在 backend 容器内执行） |
 
 ## 前置条件
 
@@ -61,7 +61,7 @@ cp deploy/config.dockerhub.env.tmpl deploy/config.env
 
 - `IMAGE_PULL_ONLY=true` 会追加加载 `deploy/docker/compose.hub.yml`，只拉取不构建；`reconfigure.sh` 同样以 `pull` 应用变更。
 - 默认 `v0.2.0` 保证可复现；`latest` 为可选项。
-- 仍需本仓库检出：compose、`deploy/mysql/init`（首启建表）、`deploy/nginx/conf.d`、`agent/`、`agent-go/`（含预构建二进制）、`deploy/systemd/`。
+- 仍需本仓库检出：compose、`deploy/nginx/conf.d`、`agent/`、`agent-go/`（含预构建二进制）、`deploy/systemd/`。数据库 Schema 由 backend 镜像内的迁移创建。
 - 公共仓库匿名拉取受 Docker Hub 速率限制（约 100 次/6 小时/IP）。
 
 ## 脚本职责
