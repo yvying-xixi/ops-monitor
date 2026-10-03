@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed（设计已定，待实现）
+Accepted（已实现）
 
 ## Context
 

@@ -115,6 +115,12 @@ sudo rm -rf /opt/ops-agent
 sudo systemctl daemon-reload
 ```
 
+## 请求签名密钥
+
+- 首次运行自动生成 Ed25519 私钥（`agent_ed25519.key`，权限 0600），路径由 `server.signing_key_file` 指定（默认相对 `config.yaml` 目录解析）。
+- 注册时上报公钥；平台在 `AGENT_REQUIRE_SIGNATURE=true` 后强制验签。
+- 重新部署时**保留**该私钥文件；删除后会生成新密钥并重新注册（旧公钥失效）。
+
 ## Troubleshooting
 
 见 [troubleshooting.md](troubleshooting.md#agent-issues)。

@@ -27,6 +27,8 @@
 | `OPERATION_LOG_ENABLED` | true | 操作审计开关 |
 | `METRICS_ENABLED` | true | Prometheus `/metrics` 开关 |
 | `METRICS_TOKEN` | 空 | `/metrics` 访问令牌（空则不鉴权，仅内网可达） |
+| `AGENT_REQUIRE_SIGNATURE` | false | 是否强制 Agent 请求签名 |
+| `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
 | `IMAGE_REGISTRY` | 空 | 镜像 registry（空则本地构建；Docker Hub 用 `docker.io/<namespace>`） |
 | `IMAGE_TAG` | latest | 镜像标签 |
 | `IMAGE_PULL_ONLY` | false | true 时纯拉取（加载 `compose.hub.yml`，不本地构建） |
@@ -66,6 +68,8 @@
 | `OTEL_ENABLED` | false | OpenTelemetry 链路追踪开关 |
 | `OTEL_SERVICE_NAME` | ops-monitor-backend | 上报到追踪后端的服务名 |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | 空 | OTLP/HTTP traces 端点（空则仅生成 span 不导出） |
+| `AGENT_REQUIRE_SIGNATURE` | false | 是否强制 Agent 请求签名（Ed25519） |
+| `AGENT_SIGNATURE_MAX_SKEW` | 300 | Agent 请求时间戳允许偏差（秒） |
 | `AGENT_BUNDLE_DIR` | 空 | Agent 安装包来源目录（容器内挂载；空则自动定位仓库根） |
 
 ## Agent 配置（Python 与 Go 通用）
@@ -77,6 +81,7 @@ Python 与 Go 两个 Agent 使用**同一份配置 schema**，可复用平台向
 | `server` | `url` | — | 服务端地址 |
 | `server` | `token` | — | Agent 注册凭证 |
 | `server` | `server_code` | — | 服务器编码（与平台一致） |
+| `server` | `signing_key_file` | agent_ed25519.key | Ed25519 私钥路径（相对 config.yaml 或绝对路径；自动生成） |
 | `collect` | `heartbeat_interval` | 30 | 心跳周期（秒） |
 | `collect` | `metrics_interval` | 10 | 指标采集周期（秒） |
 | `collect` | `assets_interval` | 60 | 资产/服务同步周期（秒） |

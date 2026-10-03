@@ -14,6 +14,17 @@
 - Token 由平台生成，数据库仅存 SHA-256 哈希；`register` 时 Token 在请求体与请求头中同时携带。
 - 校验失败返回 `401`（错误码 `40103`）。
 
+## Request Signing
+
+启用后（`AGENT_REQUIRE_SIGNATURE=true` 强制）Agent 请求携带 Ed25519 签名：
+
+- 请求头：`X-Agent-Id`（server_code）、`X-Timestamp`（Unix 秒）、`X-Request-Id`（uuid4）、`X-Signature`（base64 Ed25519）。
+- 待签串：`METHOD\nPATH\nTIMESTAMP\nREQUEST_ID\nSHA256_HEX(body)`。
+- 公钥：首次注册时在请求体 `signing_public_key`（base64）上报，平台按 Token 绑定存储（仅当尚无公钥时写入）。
+- 服务端校验顺序：Token → Agent-Id 归属 → 时间戳偏差（默认 300s）→ 签名 → `X-Request-Id` 防重放（Redis）。
+- 失败错误码：`40104` 签名无效、`40105` 重放、`40106` 缺失、`40107` 时间戳非法。
+- 详见 [decisions/010-agent-request-signing.md](../decisions/010-agent-request-signing.md)。
+
 ## Interaction Overview
 
 ```mermaid

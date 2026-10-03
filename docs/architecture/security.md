@@ -17,6 +17,8 @@ flowchart LR
     AGENT --> TOKEN[Token 哈希校验 + 绑定服务器]
 ```
 
+Agent 请求签名（可选启用，见 [ADR-010](../decisions/010-agent-request-signing.md)）：Agent 本地持有 Ed25519 私钥，公钥在注册时上报并由平台按 Token 绑定；服务端用公钥验签，并配合时间戳与 Redis `request_id` 去重防重放。`AGENT_REQUIRE_SIGNATURE` 控制是否强制（默认 false，灰度上线）。
+
 ## 授权
 
 - RBAC：用户 → 角色 → 权限（多对多）。
@@ -29,6 +31,7 @@ flowchart LR
 
 - 用户密码：bcrypt 哈希（passlib），禁止明文。
 - Agent Token：仅存 SHA-256 哈希与前缀，明文只在生成时返回一次。
+- Agent 签名私钥：仅存于 Agent 主机（`agent_ed25519.key`，权限 0600）；平台仅存公钥。
 - 操作日志 `request_params` 禁止记录密码与 Token。
 
 ## 命令执行安全
