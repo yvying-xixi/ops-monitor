@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import case, func, select, update
 
@@ -18,7 +18,7 @@ from app.models import (
 )
 from app.repositories.base import BaseRepository
 
-_UTC = timezone.utc
+_UTC = UTC
 
 
 def _utcnow() -> datetime:
@@ -295,7 +295,7 @@ class DiskRepository(BaseRepository[OpsServerDisk]):
             )
         )
 
-    def delete_missing(self, server_id: int, present_keys: list[tuple]) -> None:
+    def delete_missing(self, server_id: int, present_keys: set[tuple]) -> None:
         """删除未出现在上报列表中的磁盘资产（按 server_id+device+mount 判定）。"""
         for disk in self.list_all(server_id=server_id):
             key = (disk.device_name, disk.mount_point)

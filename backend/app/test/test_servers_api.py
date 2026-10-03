@@ -5,7 +5,6 @@ from __future__ import annotations
 from sqlalchemy import select
 
 from app.models import OpsAgentToken
-from app.repositories import ServerRepository
 from app.schemas.server import ServerCreate
 from app.services.server_service import ServerService
 

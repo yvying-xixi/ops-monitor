@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import engine
@@ -77,7 +78,7 @@ def test_user_update_and_soft_delete(user_repo):
 
 def test_user_unique_email_conflict(user_repo):
     user_repo.create(_make_user("alice", email="a@example.com"))
-    with pytest.raises(Exception):
+    with pytest.raises(IntegrityError):
         user_repo.create(_make_user("bob", email="a@example.com"))
 
 
@@ -108,7 +109,7 @@ def test_permission_tree_and_get_by_code(permission_repo):
     parent = permission_repo.create(
         _make_permission("server", "服务器管理", permission_type="MENU")
     )
-    child = permission_repo.create(
+    permission_repo.create(
         _make_permission("server:list", "服务器列表", permission_type="API", parent_id=parent.id)
     )
     assert permission_repo.get_by_code("server:list").parent_id == parent.id

@@ -40,8 +40,6 @@ from app.models import (  # noqa: E402
     SysUser,
     SysUserRole,
 )
-from app.schemas.server import ServerCreate  # noqa: E402
-from app.services.server_service import ServerService  # noqa: E402
 
 SERVER_CODE = "e2e-01"
 ADMIN_USER = "e2e-admin"

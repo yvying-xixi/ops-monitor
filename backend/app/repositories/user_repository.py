@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.models import (
     SysPermission,
@@ -20,7 +20,7 @@ def _utcnow() -> datetime:
     Returns:
         不带时区信息的 UTC 时间。
     """
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class UserRepository(BaseRepository[SysUser]):
@@ -101,7 +101,7 @@ class UserRepository(BaseRepository[SysUser]):
             user_id: 用户 ID。
             role_ids: 目标角色 ID 列表。
         """
-        self.db.execute(SysUserRole.__table__.delete().where(SysUserRole.user_id == user_id))
+        self.db.execute(delete(SysUserRole).where(SysUserRole.user_id == user_id))
         for role_id in set(role_ids):
             self.db.add(SysUserRole(user_id=user_id, role_id=role_id))
         self.db.flush()
@@ -142,7 +142,7 @@ class RoleRepository(BaseRepository[SysRole]):
             role_id: 角色 ID。
             permission_ids: 目标权限 ID 列表。
         """
-        self.db.execute(SysRolePermission.__table__.delete().where(SysRolePermission.role_id == role_id))
+        self.db.execute(delete(SysRolePermission).where(SysRolePermission.role_id == role_id))
         for permission_id in set(permission_ids):
             self.db.add(SysRolePermission(role_id=role_id, permission_id=permission_id))
         self.db.flush()

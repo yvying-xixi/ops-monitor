@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+import builtins
+from datetime import UTC, datetime
 from typing import Generic, TypeVar
 
 from sqlalchemy import func, select
@@ -80,7 +81,7 @@ class BaseRepository(Generic[T]):
             匹配的模型对象；不存在时返回 None。
         """
         stmt = self._apply_soft_delete(
-            select(self.model).where(self.model.id == entity_id)
+            select(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
         )
         return self.db.scalars(stmt).first()
 
@@ -104,7 +105,7 @@ class BaseRepository(Generic[T]):
         page_size: int = 20,
         order_by: str | None = None,
         **filters,
-    ) -> tuple[int, list[T]]:
+    ) -> tuple[int, builtins.list[T]]:
         """分页查询对象列表，并统计符合条件的总数。
 
         Args:
@@ -132,7 +133,7 @@ class BaseRepository(Generic[T]):
         items = list(self.db.scalars(stmt).all())
         return total, items
 
-    def list_all(self, **filters) -> list[T]:
+    def list_all(self, **filters) -> builtins.list[T]:
         """返回符合条件的所有对象（不分页）。
 
         Args:
@@ -159,7 +160,7 @@ class BaseRepository(Generic[T]):
         self.db.flush()
         return instance
 
-    def create_many(self, instances: list[T]) -> None:
+    def create_many(self, instances: builtins.list[T]) -> None:
         """批量新增对象。
 
         Args:
@@ -207,7 +208,7 @@ class BaseRepository(Generic[T]):
         """
         if not self._has_soft_delete:
             raise ValueError(f"{self.model.__name__} 不支持软删除")
-        instance.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        instance.deleted_at = datetime.now(UTC).replace(tzinfo=None)  # type: ignore[attr-defined]
         self.db.flush()
 
     def count(self, **filters) -> int:

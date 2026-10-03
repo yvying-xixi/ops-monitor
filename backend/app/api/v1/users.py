@@ -22,7 +22,7 @@ def list_users(
     page_num: int = Query(1, ge=1, alias="page"),
     page_size: int = Query(20, ge=1, le=100),
     username: str | None = Query(None, max_length=64),
-    status: optional_int(0, 1) = None,
+    status: optional_int(0, 1) = None,  # type: ignore[valid-type]
     db: Session = Depends(get_db),
 ):
     """分页查询用户列表。

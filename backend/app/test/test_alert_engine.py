@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.models import AlertEvent, AlertRule, MonitorServerMetric
+from app.models import AlertRule, MonitorServerMetric
 from app.repositories import AlertEventRepository, AlertRuleRepository
 from app.schemas.server import ServerCreate
 from app.services.alert_engine import AlertEngine
@@ -14,7 +14,7 @@ from app.services.server_service import ServerService
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _make_server(db, code="web-01", cores=4):
@@ -74,7 +74,7 @@ def test_violation_creates_pending_then_firing(db):
 
 def test_no_duplicate_active_event(db):
     server = _make_server(db)
-    rule = _make_rule(db)
+    _make_rule(db)
     _add_metric(db, server.id, cpu=90.0)
     for _ in range(3):
         AlertEngine(db).evaluate_all()

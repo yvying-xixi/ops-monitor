@@ -1,0 +1,45 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["app"]
+exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI 依赖/查询参数以函数调用作为默认值是标准写法
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Header",
+    "fastapi.Body",
+    "fastapi.Form",
+    "fastapi.Cookie",
+    "app.api.v1.deps.require_roles",
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+exclude = ["^app/test/", "^migrations/"]
+warn_unused_ignores = false
+disable_error_code = ["import-untyped"]
+files = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["app/test"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/test/*", "app/core/database.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

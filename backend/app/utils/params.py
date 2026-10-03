@@ -25,8 +25,10 @@ def optional_int(min_value: int | None = None, max_value: int | None = None):
             value = None
         if value is None:
             return None
+        if not isinstance(value, int | float | str):
+            raise ValueError("Input should be a valid integer")
         try:
-            parsed = int(value)  # type: ignore[arg-type]
+            parsed = int(value)
         except (TypeError, ValueError):
             raise ValueError("Input should be a valid integer") from None
         if min_value is not None and parsed < min_value:

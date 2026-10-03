@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.exceptions import AppException, ErrorCode
-from app.models import AlertEvent, AlertEventLog, AlertRule, OpsServer
+from app.models import AlertEvent, AlertEventLog, AlertRule
 from app.repositories import (
     AlertEventLogRepository,
     AlertEventRepository,
@@ -19,7 +19,7 @@ from app.schemas.alert import RuleCreate, RuleUpdate
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class AlertService:

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
 from app.exceptions import AppException, ErrorCode
-from app.models import OpsServer, MonitorServerMetric
+from app.models import MonitorServerMetric, OpsServer
 from app.repositories import (
     AgentTokenRepository,
     HeartbeatRepository,
@@ -27,7 +27,7 @@ MAX_TIME_SKEW_SECONDS = 300
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class AgentService:
@@ -190,10 +190,10 @@ class AgentService:
     def _normalize_utc(dt: datetime) -> datetime:
         """将任意时区的时间归一化为 naive UTC，用于落库与比较。"""
         if dt.tzinfo is not None:
-            return dt.astimezone(timezone.utc).replace(tzinfo=None)
+            return dt.astimezone(UTC).replace(tzinfo=None)
         return dt
 
-    def _validate_timestamp(self, collected_at: datetime) -> None:
+    def _validate_timestamp(self, collected_at: datetime) -> datetime:
         """校验采集时间与服务器时间偏差不超过允许范围。"""
         now = _utcnow()
         normalized = self._normalize_utc(collected_at)

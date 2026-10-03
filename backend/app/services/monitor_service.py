@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,7 @@ from app.repositories import (
     ServerRepository,
 )
 from app.repositories.server_repository import DiskRepository
-from app.schemas.monitor import MetricSummary
+from app.schemas.monitor import MetricBucket, MetricSummary
 
 RANGE_CONFIG = {
     "1h": {"seconds": 3600, "bucket": 60},
@@ -28,7 +28,7 @@ _MB = 1024 * 1024
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class MonitorService:
@@ -76,7 +76,7 @@ class MonitorService:
         start = end - timedelta(seconds=cfg["seconds"])
         rows = self.metric_repo.get_summary(server.id, start, end, cfg["bucket"])
 
-        points = []
+        points: list[MetricBucket] = []
         prev_in = prev_out = None
         for row in rows:
             network_in_rate = 0.0
@@ -100,7 +100,7 @@ class MonitorService:
                 "network_in_rate": network_in_rate,
                 "network_out_rate": network_out_rate,
             }
-            points.append(point)
+            points.append(MetricBucket(**point))
 
         return MetricSummary(
             range=range_key,
@@ -136,7 +136,7 @@ class MonitorService:
         servers = self.server_repo.list_active()
         latest_map = self.metric_repo.get_latest_map([s.id for s in servers])
 
-        server_list = []
+        server_list: list[dict] = []
         for server in servers:
             metric = latest_map.get(server.id)
             server_list.append(

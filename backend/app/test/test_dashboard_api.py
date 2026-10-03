@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 
 from app.models import MonitorServerMetric
 from app.schemas.server import ServerCreate
@@ -10,7 +10,7 @@ from app.services.server_service import ServerService
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _create_server(db, code, ip, agent_status="ONLINE"):

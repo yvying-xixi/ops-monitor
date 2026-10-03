@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 
@@ -13,7 +13,7 @@ from app.services.server_service import ServerService
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _make_server(db, server_code, ip, heartbeat_offset: timedelta | None):
@@ -27,10 +27,10 @@ def _make_server(db, server_code, ip, heartbeat_offset: timedelta | None):
 
 
 def test_refresh_agent_statuses(db):
-    online = _make_server(db, "online-01", "10.0.0.1", timedelta(seconds=5))
-    warning = _make_server(db, "warn-01", "10.0.0.2", timedelta(seconds=60))
-    offline = _make_server(db, "off-01", "10.0.0.3", timedelta(seconds=120))
-    no_heartbeat = _make_server(db, "none-01", "10.0.0.4", None)
+    _make_server(db, "online-01", "10.0.0.1", timedelta(seconds=5))
+    _make_server(db, "warn-01", "10.0.0.2", timedelta(seconds=60))
+    _make_server(db, "off-01", "10.0.0.3", timedelta(seconds=120))
+    _make_server(db, "none-01", "10.0.0.4", None)
 
     repo = ServerRepository(db)
     repo.refresh_agent_statuses()

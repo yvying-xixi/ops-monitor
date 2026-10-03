@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import select
 
-from app.models import OpsAgentHeartbeat, MonitorServerMetric, OpsServerDisk, OpsServerNetwork
-from app.repositories import ServerRepository
+from app.models import MonitorServerMetric, OpsAgentHeartbeat, OpsServerDisk, OpsServerNetwork
 from app.schemas.server import ServerCreate
 from app.services.server_service import ServerService
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 @pytest.fixture()

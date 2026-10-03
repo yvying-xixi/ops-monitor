@@ -50,22 +50,32 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt
-      - name: Bootstrap database schema
-        run: |
-          python - <<'PY'
-          import re, pymysql
-          sql = open("deploy/mysql/init/ops_monitor_schema.sql", encoding="utf-8").read()
-          sql = re.sub(r"CREATE DATABASE[^;]*;", "", sql, flags=re.I | re.S)
-          sql = re.sub(r"USE\s+\w+\s*;", "", sql, flags=re.I)
-          conn = pymysql.connect(host="127.0.0.1", user="root", password="",
-                                 database="ops_monitor", charset="utf8mb4",
-                                 client_flag=pymysql.constants.CLIENT.MULTI_STATEMENTS)
-          conn.cursor().execute(sql); conn.commit(); conn.close()
-          PY
+        run: pip install -r backend/requirements-dev.txt
+      - name: Run database migrations
+        working-directory: backend
+        run: alembic upgrade head
       - name: Run backend tests
         working-directory: backend
-        run: python -m pytest app/test/ -q
+        run: python -m pytest app/test/ -q --cov=app --cov-report=term-missing
+
+  quality:
+    name: Lint & Types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install dev dependencies
+        run: pip install -r backend/requirements-dev.txt
+      - name: Ruff
+        working-directory: backend
+        run: ruff check app
+      - name: MyPy
+        working-directory: backend
+        run: mypy
 
   agent:
     name: Agent Tests
@@ -112,7 +122,7 @@ jobs:
         run: go build ./...
 
   frontend:
-    name: Frontend Build
+    name: Frontend Lint, Test & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -124,6 +134,12 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Test
+        working-directory: frontend
+        run: npm run test
       - name: Build
         working-directory: frontend
         run: npm run build
