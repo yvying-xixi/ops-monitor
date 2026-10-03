@@ -7,7 +7,20 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import agent, alerts, auth, dashboard, health, metrics, monitor, roles, servers, tasks, users
+from app.api.v1 import (
+    agent,
+    alerts,
+    auth,
+    dashboard,
+    discovery,
+    health,
+    metrics,
+    monitor,
+    roles,
+    servers,
+    tasks,
+    users,
+)
 from app.core.config import settings
 from app.core.database import engine
 from app.core.logging import setup_logging
@@ -58,6 +71,7 @@ app.include_router(roles.router, prefix="/api/v1")
 app.include_router(servers.router, prefix="/api/v1")
 app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(monitor.router, prefix="/api/v1")
+app.include_router(discovery.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(agent.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")

@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     AGENT_SIGNATURE_MAX_SKEW: int = 300
     SCHEDULER_LOCK_ENABLED: bool = True
     SCHEDULER_LOCK_TTL_SECONDS: int = 600
+    # 只读服务器发现（默认关闭；仅允许扫描白名单 CIDR，不持有凭据、不远程安装）
+    DISCOVERY_ENABLED: bool = False
+    DISCOVERY_ALLOWED_CIDRS: list[str] = []
+    DISCOVERY_MAX_HOSTS: int = 256
+    DISCOVERY_SSH_PORT: int = 22
+    DISCOVERY_TIMEOUT_SECONDS: float = 0.5
+    DISCOVERY_CONCURRENCY: int = 32
     OTEL_ENABLED: bool = False
     OTEL_SERVICE_NAME: str = "ops-monitor-backend"
     OTEL_EXPORTER_OTLP_ENDPOINT: str = ""
