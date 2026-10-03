@@ -1,0 +1,9 @@
+# 预构建镜像（纯拉取）部署覆盖：移除 build，确保只拉取、不本地构建。
+#
+# 由 IMAGE_PULL_ONLY=true 时 install.sh / reconfigure.sh 自动以 -f 追加加载。
+# 使用 Compose 的 !reset 指令清空基础文件中的 build 字段（Compose v2.24+/v5 支持）。
+services:
+  backend:
+    build: !reset null
+  nginx:
+    build: !reset null

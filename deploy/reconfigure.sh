@@ -26,12 +26,21 @@ set -a
 set +a
 
 COMPOSE=(docker compose --env-file "$ENV_FILE" -f "$REPO_ROOT/deploy/docker/compose.yml")
+if [ "${IMAGE_PULL_ONLY:-false}" = "true" ]; then
+  COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.hub.yml")
+fi
 if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
   COMPOSE+=(-f "$DEPLOY_DIR/docker/compose.https.yml")
 fi
 
-log "应用变更（重建受影响服务，数据卷保留）..."
-"${COMPOSE[@]}" up -d --build
+if [ "${IMAGE_PULL_ONLY:-false}" = "true" ]; then
+  log "纯拉取模式：拉取镜像并应用变更（数据卷保留）..."
+  "${COMPOSE[@]}" pull
+  "${COMPOSE[@]}" up -d
+else
+  log "应用变更（重建受影响服务，数据卷保留）..."
+  "${COMPOSE[@]}" up -d --build
+fi
 
 echo
 log "重配置完成 ✅  访问地址: http://${HOSTNAME}${HTTP_PORT:+:$HTTP_PORT}"
