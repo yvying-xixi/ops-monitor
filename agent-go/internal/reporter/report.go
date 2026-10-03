@@ -144,6 +144,7 @@ type TaskResult struct {
 	ExitCode     *int
 	ResultText   *string
 	ErrorMessage *string
+	ErrorType    *string
 	Logs         *string
 }
 
@@ -155,6 +156,7 @@ func ReportTaskResult(ctx context.Context, c *Client, r TaskResult) error {
 		"exit_code":     r.ExitCode,
 		"result_text":   r.ResultText,
 		"error_message": r.ErrorMessage,
+		"error_type":    r.ErrorType,
 		"logs":          r.Logs,
 	}
 	_, err := c.Post(ctx, PathTaskResult, payload)

@@ -118,6 +118,73 @@ def test_poll_once_reports_failure_on_executor_error():
     worker.poll_once()
     assert posted[0]["status"] == "FAILED"
     assert "白名单" in posted[0]["error_message"]
+    assert posted[0]["error_type"] == "SERVICE_NOT_WHITELISTED"
+
+
+def test_poll_once_classifies_timeout_error():
+    posted = []
+
+    def handler(request):
+        if request.method == "GET":
+            return httpx.Response(
+                200,
+                json={
+                    "code": 0,
+                    "data": [
+                        {
+                            "execution_id": 4,
+                            "task_id": 10,
+                            "action": "RESTART",
+                            "service_name": "nginx",
+                            "timeout_seconds": 5,
+                        }
+                    ],
+                },
+            )
+        posted.append(json.loads(request.content))
+        return httpx.Response(200, json={"code": 0, "data": {}})
+
+    client = _make_client(handler)
+    worker = TaskWorker(client, server_id=1, allowed_services=["nginx"], stop=threading.Event())
+    worker.executor = mock.Mock()
+    worker.executor.run_action.return_value = (False, "执行超时（5s）")
+
+    worker.poll_once()
+    assert posted[0]["status"] == "FAILED"
+    assert posted[0]["error_type"] == "AGENT_EXECUTION_TIMEOUT"
+
+
+def test_poll_once_classifies_unexpected_error():
+    posted = []
+
+    def handler(request):
+        if request.method == "GET":
+            return httpx.Response(
+                200,
+                json={
+                    "code": 0,
+                    "data": [
+                        {
+                            "execution_id": 5,
+                            "task_id": 10,
+                            "action": "START",
+                            "service_name": "nginx",
+                            "timeout_seconds": 30,
+                        }
+                    ],
+                },
+            )
+        posted.append(json.loads(request.content))
+        return httpx.Response(200, json={"code": 0, "data": {}})
+
+    client = _make_client(handler)
+    worker = TaskWorker(client, server_id=1, allowed_services=["nginx"], stop=threading.Event())
+    worker.executor = mock.Mock()
+    worker.executor.run_action.side_effect = RuntimeError("boom")
+
+    worker.poll_once()
+    assert posted[0]["status"] == "FAILED"
+    assert posted[0]["error_type"] == "UNKNOWN"
 
 
 def test_poll_once_handles_empty():

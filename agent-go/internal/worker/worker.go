@@ -118,6 +118,8 @@ func (w *Worker) report(ctx context.Context, executionID int64, success bool, ou
 	} else {
 		result.Status = "FAILED"
 		result.ErrorMessage = &output
+		errorType := classifyFailure(output)
+		result.ErrorType = &errorType
 	}
 	return w.client.ReportTaskResult(ctx, result)
 }

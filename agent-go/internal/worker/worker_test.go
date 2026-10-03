@@ -106,6 +106,24 @@ func TestPollOnceReportsFailure(t *testing.T) {
 	if r.ErrorMessage == nil || *r.ErrorMessage == "" {
 		t.Errorf("error_message = %v", r.ErrorMessage)
 	}
+	if r.ErrorType == nil || *r.ErrorType != "SERVICE_NOT_WHITELISTED" {
+		t.Errorf("error_type = %v", r.ErrorType)
+	}
+}
+
+func TestPollOnceClassifiesTimeout(t *testing.T) {
+	client := &fakeClient{tasks: []reporter.PendingTask{
+		{ExecutionID: 4, Action: "RESTART", ServiceName: "nginx", TimeoutSecond: 5},
+	}}
+	exec := &fakeExec{actionOK: false, actionOut: "执行超时（5s）"}
+	w := New(client, exec, time.Second, nil)
+	if _, err := w.PollOnce(context.Background()); err != nil {
+		t.Fatalf("PollOnce 失败: %v", err)
+	}
+	r := client.results[0]
+	if r.ErrorType == nil || *r.ErrorType != "AGENT_EXECUTION_TIMEOUT" {
+		t.Errorf("error_type = %v", r.ErrorType)
+	}
 }
 
 func TestPollOnceEmpty(t *testing.T) {

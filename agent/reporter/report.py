@@ -104,6 +104,7 @@ def report_task_result(
     status: str,
     result_text: str | None = None,
     error_message: str | None = None,
+    error_type: str | None = None,
     logs: str | None = None,
 ) -> dict:
     """回传任务执行结果。
@@ -114,6 +115,7 @@ def report_task_result(
         status: SUCCESS/FAILED。
         result_text: 执行结果文本。
         error_message: 错误信息。
+        error_type: 标准化错误类型，供服务端重试决策。
         logs: 执行日志。
 
     Returns:
@@ -124,6 +126,7 @@ def report_task_result(
         "status": status,
         "result_text": result_text,
         "error_message": error_message,
+        "error_type": error_type,
         "logs": logs,
     }
     return client.post("/api/v1/agent/task/result", json=payload)

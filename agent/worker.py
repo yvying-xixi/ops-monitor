@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-import time
 
+from agent import errors
+from agent.errors import classify_failure, classify_validation_error
 from agent.executor.service import ServiceExecutor
 from agent.reporter.client import AgentClient, ReporterError
 from agent.reporter.report import report_task_result
@@ -67,22 +68,43 @@ class TaskWorker:
         try:
             if action == "LOGS":
                 success, output = self.executor.fetch_logs(service_name)
-                report_task_result(
-                    self.client, execution_id=execution_id, status="SUCCESS" if success else "FAILED",
-                    result_text=output if success else None,
-                    error_message=None if success else output,
-                    logs=output if success else None,
-                )
-                return
-
-            success, output = self.executor.run_action(service_name, action, timeout=timeout)
-            report_task_result(
-                self.client, execution_id=execution_id, status="SUCCESS" if success else "FAILED",
-                result_text=output if success else None,
-                error_message=None if success else output,
-            )
+            else:
+                success, output = self.executor.run_action(service_name, action, timeout=timeout)
         except ValueError as exc:
             logger.warning("任务 %s 被安全校验拦截: %s", execution_id, exc)
             report_task_result(
-                self.client, execution_id=execution_id, status="FAILED", error_message=str(exc)
+                self.client,
+                execution_id=execution_id,
+                status="FAILED",
+                error_message=str(exc),
+                error_type=classify_validation_error(str(exc)),
             )
+            return
+        except Exception as exc:
+            logger.exception("任务 %s 执行异常: %s", execution_id, exc)
+            report_task_result(
+                self.client,
+                execution_id=execution_id,
+                status="FAILED",
+                error_message=str(exc),
+                error_type=errors.UNKNOWN,
+            )
+            return
+
+        if success:
+            report_task_result(
+                self.client,
+                execution_id=execution_id,
+                status="SUCCESS",
+                result_text=output,
+                logs=output if action == "LOGS" else None,
+            )
+            return
+
+        report_task_result(
+            self.client,
+            execution_id=execution_id,
+            status="FAILED",
+            error_message=output,
+            error_type=classify_failure(output),
+        )
