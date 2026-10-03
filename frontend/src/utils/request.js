@@ -4,8 +4,8 @@ import { ElMessage } from 'element-plus'
 import { BASE_URL } from '../config'
 import { useUserStore } from '../store/user'
 import router from '../router'
+import { GATEWAY_STATUS, isRetryableGatewayError } from './requestRetry'
 
-const GATEWAY_STATUS = [502, 503, 504]
 const MAX_RETRY = 2
 
 const request = axios.create({
@@ -70,12 +70,8 @@ request.interceptors.response.use(
       }
     }
 
-    // 网关抖动（后端冷启动/重启）：仅对幂等 GET 退避重试
-    if (
-      GATEWAY_STATUS.includes(status) &&
-      config.method === 'get' &&
-      (config.__retryCount || 0) < MAX_RETRY
-    ) {
+    // 网关抖动（后端冷启动/重启）：GET 或带幂等键的 POST 退避重试
+    if (isRetryableGatewayError(config, status) && (config.__retryCount || 0) < MAX_RETRY) {
       config.__retryCount = (config.__retryCount || 0) + 1
       await sleep(500 * config.__retryCount)
       return request(config)
