@@ -4,8 +4,18 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-03
+
 ### Added
 
+- 任务重试与幂等（[ADR-009](docs/decisions/009-task-retry-and-idempotency.md)）：每次尝试新建执行记录、错误分类与退避、任务 deadline、`Idempotency-Key`、Agent 结果幂等重放。
+- Agent 传输层重试增加次数上限（`retry_max_count`）与随机抖动（Python / Go 双运行时）。
+- 前端引入 Vitest 单元测试与 ESLint；CI 前端作业增加 lint 与 test。
+- 新增 Alembic 数据库迁移体系（`backend/migrations/`、`backend/alembic.ini`、ADR-008）；基线 `0001_initial` 在真实 Schema 上验证 `alembic check` 差异为 0。
+- 新增根 `LICENSE`（Apache-2.0）。
+- 新增 `backend/entrypoint.sh`：backend 容器启动先执行 `alembic upgrade head` 再启动 uvicorn。
+- 新增优化路线图 `docs/optimization-plan.md`、任务重试设计 `docs/architecture/task-retry-strategy.md`。
+- 新增后端代码质量门禁：`backend/pyproject.toml`（ruff / mypy / pytest / coverage 配置）、`backend/requirements-dev.txt`，CI 新增 `quality` 作业（ruff + mypy），后端测试接入覆盖率报告。
 - 新增 Go 版 Agent（`agent-go/`），与 Python 版双运行时并存、协议与配置 schema 对等（[ADR-007](docs/decisions/007-go-agent-dual-runtime.md)）。
 - 平台支持按 `runtime` 打包/分发 Agent：`/api/v1/agent/package`、`/api/v1/agent/install.sh` 新增 `runtime=python|go`（默认 python）。
 - 前端 Agent 接入向导新增运行时选择（Python 默认 / Go），安装命令与包下载按选择生成。
@@ -17,6 +27,11 @@
 
 ### Changed
 
+- ORM 模型对齐真实 Schema：补齐 `DATETIME(3)`、`TINYINT`、显式索引/唯一约束/外键名及生成列 `alert_event.is_active`，使 Alembic autogenerate 差异为 0。
+- 后端接入结构化 JSON 日志（`app/core/logging.py`），自动注入 `request_id` / `user_id`。
+- CI 后端作业改用 `alembic upgrade head` 建表（移除正则剥离 SQL 脚本的 bootstrap），并新增 `quality`（ruff + mypy）作业与覆盖率报告。
+- CI 前端作业更名为 Lint, Test & Build，并在构建前执行 `eslint` 与 `vitest`。
+- `Dockerfile.backend` 拷贝迁移文件并改由 `entrypoint.sh` 启动；compose 不再挂载 SQL 初始化目录。
 - 后端 `agent_package` 服务重构为按运行时构建安装包；compose 追加 `agent-go/` 只读挂载。
 - 部署流程接入 Go Agent 构建：`install.sh` 安装阶段、`publish.sh` 发布阶段调用 `build-agent-go.sh`。
 - 前端样式体系：Tailwind 负责布局/间距/响应式/主题，Element Plus 负责组件；语义色改用 `var(--el-color-*)`。
@@ -30,6 +45,8 @@
 - 移除脚手架残留全局样式（`#app` 1126px 限制、`prefers-color-scheme` 媒体查询等）导致的后台布局污染。
 
 ### Removed
+
+- 移除 `deploy/mysql/init/ops_monitor_schema.sql`，Schema 单一来源转为 Alembic 迁移。
 
 ## [0.2.0] - 2026-10-02
 
