@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from conftest import create_user_with_password
 
-from app.repositories import TaskExecutionRepository
+from app.repositories import TaskExecutionRepository, UserRepository
 from app.repositories.server_repository import ServiceRepository
 from app.repositories.task_repository import TaskLogRepository
 from app.schemas.server import ServerCreate
@@ -15,14 +15,17 @@ from app.services.server_service import ServerService
 from app.services.task_service import TaskService
 
 
-_creator_cache: dict = {}
-
-
 def _creator_id(db):
-    key = id(db)
-    if key not in _creator_cache:
-        _creator_cache[key] = create_user_with_password(db, "task-creator").id
-    return _creator_cache[key]
+    """返回创建者用户 id（用例内不存在则创建）。
+
+    不能跨用例缓存：`db` 事务随用例回滚，用户不会真正落库，
+    缓存 id 会变成悬空外键（`fk_ops_task_created_by`）。
+    """
+    repo = UserRepository(db)
+    user = repo.get_by_username("task-creator")
+    if user is None:
+        user = create_user_with_password(db, "task-creator")
+    return user.id
 
 
 def _utcnow() -> datetime:
